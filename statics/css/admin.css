@@ -1,8 +1,23 @@
+body {
+  background: #f1f5f9;
+}
+
+.admin-layout {
+  min-height: calc(100vh - 56px - 48px);
+}
+
+.admin-content {
+  background: #f8fafc;
+  min-height: calc(100vh - 56px - 48px);
+}
+
 .admin-sidebar {
   background: #1e293b;
   color: white;
-  min-height: calc(100vh - 76px);
+  min-height: calc(100vh - 56px - 48px);
   padding: 0;
+  position: sticky;
+  top: 56px;
 }
 
 .admin-nav {
@@ -82,8 +97,32 @@
   color: white;
 }
 
+.admin-footer {
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  margin-top: auto;
+}
+
+.admin-footer a {
+  color: #94a3b8;
+  transition: color 0.3s;
+}
+
+.admin-footer a:hover {
+  color: #cbd5e1;
+}
+
 @media (max-width: 992px) {
   .admin-sidebar {
+    min-height: auto;
+    position: static;
+  }
+
+  .admin-layout {
+    min-height: auto;
+  }
+
+  .admin-content {
     min-height: auto;
   }
 }
