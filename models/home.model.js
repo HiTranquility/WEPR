@@ -1,10 +1,11 @@
-import sql from '../utils/database.js';
+import database from '../utils/database.js';
 
 export const homeQueries = {
   async getFeaturedCourses() {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    const courses = await sql`
+    const { rows: courses } = await database.raw(
+      `
       SELECT
         c.id,
         c.title,
@@ -30,16 +31,19 @@ export const homeQueries = {
       LEFT JOIN categories cat ON c.category_id = cat.id
       WHERE c.status = 'completed'
         AND c.is_featured = true
-        AND c.created_at >= ${oneWeekAgo}
+        AND c.created_at >= ?
       ORDER BY c.enrollment_count DESC
       LIMIT 4
-    `;
+    `,
+      [oneWeekAgo]
+    );
 
     return courses;
   },
 
   async getMostViewedCourses() {
-    const courses = await sql`
+    const { rows: courses } = await database.raw(
+      `
       SELECT
         c.id,
         c.title,
@@ -66,13 +70,15 @@ export const homeQueries = {
       WHERE c.status = 'completed'
       ORDER BY c.view_count DESC
       LIMIT 10
-    `;
+    `
+    );
 
     return courses;
   },
 
   async getNewestCourses() {
-    const courses = await sql`
+    const { rows: courses } = await database.raw(
+      `
       SELECT
         c.id,
         c.title,
@@ -100,7 +106,8 @@ export const homeQueries = {
       WHERE c.status = 'completed'
       ORDER BY c.created_at DESC
       LIMIT 10
-    `;
+    `
+    );
 
     return courses;
   },
@@ -108,7 +115,8 @@ export const homeQueries = {
   async getTopCategoriesByEnrollments() {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    const categories = await sql`
+    const { rows: categories } = await database.raw(
+      `
       SELECT
         cat.id,
         cat.name,
@@ -117,43 +125,52 @@ export const homeQueries = {
         COUNT(c.id) as course_count
       FROM categories cat
       LEFT JOIN courses c ON cat.id = c.category_id
-        AND c.created_at >= ${oneWeekAgo}
+        AND c.created_at >= ?
         AND c.status = 'completed'
       WHERE cat.parent_id IS NULL
       GROUP BY cat.id, cat.name, cat.description
       ORDER BY enrollment_count DESC
       LIMIT 6
-    `;
+    `,
+      [oneWeekAgo]
+    );
 
     return categories;
   },
 
   async getAllParentCategories() {
-    const categories = await sql`
+    const { rows: categories } = await database.raw(
+      `
       SELECT id, name, description
       FROM categories
       WHERE parent_id IS NULL
       ORDER BY name ASC
-    `;
+    `
+    );
 
     return categories;
   },
 
   async getCategoriesWithChildren() {
-    const parents = await sql`
+    const { rows: parents } = await database.raw(
+      `
       SELECT id, name, description
       FROM categories
       WHERE parent_id IS NULL
       ORDER BY name ASC
-    `;
+    `
+    );
 
     for (const parent of parents) {
-      const children = await sql`
+      const { rows: children } = await database.raw(
+        `
         SELECT id, name, description
         FROM categories
-        WHERE parent_id = ${parent.id}
+        WHERE parent_id = ?
         ORDER BY name ASC
-      `;
+      `,
+        [parent.id]
+      );
 
       parent.children = children;
     }
