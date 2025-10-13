@@ -85,10 +85,10 @@ app.use('/', adminRoute);
 
 //Error
 app.use(function(req, res, next) {
-    res.status(404).render('vwCommon/404');
+    res.status(404).render('vwCommon/404', { layout: false });
 });
 app.use(function(req, res, next) {
-    res.status(403).render('vwCommon/403');
+    res.status(403).render('vwCommon/403', { layout: false });
 });
 
 //Server Configuration
