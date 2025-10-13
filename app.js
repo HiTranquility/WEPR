@@ -4,6 +4,7 @@ import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
 import homeRoute from './routes/home.route.js';
 import accountRoute from './routes/account.route.js';
+import { addGlobalViewData } from './middlewares/view-data.middleware.js';
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -47,6 +48,9 @@ app.set('views', __dirname + '/views');
 
 //Routes and Static Files Configuration
 app.use('/static', express.static('statics'));
+
+//Global Middleware
+app.use(addGlobalViewData);
 
 //Server Routes
 app.use('/', accountRoute);
