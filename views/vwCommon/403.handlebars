@@ -1,8 +1,228 @@
-<div class="card">
-  <h5 class="card-header">Access Denied</h5>
-  <div class="card-body">
-    <h4 class="card-title">403 Forbidden</h4>
-    <p class="card-text">You do not have permission to access this resource.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>403 - Access Denied</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .error-container {
+      text-align: center;
+      color: white;
+      position: relative;
+      z-index: 10;
+    }
+
+    .error-code {
+      font-size: 120px;
+      font-weight: 700;
+      margin: 0;
+      animation: shake 1s ease-in-out infinite;
+      text-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    @keyframes shake {
+      0%, 100% {
+        transform: translateX(0);
+      }
+      25% {
+        transform: translateX(-10px);
+      }
+      75% {
+        transform: translateX(10px);
+      }
+    }
+
+    .error-icon {
+      font-size: 100px;
+      margin-bottom: 20px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    .error-message {
+      font-size: 32px;
+      font-weight: 600;
+      margin: 20px 0;
+      text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .error-description {
+      font-size: 18px;
+      margin-bottom: 40px;
+      opacity: 0.9;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .btn-home {
+      display: inline-block;
+      padding: 16px 40px;
+      background: white;
+      color: #f5576c;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      margin-right: 10px;
+    }
+
+    .btn-home:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    }
+
+    .btn-secondary {
+      display: inline-block;
+      padding: 16px 40px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+      transform: translateY(-3px);
+      background: rgba(255,255,255,0.3);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    }
+
+    .bubbles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .bubble {
+      position: absolute;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      animation: rise 10s infinite ease-in;
+    }
+
+    @keyframes rise {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100vh) scale(0);
+        opacity: 0;
+      }
+    }
+
+    .lock {
+      position: absolute;
+      font-size: 80px;
+      animation: lockSwing 2s ease-in-out infinite;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+    }
+
+    @keyframes lockSwing {
+      0%, 100% {
+        transform: rotate(-5deg);
+      }
+      50% {
+        transform: rotate(5deg);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .error-code {
+        font-size: 80px;
+      }
+
+      .error-message {
+        font-size: 24px;
+      }
+
+      .error-description {
+        font-size: 16px;
+      }
+
+      .btn-home, .btn-secondary {
+        display: block;
+        margin: 10px auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bubbles" id="bubbles"></div>
+
+  <div class="error-container">
+    <div class="error-icon">🚫</div>
+    <h1 class="error-code">403</h1>
+    <h2 class="error-message">Access Denied</h2>
+    <p class="error-description">
+      You don't have permission to access this page.
+      If you think this is a mistake, please contact support.
+    </p>
+    <a href="/" class="btn-home">Go Home</a>
+    <a href="/signin" class="btn-secondary">Sign In</a>
   </div>
-  <div class="card-footer text-muted">Footer</div>
-</div>
+
+  <div class="lock" style="top: 10%; right: 15%;">🔒</div>
+
+  <script>
+    function createBubbles() {
+      const bubblesContainer = document.getElementById('bubbles');
+      const bubbleCount = 20;
+
+      for (let i = 0; i < bubbleCount; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+
+        const size = Math.random() * 100 + 50;
+        bubble.style.width = size + 'px';
+        bubble.style.height = size + 'px';
+
+        bubble.style.left = Math.random() * 100 + '%';
+        bubble.style.bottom = '-' + size + 'px';
+
+        bubble.style.animationDelay = Math.random() * 5 + 's';
+        bubble.style.animationDuration = (Math.random() * 5 + 5) + 's';
+
+        bubblesContainer.appendChild(bubble);
+      }
+    }
+
+    createBubbles();
+  </script>
+</body>
+</html>

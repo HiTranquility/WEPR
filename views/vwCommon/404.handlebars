@@ -1,8 +1,203 @@
-<div class="card">
-  <h5 class="card-header">Page Not Found</h5>
-  <div class="card-body">
-    <h4 class="card-title">404 Not Found</h4>
-    <p class="card-text">The page you are looking for does not exist.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Page Not Found</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .error-container {
+      text-align: center;
+      color: white;
+      position: relative;
+      z-index: 10;
+    }
+
+    .error-code {
+      font-size: 120px;
+      font-weight: 700;
+      margin: 0;
+      animation: bounce 2s ease-in-out infinite;
+      text-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    .error-icon {
+      font-size: 100px;
+      margin-bottom: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-15px) rotate(5deg);
+      }
+    }
+
+    .error-message {
+      font-size: 32px;
+      font-weight: 600;
+      margin: 20px 0;
+      text-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .error-description {
+      font-size: 18px;
+      margin-bottom: 40px;
+      opacity: 0.9;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .btn-home {
+      display: inline-block;
+      padding: 16px 40px;
+      background: white;
+      color: #667eea;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+
+    .btn-home:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    }
+
+    .stars {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 2s infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    }
+
+    .astronaut {
+      position: absolute;
+      font-size: 60px;
+      animation: astronautFloat 6s ease-in-out infinite;
+    }
+
+    @keyframes astronautFloat {
+      0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+      25% {
+        transform: translate(50px, -30px) rotate(5deg);
+      }
+      50% {
+        transform: translate(30px, -50px) rotate(-5deg);
+      }
+      75% {
+        transform: translate(-30px, -30px) rotate(3deg);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .error-code {
+        font-size: 80px;
+      }
+
+      .error-message {
+        font-size: 24px;
+      }
+
+      .error-description {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+
+  <div class="error-container">
+    <div class="error-icon">🔍</div>
+    <h1 class="error-code">404</h1>
+    <h2 class="error-message">Oops! Page Not Found</h2>
+    <p class="error-description">
+      The page you're looking for seems to have wandered off into cyberspace.
+      Let's get you back on track!
+    </p>
+    <a href="/" class="btn-home">Take Me Home</a>
   </div>
-  <div class="card-footer text-muted">Footer</div>
-</div>
+
+  <div class="astronaut" style="top: 20%; left: 10%;">🚀</div>
+
+  <script>
+    function createStars() {
+      const starsContainer = document.getElementById('stars');
+      const starCount = 50;
+
+      for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+
+        const size = Math.random() * 3 + 1;
+        star.style.width = size + 'px';
+        star.style.height = size + 'px';
+
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+
+        star.style.animationDelay = Math.random() * 2 + 's';
+        star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+
+        starsContainer.appendChild(star);
+      }
+    }
+
+    createStars();
+  </script>
+</body>
+</html>

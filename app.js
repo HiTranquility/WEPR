@@ -3,6 +3,7 @@ import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
 import homeRoute from './routes/home.route.js';
+import accountRoute from './routes/account.route.js';
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -47,6 +48,7 @@ app.set('views', __dirname + '/views');
 app.use('/static', express.static('statics'));
 
 //Server Routes
+app.use('/', accountRoute);
 app.use('/', homeRoute);
 
 //Error Routes

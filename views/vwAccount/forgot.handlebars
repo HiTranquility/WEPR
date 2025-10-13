@@ -1,4 +1,276 @@
-{{#fill_section 'css'}}
-{{/fill_section}}
-{{#fill_section 'js'}}
-{{/fill_section}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forgot Password - Online Academy</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+      max-width: 450px;
+      width: 100%;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .auth-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+
+    .auth-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+    }
+
+    .auth-header p {
+      margin: 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .auth-body {
+      padding: 40px 30px;
+    }
+
+    .info-text {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e1e4e8;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-control.error {
+      border-color: #dc3545;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .alert-danger {
+      background-color: #fee;
+      border: 1px solid #fcc;
+      color: #c33;
+    }
+
+    .alert-success {
+      background-color: #efe;
+      border: 1px solid #cfc;
+      color: #3c3;
+    }
+
+    .alert.hidden {
+      display: none;
+    }
+
+    .auth-footer {
+      text-align: center;
+      padding: 20px 30px 30px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .auth-footer a {
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1>Forgot Password?</h1>
+      <p>We'll send you a reset link</p>
+    </div>
+
+    <div class="auth-body">
+      <div id="alertMessage" class="alert alert-danger hidden"></div>
+
+      <div class="info-text">
+        Enter your email address and we'll send you a link to reset your password.
+      </div>
+
+      <form id="forgotForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input type="email" class="form-control" id="email" required placeholder="you@example.com">
+          <div class="error-message" id="emailError">Please enter a valid email</div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">Reset Password</button>
+      </form>
+    </div>
+
+    <div class="auth-footer">
+      Remember your password? <a href="/signin">Sign In</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from '/static/js/supabase-client.js';
+
+    const form = document.getElementById('forgotForm');
+    const emailInput = document.getElementById('email');
+    const submitBtn = document.getElementById('submitBtn');
+    const alertMessage = document.getElementById('alertMessage');
+
+    function showError(input, errorElement) {
+      input.classList.add('error');
+      errorElement.classList.add('show');
+    }
+
+    function hideError(input, errorElement) {
+      input.classList.remove('error');
+      errorElement.classList.remove('show');
+    }
+
+    function validateEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      alertMessage.classList.add('hidden');
+
+      const email = emailInput.value.trim();
+
+      if (!validateEmail(email)) {
+        showError(emailInput, document.getElementById('emailError'));
+        return;
+      } else {
+        hideError(emailInput, document.getElementById('emailError'));
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending reset link...';
+
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`
+        });
+
+        if (error) throw error;
+
+        alertMessage.className = 'alert alert-success';
+        alertMessage.innerHTML = '<strong>Email sent!</strong><br>Check your inbox for a password reset link. It may take a few minutes to arrive.';
+        alertMessage.classList.remove('hidden');
+
+        form.reset();
+        submitBtn.textContent = 'Reset Password';
+        submitBtn.disabled = false;
+
+      } catch (error) {
+        console.error('Forgot password error:', error);
+        alertMessage.className = 'alert alert-danger';
+        alertMessage.textContent = error.message || 'An error occurred. Please try again.';
+        alertMessage.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Reset Password';
+      }
+    });
+  </script>
+</body>
+</html>
