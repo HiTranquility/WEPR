@@ -1,0 +1,252 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/static/css/course-detail.css">
+{{/fill_section}}
+
+<section class="course-hero">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="mb-3">
+          <span class="badge bg-primary">{{course.category.name}}</span>
+        </div>
+        <h1 class="course-title">{{course.title}}</h1>
+        <p class="course-subtitle">{{course.short_description}}</p>
+
+        <div class="course-meta">
+          <div class="course-meta-item">
+            <i class="bi bi-star-fill text-warning"></i>
+            <strong>{{course.rating_avg}}</strong>
+            <span>({{formatNumber course.rating_count}} đánh giá)</span>
+          </div>
+          <div class="course-meta-item">
+            <i class="bi bi-people-fill"></i>
+            <span>{{formatNumber course.enrollment_count}} học viên</span>
+          </div>
+          <div class="course-meta-item">
+            <i class="bi bi-clock"></i>
+            <span>Cập nhật {{formatDate course.updated_at}}</span>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span>Giảng viên:</span>
+          <div class="d-flex align-items-center gap-2">
+            <img src="{{course.teacher.avatar_url}}" class="teacher-avatar" alt="{{course.teacher.full_name}}">
+            <strong>{{course.teacher.full_name}}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <img src="{{course.thumbnail_url}}" class="course-thumbnail" alt="{{course.title}}">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="course-content">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8">
+        <ul class="nav nav-tabs content-tabs" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#overview">Tổng quan</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#curriculum">Nội dung khóa học</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#instructor">Giảng viên</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#reviews">Đánh giá</button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="overview">
+            <div class="description-content">
+              <h3>Mô tả khóa học</h3>
+              {{{course.full_description}}}
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="curriculum">
+            <h3 class="mb-4">Nội dung khóa học</h3>
+            <p class="text-muted mb-4">{{course.sections.length}} chương • {{course.total_lectures}} bài giảng • {{course.total_duration}} tổng thời lượng</p>
+
+            {{#each course.sections}}
+            <div class="curriculum-section">
+              <div class="section-header" data-bs-toggle="collapse" data-bs-target="#section-{{@index}}">
+                <div>
+                  <h5 class="section-title">{{title}}</h5>
+                  <p class="section-meta mb-0">{{lectures.length}} bài giảng • {{duration}}</p>
+                </div>
+                <i class="bi bi-chevron-down"></i>
+              </div>
+              <div class="collapse section-content" id="section-{{@index}}">
+                {{#each lectures}}
+                <div class="lecture-item">
+                  <div class="lecture-info">
+                    <i class="bi bi-play-circle lecture-icon"></i>
+                    <span>{{title}}</span>
+                    {{#if is_preview}}
+                    <span class="preview-badge">Xem trước</span>
+                    {{/if}}
+                  </div>
+                  <span class="text-muted">{{duration}}</span>
+                </div>
+                {{/each}}
+              </div>
+            </div>
+            {{/each}}
+          </div>
+
+          <div class="tab-pane fade" id="instructor">
+            <div class="instructor-card">
+              <img src="{{course.teacher.avatar_url}}" class="instructor-avatar" alt="{{course.teacher.full_name}}">
+              <div class="instructor-info">
+                <h3>{{course.teacher.full_name}}</h3>
+                <p class="text-muted">{{course.teacher.bio}}</p>
+                <div class="instructor-stats">
+                  <div class="stat-item">
+                    <i class="bi bi-star-fill"></i>
+                    <span>{{course.teacher.rating_avg}} xếp hạng giảng viên</span>
+                  </div>
+                  <div class="stat-item">
+                    <i class="bi bi-people-fill"></i>
+                    <span>{{formatNumber course.teacher.total_students}} học viên</span>
+                  </div>
+                  <div class="stat-item">
+                    <i class="bi bi-book"></i>
+                    <span>{{course.teacher.total_courses}} khóa học</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-pane fade" id="reviews">
+            <h3 class="mb-4">Đánh giá từ học viên</h3>
+            <div class="reviews-list">
+              {{#each reviews}}
+              <div class="review-item">
+                <div class="review-header">
+                  <img src="{{student.avatar_url}}" class="review-avatar" alt="{{student.full_name}}">
+                  <div>
+                    <div class="review-author">{{student.full_name}}</div>
+                    <div class="review-date">{{formatDate created_at}}</div>
+                  </div>
+                  <div class="review-rating ms-auto">
+                    {{#repeat rating}}⭐{{/repeat}}
+                  </div>
+                </div>
+                <div class="review-content">{{content}}</div>
+              </div>
+              {{/each}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="sidebar-sticky">
+          <div class="price-section">
+            <div class="d-flex align-items-center mb-3">
+              <span class="price-current">{{formatCurrency course.discount_price}}</span>
+              {{#if (gt course.price course.discount_price)}}
+              <span class="price-original ms-3">{{formatCurrency course.price}}</span>
+              <span class="discount-tag">-{{calculateDiscount course.price course.discount_price}}%</span>
+              {{/if}}
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn btn-enroll w-100" id="enrollBtn">Đăng ký học</button>
+              <button class="btn btn-wishlist w-100" id="wishlistBtn">
+                <i class="bi bi-heart"></i> Thêm vào yêu thích
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <h6 class="fw-bold mb-3">Khóa học này bao gồm:</h6>
+              <ul class="list-unstyled">
+                <li class="mb-2"><i class="bi bi-play-circle text-primary"></i> {{course.total_duration}} video</li>
+                <li class="mb-2"><i class="bi bi-file-earmark-text text-primary"></i> {{course.total_resources}} tài nguyên</li>
+                <li class="mb-2"><i class="bi bi-phone text-primary"></i> Truy cập trên điện thoại và TV</li>
+                <li class="mb-2"><i class="bi bi-infinity text-primary"></i> Truy cập không giới hạn</li>
+                <li class="mb-2"><i class="bi bi-award text-primary"></i> Chứng chỉ hoàn thành</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="related-courses">
+  <div class="container">
+    <h3 class="mb-4">Các khóa học khác cùng lĩnh vực</h3>
+    <div class="row g-4">
+      {{#each relatedCourses}}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="card course-card">
+          <div class="position-relative">
+            <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
+          </div>
+          <div class="course-body">
+            <div class="course-category">{{category.name}}</div>
+            <h5 class="course-title">{{truncate title 60}}</h5>
+            <div class="course-teacher">
+              <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
+              {{teacher.full_name}}
+            </div>
+            <div class="course-rating">
+              <span class="rating-stars">⭐ {{rating_avg}}</span>
+              <span class="rating-text">({{formatNumber rating_count}})</span>
+            </div>
+            <div class="course-footer">
+              <div class="course-price">
+                <span class="price-current">{{formatCurrency discount_price}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</section>
+
+{{#fill_section 'js'}}
+<script type="module">
+  import { supabase } from '/static/js/supabase-client.js';
+
+  const enrollBtn = document.getElementById('enrollBtn');
+  const wishlistBtn = document.getElementById('wishlistBtn');
+
+  enrollBtn.addEventListener('click', async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      window.location.href = '/signin';
+      return;
+    }
+
+    alert('Chức năng đăng ký học đang được phát triển');
+  });
+
+  wishlistBtn.addEventListener('click', async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      window.location.href = '/signin';
+      return;
+    }
+
+    alert('Chức năng thêm vào yêu thích đang được phát triển');
+  });
+</script>
+{{/fill_section}}

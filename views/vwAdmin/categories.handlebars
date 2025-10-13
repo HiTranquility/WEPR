@@ -1,0 +1,180 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/static/css/admin.css">
+{{/fill_section}}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-2 p-0">
+      <div class="admin-sidebar">
+        <ul class="admin-nav">
+          <li class="admin-nav-item">
+            <a href="/admin/dashboard" class="admin-nav-link">
+              <i class="bi bi-speedometer2"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="admin-nav-item">
+            <a href="/admin/categories" class="admin-nav-link active">
+              <i class="bi bi-tags"></i>
+              <span>Lĩnh vực</span>
+            </a>
+          </li>
+          <li class="admin-nav-item">
+            <a href="/admin/courses" class="admin-nav-link">
+              <i class="bi bi-book"></i>
+              <span>Khóa học</span>
+            </a>
+          </li>
+          <li class="admin-nav-item">
+            <a href="/admin/users" class="admin-nav-link">
+              <i class="bi bi-people"></i>
+              <span>Người dùng</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-lg-10">
+      <div class="admin-header">
+        <div class="container-fluid">
+          <h2 class="mb-1">Quản lý lĩnh vực</h2>
+          <p class="mb-0 opacity-75">Quản lý các lĩnh vực khóa học</p>
+        </div>
+      </div>
+
+      <div class="container-fluid">
+        <div class="data-table">
+          <div class="table-toolbar">
+            <h5 class="mb-0">Danh sách lĩnh vực ({{categories.length}})</h5>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+              <i class="bi bi-plus-lg"></i> Thêm lĩnh vực
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Tên lĩnh vực</th>
+                  <th>Số khóa học</th>
+                  <th>Ngày tạo</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each categories}}
+                <tr>
+                  <td>{{id}}</td>
+                  <td><strong>{{name}}</strong></td>
+                  <td>{{course_count}} khóa học</td>
+                  <td>{{formatDate created_at}}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <button class="btn btn-sm btn-outline-primary" onclick="editCategory('{{id}}', '{{name}}')">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory('{{id}}', {{course_count}})">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Thêm lĩnh vực mới</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="addCategoryForm">
+          <div class="mb-3">
+            <label class="form-label">Tên lĩnh vực *</label>
+            <input type="text" class="form-control" id="categoryName" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-primary" onclick="saveCategory()">Lưu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Sửa lĩnh vực</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editCategoryForm">
+          <input type="hidden" id="editCategoryId">
+          <div class="mb-3">
+            <label class="form-label">Tên lĩnh vực *</label>
+            <input type="text" class="form-control" id="editCategoryName" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button type="button" class="btn btn-primary" onclick="updateCategory()">Cập nhật</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{#fill_section 'js'}}
+<script>
+  function saveCategory() {
+    const name = document.getElementById('categoryName').value;
+    if (!name) {
+      alert('Vui lòng nhập tên lĩnh vực');
+      return;
+    }
+    alert('Chức năng thêm lĩnh vực đang được phát triển');
+    bootstrap.Modal.getInstance(document.getElementById('addCategoryModal')).hide();
+  }
+
+  function editCategory(id, name) {
+    document.getElementById('editCategoryId').value = id;
+    document.getElementById('editCategoryName').value = name;
+    new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+  }
+
+  function updateCategory() {
+    const id = document.getElementById('editCategoryId').value;
+    const name = document.getElementById('editCategoryName').value;
+    if (!name) {
+      alert('Vui lòng nhập tên lĩnh vực');
+      return;
+    }
+    alert('Chức năng cập nhật lĩnh vực đang được phát triển');
+    bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
+  }
+
+  function deleteCategory(id, courseCount) {
+    if (courseCount > 0) {
+      alert('Không thể xóa lĩnh vực đã có khóa học!');
+      return;
+    }
+    if (confirm('Bạn có chắc muốn xóa lĩnh vực này?')) {
+      alert('Chức năng xóa lĩnh vực đang được phát triển');
+    }
+  }
+</script>
+{{/fill_section}}

@@ -1,0 +1,86 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/static/css/teacher.css">
+{{/fill_section}}
+
+<section class="teacher-header">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="mb-2">Khóa học của tôi</h1>
+        <p class="mb-0 opacity-75">Quản lý các khóa học bạn đang giảng dạy</p>
+      </div>
+      <a href="/teacher/create-course" class="btn btn-light">
+        <i class="bi bi-plus-lg"></i> Tạo khóa học mới
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      {{#if courses.length}}
+      {{#each courses}}
+      <div class="col-lg-4 col-md-6">
+        <div class="teacher-course-card">
+          <img src="{{thumbnail_url}}" class="w-100" style="height: 200px; object-fit: cover;" alt="{{title}}">
+          <div class="p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="course-status-badge status-{{status}}">
+                {{#if (eq status 'published')}}Đã xuất bản
+                {{else if (eq status 'draft')}}Bản nháp
+                {{else}}Chưa hoàn thành
+                {{/if}}
+              </span>
+              <span class="badge bg-primary">{{category.name}}</span>
+            </div>
+            <h5 class="mb-2">{{title}}</h5>
+            <div class="d-flex gap-3 text-muted small mb-2">
+              <span><i class="bi bi-people"></i> {{formatNumber enrollment_count}}</span>
+              <span><i class="bi bi-star"></i> {{rating_avg}}</span>
+              <span><i class="bi bi-eye"></i> {{formatNumber view_count}}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <strong class="text-success">{{formatCurrency discount_price}}</strong>
+              <small class="text-muted">Cập nhật {{formatDate updated_at}}</small>
+            </div>
+          </div>
+          <div class="course-card-actions">
+            <a href="/teacher/edit-course/{{id}}" class="btn btn-sm btn-outline-primary flex-grow-1">
+              <i class="bi bi-pencil"></i> Sửa
+            </a>
+            <a href="/courses/{{id}}" class="btn btn-sm btn-outline-secondary" target="_blank">
+              <i class="bi bi-eye"></i> Xem
+            </a>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteCourse('{{id}}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+      {{else}}
+      <div class="col-12">
+        <div class="text-center py-5">
+          <i class="bi bi-book display-1 text-muted mb-3"></i>
+          <h4>Chưa có khóa học nào</h4>
+          <p class="text-muted mb-4">Bắt đầu tạo khóa học đầu tiên của bạn</p>
+          <a href="/teacher/create-course" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Tạo khóa học mới
+          </a>
+        </div>
+      </div>
+      {{/if}}
+    </div>
+  </div>
+</section>
+
+{{#fill_section 'js'}}
+<script>
+  function deleteCourse(courseId) {
+    if (confirm('Bạn có chắc muốn xóa khóa học này? Hành động này không thể hoàn tác.')) {
+      alert('Chức năng xóa khóa học đang được phát triển');
+    }
+  }
+</script>
+{{/fill_section}}

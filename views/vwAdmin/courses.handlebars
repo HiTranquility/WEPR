@@ -1,0 +1,139 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/static/css/admin.css">
+{{/fill_section}}
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-2 p-0">
+      <div class="admin-sidebar">
+        <ul class="admin-nav">
+          <li class="admin-nav-item">
+            <a href="/admin/dashboard" class="admin-nav-link">
+              <i class="bi bi-speedometer2"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="admin-nav-item">
+            <a href="/admin/categories" class="admin-nav-link">
+              <i class="bi bi-tags"></i>
+              <span>Lĩnh vực</span>
+            </a>
+          </li>
+          <li class="admin-nav-item">
+            <a href="/admin/courses" class="admin-nav-link active">
+              <i class="bi bi-book"></i>
+              <span>Khóa học</span>
+            </a>
+          </li>
+          <li class="admin-nav-item">
+            <a href="/admin/users" class="admin-nav-link">
+              <i class="bi bi-people"></i>
+              <span>Người dùng</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-lg-10">
+      <div class="admin-header">
+        <div class="container-fluid">
+          <h2 class="mb-1">Quản lý khóa học</h2>
+          <p class="mb-0 opacity-75">Quản lý tất cả khóa học trên hệ thống</p>
+        </div>
+      </div>
+
+      <div class="container-fluid">
+        <div class="data-table">
+          <div class="table-toolbar">
+            <h5 class="mb-0">Danh sách khóa học ({{courses.length}})</h5>
+            <div class="d-flex gap-2">
+              <select class="form-select form-select-sm" style="width: 200px;" onchange="filterByCategory(this.value)">
+                <option value="">Tất cả lĩnh vực</option>
+                {{#each categories}}
+                <option value="{{id}}">{{name}}</option>
+                {{/each}}
+              </select>
+              <select class="form-select form-select-sm" style="width: 150px;" onchange="filterByStatus(this.value)">
+                <option value="">Tất cả trạng thái</option>
+                <option value="published">Đã xuất bản</option>
+                <option value="draft">Bản nháp</option>
+                <option value="incomplete">Chưa hoàn thành</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 60px;">Ảnh</th>
+                  <th>Tên khóa học</th>
+                  <th>Giảng viên</th>
+                  <th>Lĩnh vực</th>
+                  <th>Trạng thái</th>
+                  <th>Học viên</th>
+                  <th>Giá</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each courses}}
+                <tr>
+                  <td>
+                    <img src="{{thumbnail_url}}" class="rounded" style="width: 50px; height: 30px; object-fit: cover;" alt="{{title}}">
+                  </td>
+                  <td>
+                    <strong>{{truncate title 50}}</strong><br>
+                    <small class="text-muted">⭐ {{rating_avg}} ({{formatNumber rating_count}})</small>
+                  </td>
+                  <td>{{teacher.full_name}}</td>
+                  <td><span class="badge bg-primary">{{category.name}}</span></td>
+                  <td>
+                    <span class="badge bg-{{#if (eq status 'published')}}success{{else if (eq status 'draft')}}warning{{else}}danger{{/if}}">
+                      {{#if (eq status 'published')}}Đã xuất bản
+                      {{else if (eq status 'draft')}}Bản nháp
+                      {{else}}Chưa hoàn thành
+                      {{/if}}
+                    </span>
+                  </td>
+                  <td>{{formatNumber enrollment_count}}</td>
+                  <td>{{formatCurrency discount_price}}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="/courses/{{id}}" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <button class="btn btn-sm btn-outline-danger" onclick="removeCourse('{{id}}', '{{title}}')">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{#fill_section 'js'}}
+<script>
+  function filterByCategory(categoryId) {
+    alert('Chức năng lọc theo lĩnh vực đang được phát triển');
+  }
+
+  function filterByStatus(status) {
+    alert('Chức năng lọc theo trạng thái đang được phát triển');
+  }
+
+  function removeCourse(courseId, courseTitle) {
+    if (confirm(`Bạn có chắc muốn gỡ bỏ khóa học "${courseTitle}"?\nKhóa học sẽ không còn hiển thị công khai.`)) {
+      alert('Chức năng gỡ bỏ khóa học đang được phát triển');
+    }
+  }
+</script>
+{{/fill_section}}

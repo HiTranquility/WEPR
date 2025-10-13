@@ -1,0 +1,105 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/static/css/profile.css">
+{{/fill_section}}
+
+<section class="profile-header">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3">
+      <img src="{{user.avatar_url}}" class="profile-avatar" alt="{{user.full_name}}">
+      <div>
+        <h2 class="mb-1">{{user.full_name}}</h2>
+        <p class="mb-0 opacity-75">{{user.email}}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-3">
+        <div class="profile-sidebar">
+          <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+              <a href="/student/profile" class="sidebar-nav-link">
+                <i class="bi bi-person"></i>
+                <span>Thông tin cá nhân</span>
+              </a>
+            </li>
+            <li class="sidebar-nav-item">
+              <a href="/student/my-courses" class="sidebar-nav-link">
+                <i class="bi bi-book"></i>
+                <span>Khóa học của tôi</span>
+              </a>
+            </li>
+            <li class="sidebar-nav-item">
+              <a href="/student/watchlist" class="sidebar-nav-link active">
+                <i class="bi bi-heart"></i>
+                <span>Danh sách yêu thích</span>
+              </a>
+            </li>
+            <li class="sidebar-nav-item">
+              <a href="/student/change-password" class="sidebar-nav-link">
+                <i class="bi bi-lock"></i>
+                <span>Đổi mật khẩu</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-lg-9">
+        <div class="profile-content">
+          <h4 class="mb-4">Danh sách yêu thích ({{watchlist.length}})</h4>
+
+          {{#if watchlist.length}}
+          <div class="watchlist-container">
+            {{#each watchlist}}
+            <div class="course-card-horizontal">
+              <img src="{{course.thumbnail_url}}" class="course-card-thumbnail" alt="{{course.title}}">
+              <div class="course-card-content">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <span class="badge bg-primary mb-2">{{course.category.name}}</span>
+                    <h5>{{course.title}}</h5>
+                    <p class="text-muted mb-2">{{course.teacher.full_name}}</p>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                      <span class="text-warning">⭐ {{course.rating_avg}}</span>
+                      <span class="text-muted">({{formatNumber course.rating_count}})</span>
+                      <span class="text-muted">{{formatNumber course.enrollment_count}} học viên</span>
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    <div class="fs-4 fw-bold text-primary mb-2">{{formatCurrency course.discount_price}}</div>
+                    <button class="btn btn-sm btn-danger" onclick="removeFromWatchlist('{{id}}')">
+                      <i class="bi bi-trash"></i> Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {{/each}}
+          </div>
+          {{else}}
+          <div class="empty-state">
+            <i class="bi bi-heart"></i>
+            <h5>Chưa có khóa học yêu thích</h5>
+            <p>Bạn chưa thêm khóa học nào vào danh sách yêu thích</p>
+            <a href="/" class="btn btn-primary">Khám phá khóa học</a>
+          </div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{#fill_section 'js'}}
+<script>
+  function removeFromWatchlist(id) {
+    if (confirm('Bạn có chắc muốn xóa khóa học này khỏi danh sách yêu thích?')) {
+      alert('Chức năng xóa khỏi watchlist đang được phát triển');
+    }
+  }
+</script>
+{{/fill_section}}

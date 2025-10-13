@@ -1,0 +1,186 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/static/css/teacher.css">
+<link rel="stylesheet" href="https://cdn.quilljs.com/1.3.6/quill.snow.css">
+{{/fill_section}}
+
+<section class="teacher-header">
+  <div class="container">
+    <h1 class="mb-2">Tạo khóa học mới</h1>
+    <p class="mb-0 opacity-75">Chia sẻ kiến thức và kinh nghiệm của bạn với học viên</p>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container create-course-form">
+    <form id="createCourseForm">
+      <div class="form-section">
+        <h3 class="form-section-title">Thông tin cơ bản</h3>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Tên khóa học *</label>
+          <input type="text" class="form-control" id="courseTitle" required
+                 placeholder="VD: Lập trình Python từ cơ bản đến nâng cao">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Mô tả ngắn *</label>
+          <textarea class="form-control" id="shortDescription" rows="3" required
+                    placeholder="Mô tả ngắn gọn về khóa học (tối đa 200 ký tự)"></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Lĩnh vực *</label>
+          <select class="form-select" id="category" required>
+            <option value="">-- Chọn lĩnh vực --</option>
+            {{#each categories}}
+            <option value="{{id}}">{{name}}</option>
+            {{/each}}
+          </select>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Giá gốc (VNĐ) *</label>
+            <input type="number" class="form-control" id="price" required min="0">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Giá khuyến mại (VNĐ)</label>
+            <input type="number" class="form-control" id="discountPrice" min="0">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">Trạng thái</label>
+            <select class="form-select" id="status">
+              <option value="draft">Bản nháp</option>
+              <option value="incomplete">Chưa hoàn thành</option>
+              <option value="published">Đã xuất bản</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3 class="form-section-title">Ảnh đại diện khóa học</h3>
+        <div class="image-upload-area" onclick="document.getElementById('thumbnailInput').click()">
+          <i class="bi bi-cloud-upload"></i>
+          <p class="mb-0">Click để tải ảnh lên hoặc nhập URL</p>
+          <small class="text-muted">Kích thước khuyến nghị: 1280x720px</small>
+        </div>
+        <input type="file" id="thumbnailInput" class="d-none" accept="image/*">
+        <input type="url" class="form-control mt-3" id="thumbnailUrl" placeholder="Hoặc nhập URL ảnh">
+        <img id="thumbnailPreview" class="image-preview d-none">
+      </div>
+
+      <div class="form-section">
+        <h3 class="form-section-title">Mô tả chi tiết</h3>
+        <div id="editor" class="wysiwyg-editor"></div>
+      </div>
+
+      <div class="form-section">
+        <h3 class="form-section-title">Nội dung khóa học</h3>
+        <p class="text-muted">Tổ chức khóa học thành các chương và bài giảng</p>
+
+        <div id="sectionsContainer"></div>
+
+        <button type="button" class="btn btn-outline-primary" onclick="addSection()">
+          <i class="bi bi-plus-lg"></i> Thêm chương
+        </button>
+      </div>
+
+      <div class="d-flex gap-3 justify-content-end">
+        <a href="/teacher/courses" class="btn btn-outline-secondary">Hủy</a>
+        <button type="submit" class="btn btn-success">Tạo khóa học</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+{{#fill_section 'js'}}
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+  const quill = new Quill('#editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['link', 'image'],
+        ['clean']
+      ]
+    },
+    placeholder: 'Nhập mô tả chi tiết về khóa học...'
+  });
+
+  let sectionCount = 0;
+
+  function addSection() {
+    sectionCount++;
+    const html = `
+      <div class="section-builder" id="section-${sectionCount}">
+        <div class="section-header-input">
+          <input type="text" class="form-control mb-2" placeholder="Tên chương ${sectionCount}" required>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-primary" onclick="addLecture(${sectionCount})">
+              <i class="bi bi-plus"></i> Thêm bài giảng
+            </button>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeSection(${sectionCount})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="lecture-list" id="lectures-${sectionCount}">
+          <p class="text-muted text-center">Chưa có bài giảng</p>
+        </div>
+      </div>
+    `;
+    document.getElementById('sectionsContainer').insertAdjacentHTML('beforeend', html);
+  }
+
+  function addLecture(sectionId) {
+    const lectureTitle = prompt('Nhập tên bài giảng:');
+    if (!lectureTitle) return;
+
+    const videoUrl = prompt('Nhập URL video:');
+    if (!videoUrl) return;
+
+    const lectureList = document.getElementById(`lectures-${sectionId}`);
+    if (lectureList.querySelector('.text-muted')) {
+      lectureList.innerHTML = '';
+    }
+
+    const html = `
+      <div class="lecture-item-builder">
+        <div>
+          <strong>${lectureTitle}</strong><br>
+          <small class="text-muted">${videoUrl}</small>
+        </div>
+        <button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    `;
+    lectureList.insertAdjacentHTML('beforeend', html);
+  }
+
+  function removeSection(sectionId) {
+    if (confirm('Bạn có chắc muốn xóa chương này?')) {
+      document.getElementById(`section-${sectionId}`).remove();
+    }
+  }
+
+  document.getElementById('thumbnailUrl').addEventListener('input', (e) => {
+    const preview = document.getElementById('thumbnailPreview');
+    if (e.target.value) {
+      preview.src = e.target.value;
+      preview.classList.remove('d-none');
+    } else {
+      preview.classList.add('d-none');
+    }
+  });
+
+  document.getElementById('createCourseForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Chức năng tạo khóa học đang được phát triển. Dữ liệu sẽ được lưu vào database.');
+  });
+</script>
+{{/fill_section}}

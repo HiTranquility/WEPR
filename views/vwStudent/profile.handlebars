@@ -1,0 +1,111 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/static/css/profile.css">
+{{/fill_section}}
+
+<section class="profile-header">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3">
+      <img src="{{user.avatar_url}}" class="profile-avatar" alt="{{user.full_name}}">
+      <div>
+        <h2 class="mb-1">{{user.full_name}}</h2>
+        <p class="mb-0 opacity-75">{{user.email}}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-3">
+        <div class="profile-sidebar">
+          <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+              <a href="/student/profile" class="sidebar-nav-link active">
+                <i class="bi bi-person"></i>
+                <span>Thông tin cá nhân</span>
+              </a>
+            </li>
+            <li class="sidebar-nav-item">
+              <a href="/student/my-courses" class="sidebar-nav-link">
+                <i class="bi bi-book"></i>
+                <span>Khóa học của tôi</span>
+              </a>
+            </li>
+            <li class="sidebar-nav-item">
+              <a href="/student/watchlist" class="sidebar-nav-link">
+                <i class="bi bi-heart"></i>
+                <span>Danh sách yêu thích</span>
+              </a>
+            </li>
+            <li class="sidebar-nav-item">
+              <a href="/student/change-password" class="sidebar-nav-link">
+                <i class="bi bi-lock"></i>
+                <span>Đổi mật khẩu</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-lg-9">
+        <div class="profile-content">
+          <h4 class="mb-4">Thông tin cá nhân</h4>
+
+          <form id="profileForm">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Họ và tên</label>
+                <input type="text" class="form-control" id="fullName" value="{{user.full_name}}" required>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" value="{{user.email}}" required>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Ảnh đại diện URL</label>
+                <input type="url" class="form-control" id="avatarUrl" value="{{user.avatar_url}}">
+              </div>
+
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary" id="submitBtn">Cập nhật thông tin</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{{#fill_section 'js'}}
+<script type="module">
+  import { supabase } from '/static/js/supabase-client.js';
+
+  const form = document.getElementById('profileForm');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Đang cập nhật...';
+
+    const fullName = document.getElementById('fullName').value;
+    const email = document.getElementById('email').value;
+    const avatarUrl = document.getElementById('avatarUrl').value;
+
+    try {
+      alert('Chức năng cập nhật thông tin đang được phát triển');
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('Có lỗi xảy ra: ' + error.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Cập nhật thông tin';
+    }
+  });
+</script>
+{{/fill_section}}
