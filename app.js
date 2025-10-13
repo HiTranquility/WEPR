@@ -71,7 +71,7 @@ app.set('view engine', 'handlebars');
 app.set('views', __dirname + '/views');
 
 //Routes and Static Files Configuration
-app.use('/static', express.static('statics'));
+app.use('/statics', express.static('statics'));
 
 //Global Middleware
 app.use(addGlobalViewData);

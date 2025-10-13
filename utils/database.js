@@ -8,10 +8,11 @@ const database = knex({
     user: process.env.PG_USER || 'postgres',
     password: process.env.PG_PASSWORD || '',
     database: process.env.PG_DATABASE || 'postgres',
-    pool: {
-      min: parseInt(process.env.PG_POOL_MIN || '0', 10),
-      max: parseInt(process.env.PG_POOL_MAX || '15', 10)
-    },
+    ssl: process.env.PG_HOST?.includes('supabase.com') ? { rejectUnauthorized: false } : false
+  },
+  pool: {
+    min: parseInt(process.env.PG_POOL_MIN || '0', 10),
+    max: parseInt(process.env.PG_POOL_MAX || '15', 10)
   }
 });
 
