@@ -1,41 +1,6 @@
 {{#fill_section 'css'}}
 <link rel="stylesheet" href="/static/css/admin.css">
 {{/fill_section}}
-
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-lg-2 p-0">
-      <div class="admin-sidebar">
-        <ul class="admin-nav">
-          <li class="admin-nav-item">
-            <a href="/admin/dashboard" class="admin-nav-link">
-              <i class="bi bi-speedometer2"></i>
-              <span>Dashboard</span>
-            </a>
-          </li>
-          <li class="admin-nav-item">
-            <a href="/admin/categories" class="admin-nav-link">
-              <i class="bi bi-tags"></i>
-              <span>Lĩnh vực</span>
-            </a>
-          </li>
-          <li class="admin-nav-item">
-            <a href="/admin/courses" class="admin-nav-link">
-              <i class="bi bi-book"></i>
-              <span>Khóa học</span>
-            </a>
-          </li>
-          <li class="admin-nav-item">
-            <a href="/admin/users" class="admin-nav-link active">
-              <i class="bi bi-people"></i>
-              <span>Người dùng</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="col-lg-10">
       <div class="admin-header">
         <div class="container-fluid">
           <h2 class="mb-1">Quản lý người dùng</h2>
@@ -185,8 +150,6 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
         <button type="button" class="btn btn-primary" onclick="updateUser()">Cập nhật</button>
-      </div>
-    </div>
   </div>
 </div>
 

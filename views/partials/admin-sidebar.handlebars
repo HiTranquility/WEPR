@@ -1,0 +1,28 @@
+<div class="admin-sidebar">
+    <ul class="admin-nav">
+        <li class="admin-nav-item">
+            <a href="/admin/dashboard" class="admin-nav-link {{#if (eq activeMenu 'dashboard')}}active{{/if}}">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="admin-nav-item">
+            <a href="/admin/categories" class="admin-nav-link {{#if (eq activeMenu 'categories')}}active{{/if}}">
+                <i class="bi bi-tags"></i>
+                <span>Lĩnh vực</span>
+            </a>
+        </li>
+        <li class="admin-nav-item">
+            <a href="/admin/courses" class="admin-nav-link {{#if (eq activeMenu 'courses')}}active{{/if}}">
+                <i class="bi bi-book"></i>
+                <span>Khóa học</span>
+            </a>
+        </li>
+        <li class="admin-nav-item">
+            <a href="/admin/users" class="admin-nav-link {{#if (eq activeMenu 'users')}}active{{/if}}">
+                <i class="bi bi-people"></i>
+                <span>Người dùng</span>
+            </a>
+        </li>
+    </ul>
+</div>

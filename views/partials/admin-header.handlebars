@@ -1,0 +1,30 @@
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/admin/dashboard">
+            <i class="bi bi-mortarboard-fill fs-4"></i>
+            <span class="fw-bold">Online Academy Admin</span>
+        </a>
+
+        <div class="d-flex align-items-center gap-3">
+            <a href="/" class="text-white text-decoration-none" target="_blank">
+                <i class="bi bi-box-arrow-up-right"></i> Xem trang chủ
+            </a>
+
+            <div class="dropdown">
+                <button class="btn btn-dark dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                    <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg"
+                         class="rounded-circle"
+                         style="width: 32px; height: 32px; object-fit: cover;"
+                         alt="Admin">
+                    <span>Admin User</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="/admin/profile"><i class="bi bi-person"></i> Hồ sơ</a></li>
+                    <li><a class="dropdown-item" href="/admin/settings"><i class="bi bi-gear"></i> Cài đặt</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="/signout"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>

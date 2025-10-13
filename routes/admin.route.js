@@ -4,7 +4,9 @@ const router = express.Router();
 
 router.get('/admin/categories', function(req, res) {
     res.render('vwAdmin/categories', {
+        layout: 'admin',
         title: 'Quản lý lĩnh vực',
+        activeMenu: 'categories',
         categories: [
             { id: 1, name: 'Lập trình', course_count: 245, created_at: new Date('2024-01-15') },
             { id: 2, name: 'Kinh doanh', course_count: 189, created_at: new Date('2024-01-16') },
@@ -20,7 +22,9 @@ router.get('/admin/categories', function(req, res) {
 
 router.get('/admin/courses', function(req, res) {
     res.render('vwAdmin/courses', {
+        layout: 'admin',
         title: 'Quản lý khóa học',
+        activeMenu: 'courses',
         courses: [
             {
                 id: 1,
@@ -95,7 +99,9 @@ router.get('/admin/courses', function(req, res) {
 
 router.get('/admin/users', function(req, res) {
     res.render('vwAdmin/users', {
+        layout: 'admin',
         title: 'Quản lý người dùng',
+        activeMenu: 'users',
         users: [
             {
                 id: 1,
@@ -151,7 +157,9 @@ router.get('/admin/users', function(req, res) {
 
 router.get('/admin/dashboard', function(req, res) {
     res.render('vwAdmin/categories', {
-        title: 'Dashboard'
+        layout: 'admin',
+        title: 'Dashboard',
+        activeMenu: 'dashboard'
     });
 });
 
