@@ -56,13 +56,17 @@ app.use(addGlobalViewData);
 app.use('/', accountRoute);
 app.use('/', homeRoute);
 
-//Error Routes
+//Error
 app.use(function(req, res, next) {
     res.status(404).render('vwCommon/404');
 });
 app.use(function(req, res, next) {
     res.status(403).render('vwCommon/403');
 });
+
+//Unrestricted Routes
+
+//Restricted Rôutes
 
 //Server Configuration
 app.listen(process.env.APP_PORT || 3000, function() {
