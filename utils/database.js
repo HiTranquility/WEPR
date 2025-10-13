@@ -3,12 +3,15 @@ import knex from 'knex';
 const database = knex({
   client: 'pg',
   connection: {
-    host: 'aws-1-us-east-1.pooler.supabase.com',
-    port: 5432,
-    user: 'postgres.psvilyccxeeibbmdmdmd',
-    password: 'uX@JKPf/78$W!ic',
-    database: 'postgres',
-    pool: { min: 0, max: 15 },
+    host: process.env.PG_HOST || 'localhost',
+    port: parseInt(process.env.PG_PORT || '5432', 10),
+    user: process.env.PG_USER || 'postgres',
+    password: process.env.PG_PASSWORD || '',
+    database: process.env.PG_DATABASE || 'postgres',
+    pool: {
+      min: parseInt(process.env.PG_POOL_MIN || '0', 10),
+      max: parseInt(process.env.PG_POOL_MAX || '15', 10)
+    },
   }
 });
 

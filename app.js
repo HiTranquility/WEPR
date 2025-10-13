@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
@@ -36,6 +37,6 @@ app.use('/', routes);
 app.use('/admin', adminRoutes);
 
 //Server Configuration
-app.listen(3000, function() {
-    console.log('Server is running on port 3000');
+app.listen(process.env.APP_PORT || 3000, function() {
+	console.log('Server is running on port ' + (process.env.APP_PORT || 3000));
 });
