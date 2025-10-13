@@ -1,4 +1,4 @@
-import { database } from '../utils/database.js';
+import database from '../utils/database.js';
 
 export const homeQueries = {
   async getFeaturedCourses() {
