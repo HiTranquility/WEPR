@@ -1,4 +1,676 @@
 {{#fill_section 'css'}}
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #1a1a1a;
+  background: #ffffff;
+}
+
+.navbar {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 1rem 0;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.nav-link {
+  color: #475569;
+  font-weight: 500;
+  margin: 0 0.5rem;
+  transition: color 0.3s;
+}
+
+.nav-link:hover {
+  color: #2563eb;
+}
+
+.btn-primary {
+  background: #2563eb;
+  border: none;
+  padding: 0.625rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-outline-primary {
+  color: #2563eb;
+  border-color: #2563eb;
+  padding: 0.625rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-outline-primary:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.hero-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 5rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+  opacity: 0.5;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  opacity: 0.95;
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.section-subtitle {
+  color: #64748b;
+  font-size: 1.125rem;
+  margin-bottom: 2.5rem;
+}
+
+.course-card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+.course-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.course-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #10b981;
+  color: white;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.course-badge.bestseller {
+  background: #f59e0b;
+}
+
+.course-body {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-category {
+  color: #2563eb;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.course-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.course-teacher {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.teacher-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.course-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.rating-stars {
+  color: #f59e0b;
+  font-size: 0.875rem;
+}
+
+.rating-text {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.course-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.course-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.price-current {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.price-original {
+  font-size: 1rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.discount-badge {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.category-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  cursor: pointer;
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+}
+
+.category-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 2rem;
+  color: white;
+}
+
+.category-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.category-count {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.carousel-item img {
+  height: 500px;
+  object-fit: cover;
+  filter: brightness(0.8);
+}
+
+.carousel-caption {
+  background: rgba(0,0,0,0.5);
+  padding: 2rem;
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+.carousel-caption h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.stats-section {
+  background: #f8fafc;
+  padding: 4rem 0;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 2rem;
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: #64748b;
+  font-size: 1.125rem;
+}
+
+footer {
+  background: #1e293b;
+  color: #cbd5e1;
+  padding: 3rem 0 1.5rem;
+}
+
+footer a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+footer a:hover {
+  color: #ffffff;
+}
+
+.footer-title {
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+}
+</style>
 {{/fill_section}}
+
+<nav class="navbar navbar-expand-lg navbar-light sticky-top">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <i class="bi bi-mortarboard-fill"></i> Online Academy
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown">
+            Lĩnh vực
+          </a>
+          <ul class="dropdown-menu">
+            {{#each allCategories}}
+            <li><a class="dropdown-item fw-bold" href="/courses?category={{id}}">{{name}}</a></li>
+            {{#each children}}
+            <li><a class="dropdown-item ps-4" href="/courses?category={{id}}">{{name}}</a></li>
+            {{/each}}
+            {{/each}}
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/courses">Khóa học</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-outline-primary ms-2" href="/signin">Đăng nhập</a>
+        </li>
+        <li class="nav-item">
+          <a class="btn btn-primary ms-2" href="/signup">Đăng ký</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+  <div class="carousel-indicators">
+    {{#each featuredCourses}}
+    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{@index}}"
+            class="{{#if @first}}active{{/if}}"></button>
+    {{/each}}
+  </div>
+
+  <div class="carousel-inner">
+    {{#each featuredCourses}}
+    <div class="carousel-item {{#if @first}}active{{/if}}">
+      <img src="{{thumbnail_url}}" class="d-block w-100" alt="{{title}}">
+      <div class="carousel-caption d-md-block">
+        <h3>{{title}}</h3>
+        <p>{{short_description}}</p>
+        <div class="d-flex justify-content-center gap-3 align-items-center mb-3">
+          <div class="rating-stars">
+            ⭐ {{rating_avg}} ({{formatNumber rating_count}} đánh giá)
+          </div>
+          <div class="text-white">
+            <i class="bi bi-people-fill"></i> {{formatNumber enrollment_count}} học viên
+          </div>
+        </div>
+        <div class="d-flex justify-content-center gap-2 mb-3">
+          <span class="price-current text-white fs-3 fw-bold">{{formatCurrency discount_price}}</span>
+          <span class="price-original text-white-50 fs-5">{{formatCurrency price}}</span>
+          <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+        </div>
+        <a href="/courses/{{id}}" class="btn btn-primary btn-lg">Xem chi tiết</a>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+
+  <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+</div>
+
+<section class="stats-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div class="stat-number">10,000+</div>
+          <div class="stat-label">Học viên</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div class="stat-number">500+</div>
+          <div class="stat-label">Khóa học</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div class="stat-number">100+</div>
+          <div class="stat-label">Giảng viên</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="stat-card">
+          <div class="stat-number">4.8/5</div>
+          <div class="stat-label">Đánh giá</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Lĩnh vực phổ biến trong tuần</h2>
+      <p class="section-subtitle">Các lĩnh vực được đăng ký nhiều nhất</p>
+    </div>
+    <div class="row g-4">
+      {{#each topCategories}}
+      <div class="col-md-4 col-sm-6">
+        <div class="category-card">
+          <div class="category-icon">
+            <i class="bi bi-book"></i>
+          </div>
+          <div class="category-name">{{name}}</div>
+          <div class="category-count">{{enrollment_count}} đăng ký mới | {{course_count}} khóa học</div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</section>
+
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Khóa học được xem nhiều nhất</h2>
+      <p class="section-subtitle">Những khóa học đang được quan tâm nhất</p>
+    </div>
+    <div class="row g-4">
+      {{#each mostViewedCourses}}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="card course-card">
+          <div class="position-relative">
+            <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
+            {{#if (isBestSeller enrollment_count)}}
+            <span class="course-badge bestseller">Best Seller</span>
+            {{/if}}
+          </div>
+          <div class="course-body">
+            <div class="course-category">{{category.name}}</div>
+            <h5 class="course-title">{{truncate title 60}}</h5>
+            <div class="course-teacher">
+              <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
+              {{teacher.full_name}}
+            </div>
+            <div class="course-rating">
+              <span class="rating-stars">⭐ {{rating_avg}}</span>
+              <span class="rating-text">({{formatNumber rating_count}})</span>
+              <span class="rating-text">• {{formatNumber enrollment_count}} học viên</span>
+            </div>
+            <div class="course-footer">
+              <div class="course-price">
+                <span class="price-current">{{formatCurrency discount_price}}</span>
+                {{#if (gt price discount_price)}}
+                <span class="price-original">{{formatCurrency price}}</span>
+                {{/if}}
+              </div>
+              {{#if (gt price discount_price)}}
+              <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Khóa học mới nhất</h2>
+      <p class="section-subtitle">Khám phá những khóa học vừa được ra mắt</p>
+    </div>
+    <div class="row g-4">
+      {{#each newestCourses}}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="card course-card">
+          <div class="position-relative">
+            <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
+            {{#if (isNew created_at)}}
+            <span class="course-badge">Mới</span>
+            {{/if}}
+          </div>
+          <div class="course-body">
+            <div class="course-category">{{category.name}}</div>
+            <h5 class="course-title">{{truncate title 60}}</h5>
+            <div class="course-teacher">
+              <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
+              {{teacher.full_name}}
+            </div>
+            <div class="course-rating">
+              <span class="rating-stars">⭐ {{rating_avg}}</span>
+              <span class="rating-text">({{formatNumber rating_count}})</span>
+              <span class="rating-text">• {{formatNumber view_count}} lượt xem</span>
+            </div>
+            <div class="course-footer">
+              <div class="course-price">
+                <span class="price-current">{{formatCurrency discount_price}}</span>
+                {{#if (gt price discount_price)}}
+                <span class="price-original">{{formatCurrency price}}</span>
+                {{/if}}
+              </div>
+              {{#if (gt price discount_price)}}
+              <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <h5 class="footer-title">
+          <i class="bi bi-mortarboard-fill"></i> Online Academy
+        </h5>
+        <p>Nền tảng học trực tuyến hàng đầu Việt Nam. Học mọi lúc, mọi nơi với hàng ngàn khóa học chất lượng cao.</p>
+      </div>
+      <div class="col-md-2 mb-4">
+        <h5 class="footer-title">Về chúng tôi</h5>
+        <ul class="list-unstyled">
+          <li><a href="#">Giới thiệu</a></li>
+          <li><a href="#">Liên hệ</a></li>
+          <li><a href="#">Tuyển dụng</a></li>
+        </ul>
+      </div>
+      <div class="col-md-2 mb-4">
+        <h5 class="footer-title">Hỗ trợ</h5>
+        <ul class="list-unstyled">
+          <li><a href="#">Trung tâm trợ giúp</a></li>
+          <li><a href="#">Điều khoản</a></li>
+          <li><a href="#">Chính sách</a></li>
+        </ul>
+      </div>
+      <div class="col-md-4 mb-4">
+        <h5 class="footer-title">Theo dõi chúng tôi</h5>
+        <div class="d-flex gap-3">
+          <a href="#" class="fs-4"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="fs-4"><i class="bi bi-twitter"></i></a>
+          <a href="#" class="fs-4"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="fs-4"><i class="bi bi-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+    <hr class="my-4" style="border-color: #475569;">
+    <div class="text-center">
+      <p>&copy; 2024 Online Academy. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
 {{#fill_section 'js'}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const carousel = new bootstrap.Carousel(document.getElementById('heroCarousel'), {
+    interval: 5000,
+    wrap: true,
+    keyboard: true
+  });
+
+  const cards = document.querySelectorAll('.course-card, .category-card');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '0';
+        entry.target.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          entry.target.style.transition = 'all 0.6s ease-out';
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, 100);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.1
+  });
+
+  cards.forEach(card => observer.observe(card));
+});
+</script>
 {{/fill_section}}
