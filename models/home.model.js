@@ -1,200 +1,159 @@
-import database from '../utils/database.js';
+import sql from '../utils/database.js';
 
 export const homeQueries = {
   async getFeaturedCourses() {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    const courses = await database('courses')
-      .select(
-        'courses.id',
-        'courses.title',
-        'courses.short_description',
-        'courses.thumbnail_url',
-        'courses.price',
-        'courses.discount_price',
-        'courses.rating_avg',
-        'courses.rating_count',
-        'courses.enrollment_count',
-        'courses.view_count',
-        'users.id as teacher_id',
-        'users.full_name as teacher_name',
-        'users.avatar_url as teacher_avatar',
-        'categories.id as category_id',
-        'categories.name as category_name'
-      )
-      .leftJoin('users', 'courses.teacher_id', 'users.id')
-      .leftJoin('categories', 'courses.category_id', 'categories.id')
-      .where('courses.status', 'completed')
-      .where('courses.is_featured', true)
-      .where('courses.created_at', '>=', oneWeekAgo)
-      .orderBy('courses.enrollment_count', 'desc')
-      .limit(4);
+    const courses = await sql`
+      SELECT
+        c.id,
+        c.title,
+        c.short_description,
+        c.thumbnail_url,
+        c.price,
+        c.discount_price,
+        c.rating_avg,
+        c.rating_count,
+        c.enrollment_count,
+        c.view_count,
+        json_build_object(
+          'id', u.id,
+          'full_name', u.full_name,
+          'avatar_url', u.avatar_url
+        ) as teacher,
+        json_build_object(
+          'id', cat.id,
+          'name', cat.name
+        ) as category
+      FROM courses c
+      LEFT JOIN users u ON c.teacher_id = u.id
+      LEFT JOIN categories cat ON c.category_id = cat.id
+      WHERE c.status = 'completed'
+        AND c.is_featured = true
+        AND c.created_at >= ${oneWeekAgo}
+      ORDER BY c.enrollment_count DESC
+      LIMIT 4
+    `;
 
-    return courses.map(course => ({
-      id: course.id,
-      title: course.title,
-      short_description: course.short_description,
-      thumbnail_url: course.thumbnail_url,
-      price: course.price,
-      discount_price: course.discount_price,
-      rating_avg: course.rating_avg,
-      rating_count: course.rating_count,
-      enrollment_count: course.enrollment_count,
-      view_count: course.view_count,
-      teacher: {
-        id: course.teacher_id,
-        full_name: course.teacher_name,
-        avatar_url: course.teacher_avatar
-      },
-      category: {
-        id: course.category_id,
-        name: course.category_name
-      }
-    }));
+    return courses;
   },
 
   async getMostViewedCourses() {
-    const courses = await database('courses')
-      .select(
-        'courses.id',
-        'courses.title',
-        'courses.short_description',
-        'courses.thumbnail_url',
-        'courses.price',
-        'courses.discount_price',
-        'courses.rating_avg',
-        'courses.rating_count',
-        'courses.enrollment_count',
-        'courses.view_count',
-        'users.id as teacher_id',
-        'users.full_name as teacher_name',
-        'users.avatar_url as teacher_avatar',
-        'categories.id as category_id',
-        'categories.name as category_name'
-      )
-      .leftJoin('users', 'courses.teacher_id', 'users.id')
-      .leftJoin('categories', 'courses.category_id', 'categories.id')
-      .where('courses.status', 'completed')
-      .orderBy('courses.view_count', 'desc')
-      .limit(10);
+    const courses = await sql`
+      SELECT
+        c.id,
+        c.title,
+        c.short_description,
+        c.thumbnail_url,
+        c.price,
+        c.discount_price,
+        c.rating_avg,
+        c.rating_count,
+        c.enrollment_count,
+        c.view_count,
+        json_build_object(
+          'id', u.id,
+          'full_name', u.full_name,
+          'avatar_url', u.avatar_url
+        ) as teacher,
+        json_build_object(
+          'id', cat.id,
+          'name', cat.name
+        ) as category
+      FROM courses c
+      LEFT JOIN users u ON c.teacher_id = u.id
+      LEFT JOIN categories cat ON c.category_id = cat.id
+      WHERE c.status = 'completed'
+      ORDER BY c.view_count DESC
+      LIMIT 10
+    `;
 
-    return courses.map(course => ({
-      id: course.id,
-      title: course.title,
-      short_description: course.short_description,
-      thumbnail_url: course.thumbnail_url,
-      price: course.price,
-      discount_price: course.discount_price,
-      rating_avg: course.rating_avg,
-      rating_count: course.rating_count,
-      enrollment_count: course.enrollment_count,
-      view_count: course.view_count,
-      teacher: {
-        id: course.teacher_id,
-        full_name: course.teacher_name,
-        avatar_url: course.teacher_avatar
-      },
-      category: {
-        id: course.category_id,
-        name: course.category_name
-      }
-    }));
+    return courses;
   },
 
   async getNewestCourses() {
-    const courses = await database('courses')
-      .select(
-        'courses.id',
-        'courses.title',
-        'courses.short_description',
-        'courses.thumbnail_url',
-        'courses.price',
-        'courses.discount_price',
-        'courses.rating_avg',
-        'courses.rating_count',
-        'courses.enrollment_count',
-        'courses.view_count',
-        'courses.created_at',
-        'users.id as teacher_id',
-        'users.full_name as teacher_name',
-        'users.avatar_url as teacher_avatar',
-        'categories.id as category_id',
-        'categories.name as category_name'
-      )
-      .leftJoin('users', 'courses.teacher_id', 'users.id')
-      .leftJoin('categories', 'courses.category_id', 'categories.id')
-      .where('courses.status', 'completed')
-      .orderBy('courses.created_at', 'desc')
-      .limit(10);
+    const courses = await sql`
+      SELECT
+        c.id,
+        c.title,
+        c.short_description,
+        c.thumbnail_url,
+        c.price,
+        c.discount_price,
+        c.rating_avg,
+        c.rating_count,
+        c.enrollment_count,
+        c.view_count,
+        c.created_at,
+        json_build_object(
+          'id', u.id,
+          'full_name', u.full_name,
+          'avatar_url', u.avatar_url
+        ) as teacher,
+        json_build_object(
+          'id', cat.id,
+          'name', cat.name
+        ) as category
+      FROM courses c
+      LEFT JOIN users u ON c.teacher_id = u.id
+      LEFT JOIN categories cat ON c.category_id = cat.id
+      WHERE c.status = 'completed'
+      ORDER BY c.created_at DESC
+      LIMIT 10
+    `;
 
-    return courses.map(course => ({
-      id: course.id,
-      title: course.title,
-      short_description: course.short_description,
-      thumbnail_url: course.thumbnail_url,
-      price: course.price,
-      discount_price: course.discount_price,
-      rating_avg: course.rating_avg,
-      rating_count: course.rating_count,
-      enrollment_count: course.enrollment_count,
-      view_count: course.view_count,
-      created_at: course.created_at,
-      teacher: {
-        id: course.teacher_id,
-        full_name: course.teacher_name,
-        avatar_url: course.teacher_avatar
-      },
-      category: {
-        id: course.category_id,
-        name: course.category_name
-      }
-    }));
+    return courses;
   },
 
   async getTopCategoriesByEnrollments() {
     const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    const categories = await database('categories')
-      .select(
-        'categories.id',
-        'categories.name',
-        'categories.description',
-        database.raw('COALESCE(SUM(courses.enrollment_count), 0) as enrollment_count'),
-        database.raw('COUNT(courses.id) as course_count')
-      )
-      .leftJoin('courses', function() {
-        this.on('categories.id', '=', 'courses.category_id')
-            .andOn('courses.created_at', '>=', database.raw('?', [oneWeekAgo]))
-            .andOn('courses.status', '=', database.raw('?', ['completed']));
-      })
-      .whereNull('categories.parent_id')
-      .groupBy('categories.id', 'categories.name', 'categories.description')
-      .orderBy('enrollment_count', 'desc')
-      .limit(6);
+    const categories = await sql`
+      SELECT
+        cat.id,
+        cat.name,
+        cat.description,
+        COALESCE(SUM(c.enrollment_count), 0) as enrollment_count,
+        COUNT(c.id) as course_count
+      FROM categories cat
+      LEFT JOIN courses c ON cat.id = c.category_id
+        AND c.created_at >= ${oneWeekAgo}
+        AND c.status = 'completed'
+      WHERE cat.parent_id IS NULL
+      GROUP BY cat.id, cat.name, cat.description
+      ORDER BY enrollment_count DESC
+      LIMIT 6
+    `;
 
     return categories;
   },
 
   async getAllParentCategories() {
-    const categories = await database('categories')
-      .select('id', 'name', 'description')
-      .whereNull('parent_id')
-      .orderBy('name', 'asc');
+    const categories = await sql`
+      SELECT id, name, description
+      FROM categories
+      WHERE parent_id IS NULL
+      ORDER BY name ASC
+    `;
 
     return categories;
   },
 
   async getCategoriesWithChildren() {
-    const parents = await database('categories')
-      .select('id', 'name', 'description')
-      .whereNull('parent_id')
-      .orderBy('name', 'asc');
+    const parents = await sql`
+      SELECT id, name, description
+      FROM categories
+      WHERE parent_id IS NULL
+      ORDER BY name ASC
+    `;
 
     for (const parent of parents) {
-      const children = await database('categories')
-        .select('id', 'name', 'description')
-        .where('parent_id', parent.id)
-        .orderBy('name', 'asc');
+      const children = await sql`
+        SELECT id, name, description
+        FROM categories
+        WHERE parent_id = ${parent.id}
+        ORDER BY name ASC
+      `;
 
       parent.children = children;
     }

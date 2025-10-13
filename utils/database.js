@@ -1,19 +1,15 @@
-import knex from 'knex';
+import postgres from 'postgres';
 
-const database = knex({
-  client: 'pg',
-  connection: {
-    host: process.env.PG_HOST || 'localhost',
-    port: parseInt(process.env.PG_PORT || '5432', 10),
-    user: process.env.PG_USER || 'postgres',
-    password: process.env.PG_PASSWORD || '',
-    database: process.env.PG_DATABASE || 'postgres',
-    ssl: process.env.PG_HOST?.includes('supabase.com') ? { rejectUnauthorized: false } : false
-  },
-  pool: {
-    min: parseInt(process.env.PG_POOL_MIN || '0', 10),
-    max: parseInt(process.env.PG_POOL_MAX || '15', 10)
-  }
+const sql = postgres({
+  host: process.env.PG_HOST,
+  port: parseInt(process.env.PG_PORT || '6543', 10),
+  database: process.env.PG_DATABASE,
+  username: process.env.PG_USER,
+  password: process.env.PG_PASSWORD,
+  ssl: 'require',
+  max: parseInt(process.env.PG_POOL_MAX || '10', 10),
+  idle_timeout: 20,
+  connect_timeout: 10
 });
 
-export default database;
+export default sql;
