@@ -294,47 +294,6 @@ body {
   font-size: 0.875rem;
 }
 
-.carousel-item img {
-  height: 500px;
-  object-fit: cover;
-  filter: brightness(0.8);
-}
-
-.carousel-caption {
-  background: rgba(0,0,0,0.5);
-  padding: 2rem;
-  border-radius: 12px;
-  backdrop-filter: blur(8px);
-}
-
-.carousel-caption h3 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.stats-section {
-  background: #f8fafc;
-  padding: 4rem 0;
-}
-
-.stat-card {
-  text-align: center;
-  padding: 2rem;
-}
-
-.stat-number {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #2563eb;
-  margin-bottom: 0.5rem;
-}
-
-.stat-label {
-  color: #64748b;
-  font-size: 1.125rem;
-}
-
 footer {
   background: #1e293b;
   color: #cbd5e1;
@@ -368,13 +327,5 @@ footer a:hover {
 
   .section-title {
     font-size: 1.5rem;
-  }
-
-  .carousel-caption h3 {
-    font-size: 1.5rem;
-  }
-
-  .stat-number {
-    font-size: 2rem;
   }
 }
