@@ -10,6 +10,7 @@ const __dirname = import.meta.dirname;
 
 //App Configuration
 app.engine('handlebars',engine ({
+    partialsDir: __dirname + '/views/partials',
     helpers: {
         fill_section: hbs_sections(),
         formatNumber(value) {
