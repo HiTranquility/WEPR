@@ -4,6 +4,9 @@ import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
 import homeRoute from './routes/home.route.js';
 import accountRoute from './routes/account.route.js';
+import studentRoute from './routes/student.route.js';
+import teacherRoute from './routes/teacher.route.js';
+import adminRoute from './routes/admin.route.js';
 import { addGlobalViewData } from './middlewares/view-data.middleware.js';
 
 const app = express();
@@ -40,6 +43,27 @@ app.engine('handlebars',engine ({
         truncate(str, length) {
             if (!str || str.length <= length) return str;
             return str.substring(0, length) + '...';
+        },
+        formatDate(date) {
+            if (!date) return '';
+            return new Intl.DateTimeFormat('vi-VN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }).format(new Date(date));
+        },
+        repeat(count) {
+            let result = '';
+            for (let i = 0; i < count; i++) {
+                result += '⭐';
+            }
+            return result;
+        },
+        lt(a, b) {
+            return a < b;
+        },
+        ne(a, b) {
+            return a !== b;
         }
     }
 }));
@@ -55,6 +79,9 @@ app.use(addGlobalViewData);
 //Server Routes
 app.use('/', accountRoute);
 app.use('/', homeRoute);
+app.use('/', studentRoute);
+app.use('/', teacherRoute);
+app.use('/', adminRoute);
 
 //Error
 app.use(function(req, res, next) {
@@ -63,10 +90,6 @@ app.use(function(req, res, next) {
 app.use(function(req, res, next) {
     res.status(403).render('vwCommon/403');
 });
-
-//Unrestricted Routes
-
-//Restricted Rôutes
 
 //Server Configuration
 app.listen(process.env.APP_PORT || 3000, function() {
