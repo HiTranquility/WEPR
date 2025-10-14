@@ -3,7 +3,7 @@ import { ensureAuthenticated, requireRole } from '../middlewares/auth.middleware
 
 const router = express.Router();
 
-router.use('/admin', ensureAuthenticated, requireRole('admin'));
+// router.use('/admin', ensureAuthenticated, requireRole('admin'));
 
 router.get('/admin/categories', function(req, res) {
     res.render('vwAdmin/categories', {

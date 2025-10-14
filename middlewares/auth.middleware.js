@@ -8,7 +8,7 @@ export function ensureAuthenticated(req, res, next) {
     return next();
   }
 
-  return res.redirect('/signin');
+  // return res.redirect('/signin');
 }
 
 export function requireRole(...allowedRoles) {
