@@ -1,0 +1,10 @@
+courses_categories
+courses (category)
+course_enrollments (user + course)
+
+users (admin, student, teacher)
+watchlists (student)
+reviews (student + course)
+
+
+//In reality, we will separate users into members and users since users are those comminucating with the database (system) and the others will do the business rules such as (students and teachers)
