@@ -1,20 +1,18 @@
 import 'dotenv/config';
 import knex from 'knex';
 
-const env = process.env;
-
 const database = knex({
   client: 'pg',
   connection: {
-    host: env.PG_HOST || env.PGHOST,
-    port: parseInt(env.PG_PORT || env.PGPORT || '5432', 10),
-    database: env.PG_DATABASE || env.PGDATABASE,
-    user: env.PG_USER || env.PGUSER,
-    password: env.PG_PASSWORD || env.PGPASSWORD
+    host: process.env.PG_HOST || process.env.PGHOST || '127.0.0.1',
+    port: parseInt(process.env.PG_PORT || process.env.PGPORT || '5432'),
+    database: process.env.PG_DATABASE || process.env.PGDATABASE,
+    user: process.env.PG_USER || process.env.PGUSER,
+    password: process.env.PG_PASSWORD || process.env.PGPASSWORD
   },
   pool: {
-    min: parseInt(env.PG_POOL_MIN || '0', 10),
-    max: parseInt(env.PG_POOL_MAX || '10', 10)
+    min: parseInt(process.env.PG_POOL_MIN || process.env.PGPOOLMIN || '2'),
+    max: parseInt(process.env.PG_POOL_MAX || process.env.PGPOOLMAX || '10')
   }
 });
 
