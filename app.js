@@ -2,7 +2,6 @@ import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
-import homeRoute from './routes/home.route.js';
 import commonRoute from './routes/common.route.js';
 import accountRoute from './routes/account.route.js';
 import courseRoute from './routes/course.route.js';
@@ -76,7 +75,6 @@ app.use('/statics', express.static('statics'));
 
 //Server Routes
 app.use('/', commonRoute);
-app.use('/', homeRoute);
 app.use('/', accountRoute);
 app.use('/', courseRoute);
 app.use('/', studentRoute);
