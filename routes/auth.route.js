@@ -2,32 +2,58 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/signup', (req, res) => {
-    res.render('vwAuth/signup', {
-        layout: 'auth',
-        title: 'Sign Up - Online Academy'
-    });
-});
-
-router.get('/signin', (req, res) => {
+router.get('/signin', function(req, res) {
     res.render('vwAuth/signin', {
         layout: 'auth',
-        title: 'Sign In - Online Academy'
+        title: 'Đăng nhập'
     });
 });
 
-router.get('/forgot', (req, res) => {
+router.get('/signup', function(req, res) {
+    res.render('vwAuth/signup', {
+        layout: 'auth',
+        title: 'Đăng ký tài khoản'
+    });
+});
+
+router.get('/forgot', function(req, res) {
     res.render('vwAuth/forgot', {
         layout: 'auth',
-        title: 'Forgot Password - Online Academy'
+        title: 'Quên mật khẩu'
     });
 });
 
-router.get('/reset', (req, res) => {
+router.get('/reset', function(req, res) {
+    const token = req.query.token || '';
     res.render('vwAuth/reset', {
         layout: 'auth',
-        title: 'Reset Password - Online Academy'
+        title: 'Đặt lại mật khẩu',
+        token: token
     });
+});
+
+router.post('/signin', function(req, res) {
+    res.json({ success: true, message: 'Đăng nhập thành công!' });
+});
+
+router.post('/signup', function(req, res) {
+    res.json({ success: true, message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.' });
+});
+
+router.post('/forgot', function(req, res) {
+    res.json({ success: true, message: 'Đã gửi link đặt lại mật khẩu đến email của bạn!' });
+});
+
+router.post('/reset', function(req, res) {
+    res.json({ success: true, message: 'Đặt lại mật khẩu thành công!' });
+});
+
+router.post('/signout', function(req, res) {
+    res.json({ success: true, message: 'Đăng xuất thành công!' });
+});
+
+router.post('/verify-otp', function(req, res) {
+    res.json({ success: true, message: 'Xác thực OTP thành công!' });
 });
 
 export default router;
