@@ -1,25 +1,29 @@
 import express from 'express';
 import { ensureAuthenticated, requireRole } from '../middlewares/auth.middleware.js';
+import { getAllCourseCategories } from '../models/course.model.js';
 
 const router = express.Router();
 
 router.use('/admin', ensureAuthenticated, requireRole('admin'));
 
-router.get('/admin/categories', function(req, res) {
+router.get('/admin/categories', async function(req, res) {
+        const categories = await getAllCourseCategories();
     res.render('vwAdmin/categories', {
         layout: 'admin',
         title: 'Quản lý lĩnh vực',
         activeMenu: 'categories',
-        categories: [
-            { id: 1, name: 'Lập trình', course_count: 245, created_at: new Date('2024-01-15') },
-            { id: 2, name: 'Kinh doanh', course_count: 189, created_at: new Date('2024-01-16') },
-            { id: 3, name: 'Thiết kế', course_count: 156, created_at: new Date('2024-01-17') },
-            { id: 4, name: 'Marketing', course_count: 134, created_at: new Date('2024-01-18') },
-            { id: 5, name: 'Khoa học dữ liệu', course_count: 98, created_at: new Date('2024-01-19') },
-            { id: 6, name: 'Phát triển cá nhân', course_count: 167, created_at: new Date('2024-01-20') },
-            { id: 7, name: 'Nhiếp ảnh', course_count: 87, created_at: new Date('2024-01-21') },
-            { id: 8, name: 'Âm nhạc', course_count: 65, created_at: new Date('2024-01-22') }
-        ]
+        categories,
+        // categories: 
+        // [
+        //     { id: 1, name: 'Lập trình', course_count: 245, created_at: new Date('2024-01-15') },
+        //     { id: 2, name: 'Kinh doanh', course_count: 189, created_at: new Date('2024-01-16') },
+        //     { id: 3, name: 'Thiết kế', course_count: 156, created_at: new Date('2024-01-17') },
+        //     { id: 4, name: 'Marketing', course_count: 134, created_at: new Date('2024-01-18') },
+        //     { id: 5, name: 'Khoa học dữ liệu', course_count: 98, created_at: new Date('2024-01-19') },
+        //     { id: 6, name: 'Phát triển cá nhân', course_count: 167, created_at: new Date('2024-01-20') },
+        //     { id: 7, name: 'Nhiếp ảnh', course_count: 87, created_at: new Date('2024-01-21') },
+        //     { id: 8, name: 'Âm nhạc', course_count: 65, created_at: new Date('2024-01-22') }
+        // ],
     });
 });
 

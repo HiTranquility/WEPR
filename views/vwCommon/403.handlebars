@@ -1,52 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>403 - Access Denied</title>
-  <link rel="stylesheet" href="/statics/css/common/error.css">
-</head>
-<body class="error-403">
-  <div class="bubbles" id="bubbles"></div>
+{{! Using error layout; body only }}
+<div class="bubbles" id="bubbles"></div>
 
-  <div class="error-container">
-    <div class="error-icon">🚫</div>
-    <h1 class="error-code">403</h1>
-    <h2 class="error-message">Access Denied</h2>
-    <p class="error-description">
-      You don't have permission to access this page.
-      If you think this is a mistake, please contact support.
-    </p>
-    <a href="/" class="btn-home">Go Home</a>
-    <a href="/signin" class="btn-secondary">Sign In</a>
-  </div>
+<div class="error-container">
+  <div class="error-icon">🚫</div>
+  <h1 class="error-code">403</h1>
+  <h2 class="error-message">Access Denied</h2>
+  <p class="error-description">
+    You don't have permission to access this page.
+    If you think this is a mistake, please contact support.
+  </p>
+  <a href="/" class="btn-home">Go Home</a>
+  <a href="/signin" class="btn-secondary">Sign In</a>
+</div>
 
-  <div class="lock" style="top: 10%; right: 15%;">🔒</div>
+<div class="lock" style="top: 10%; right: 15%;">🔒</div>
 
-  <script>
-    function createBubbles() {
-      const bubblesContainer = document.getElementById('bubbles');
-      const bubbleCount = 20;
+{{#fill_section 'js'}}
+<script>
+  function createBubbles() {
+    const bubblesContainer = document.getElementById('bubbles');
+    const bubbleCount = 20;
 
-      for (let i = 0; i < bubbleCount; i++) {
-        const bubble = document.createElement('div');
-        bubble.className = 'bubble';
+    for (let i = 0; i < bubbleCount; i++) {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
 
-        const size = Math.random() * 100 + 50;
-        bubble.style.width = size + 'px';
-        bubble.style.height = size + 'px';
+      const size = Math.random() * 100 + 50;
+      bubble.style.width = size + 'px';
+      bubble.style.height = size + 'px';
 
-        bubble.style.left = Math.random() * 100 + '%';
-        bubble.style.bottom = '-' + size + 'px';
+      bubble.style.left = Math.random() * 100 + '%';
+      bubble.style.bottom = '-' + size + 'px';
 
-        bubble.style.animationDelay = Math.random() * 5 + 's';
-        bubble.style.animationDuration = (Math.random() * 5 + 5) + 's';
+      bubble.style.animationDelay = Math.random() * 5 + 's';
+      bubble.style.animationDuration = (Math.random() * 5 + 5) + 's';
 
-        bubblesContainer.appendChild(bubble);
-      }
+      bubblesContainer.appendChild(bubble);
     }
+  }
 
-    createBubbles();
-  </script>
-</body>
-</html>
+  createBubbles();
+</script>
+{{/fill_section}}
