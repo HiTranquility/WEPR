@@ -1,0 +1,49 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/teacher/main.css">
+{{/fill_section}}
+
+<div class="container py-4">
+  <h2 class="mb-4">Chỉnh sửa khóa học</h2>
+  <div class="row">
+    <div class="col-lg-8">
+      <form id="editCourseForm">
+        <div class="mb-3">
+          <label class="form-label">Tiêu đề khóa học</label>
+          <input type="text" class="form-control" value="{{course.title}}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Lĩnh vực</label>
+          <select class="form-select" required>
+            {{#each categories}}
+            <option value="{{id}}" {{#if (eq id ../course.category_id)}}selected{{/if}}>{{name}}</option>
+            {{/each}}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Mô tả ngắn</label>
+          <textarea class="form-control" rows="2" required>{{course.short_description}}</textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Mô tả chi tiết</label>
+          <textarea class="form-control" rows="6">{{course.full_description}}</textarea>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Giá gốc</label>
+            <input type="number" class="form-control" value="{{course.price}}">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Giá khuyến mại</label>
+            <input type="number" class="form-control" value="{{course.discount_price}}">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">URL ảnh thumbnail</label>
+          <input type="url" class="form-control" value="{{course.thumbnail_url}}">
+        </div>
+        <button type="submit" class="btn btn-primary">Cập nhật khóa học</button>
+        <a href="/teacher/courses" class="btn btn-secondary">Hủy</a>
+      </form>
+    </div>
+  </div>
+</div>

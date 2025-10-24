@@ -1,111 +1,88 @@
 {{#fill_section 'css'}}
-<link rel="stylesheet" href="/statics/css/main.css">
+<link rel="stylesheet" href="/statics/css/student/main.css">
 {{/fill_section}}
 
-<section class="profile-header">
-  <div class="container">
-    <div class="d-flex align-items-center gap-3">
-      <img src="{{user.avatar_url}}" class="profile-avatar" alt="{{user.full_name}}">
-      <div>
-        <h2 class="mb-1">{{user.full_name}}</h2>
-        <p class="mb-0 opacity-75">{{user.email}}</p>
+<div class="container py-5">
+  <div class="welcome-section mb-5">
+    <h1>Xin chào, {{user.full_name}}!</h1>
+    <p class="text-muted">Sẵn sàng tiếp tục học tập ngày hôm nay?</p>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <h3>{{stats.enrolled_courses}}</h3>
+        <p>Khóa học đang học</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <h3>{{stats.completed_courses}}</h3>
+        <p>Đã hoàn thành</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <h3>{{stats.certificates}}</h3>
+        <p>Chứng chỉ</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <h3>{{stats.total_learning_hours}}</h3>
+        <p>Giờ học</p>
       </div>
     </div>
   </div>
-</section>
 
-<section class="py-5">
-  <div class="container">
+  <div class="mb-5">
+    <h3 class="mb-4">Tiếp tục học</h3>
     <div class="row g-4">
-      <div class="col-lg-3">
-        <div class="profile-sidebar">
-          <ul class="sidebar-nav">
-            <li class="sidebar-nav-item">
-              <a href="/student/profile" class="sidebar-nav-link active">
-                <i class="bi bi-person"></i>
-                <span>Thông tin cá nhân</span>
-              </a>
-            </li>
-            <li class="sidebar-nav-item">
-              <a href="/student/my-courses" class="sidebar-nav-link">
-                <i class="bi bi-book"></i>
-                <span>Khóa học của tôi</span>
-              </a>
-            </li>
-            <li class="sidebar-nav-item">
-              <a href="/student/watchlist" class="sidebar-nav-link">
-                <i class="bi bi-heart"></i>
-                <span>Danh sách yêu thích</span>
-              </a>
-            </li>
-            <li class="sidebar-nav-item">
-              <a href="/student/change-password" class="sidebar-nav-link">
-                <i class="bi bi-lock"></i>
-                <span>Đổi mật khẩu</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="col-lg-9">
-        <div class="profile-content">
-          <h4 class="mb-4">Thông tin cá nhân</h4>
-
-          <form id="profileForm">
-            <div class="row g-3">
-              <div class="col-12">
-                <label class="form-label">Họ và tên</label>
-                <input type="text" class="form-control" id="fullName" value="{{user.full_name}}" required>
-              </div>
-
-              <div class="col-12">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" value="{{user.email}}" required>
-              </div>
-
-              <div class="col-12">
-                <label class="form-label">Ảnh đại diện URL</label>
-                <input type="url" class="form-control" id="avatarUrl" value="{{user.avatar_url}}">
-              </div>
-
-              <div class="col-12">
-                <button type="submit" class="btn btn-primary" id="submitBtn">Cập nhật thông tin</button>
+      {{#each recentCourses}}
+      <div class="col-md-6">
+        <div class="card learning-card">
+          <div class="row g-0">
+            <div class="col-4">
+              <img src="{{thumbnail_url}}" class="img-fluid rounded-start" alt="{{title}}">
+            </div>
+            <div class="col-8">
+              <div class="card-body">
+                <h5 class="card-title">{{title}}</h5>
+                <p class="text-muted small">{{teacher.full_name}}</p>
+                <div class="progress mb-2" style="height: 8px;">
+                  <div class="progress-bar" role="progressbar" style="width: {{progress}}%"></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-muted small">{{progress}}% hoàn thành</span>
+                  <a href="/learn/{{id}}" class="btn btn-primary btn-sm">Tiếp tục</a>
+                </div>
               </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
+      {{/each}}
     </div>
   </div>
-</section>
 
-{{#fill_section 'js'}}
-<script type="module">
-  import { supabase } from '/statics/js/supabase-client.js';
-
-  const form = document.getElementById('profileForm');
-  const submitBtn = document.getElementById('submitBtn');
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Đang cập nhật...';
-
-    const fullName = document.getElementById('fullName').value;
-    const email = document.getElementById('email').value;
-    const avatarUrl = document.getElementById('avatarUrl').value;
-
-    try {
-      alert('Chức năng cập nhật thông tin đang được phát triển');
-    } catch (error) {
-      console.error('Update error:', error);
-      alert('Có lỗi xảy ra: ' + error.message);
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Cập nhật thông tin';
-    }
-  });
-</script>
-{{/fill_section}}
+  <div>
+    <h3 class="mb-4">Khóa học đề xuất</h3>
+    <div class="row g-4">
+      {{#each recommendedCourses}}
+      <div class="col-md-4">
+        <div class="card">
+          <img src="{{thumbnail_url}}" class="card-img-top" alt="{{title}}">
+          <div class="card-body">
+            <h6 class="card-title">{{title}}</h6>
+            <p class="text-muted small">{{teacher.full_name}}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="rating">⭐ {{rating_avg}}</span>
+              <strong class="text-success">{{formatCurrency discount_price}}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</div>

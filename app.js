@@ -3,11 +3,12 @@ import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
 import homeRoute from './routes/home.route.js';
+import commonRoute from './routes/common.route.js';
 import accountRoute from './routes/account.route.js';
+import courseRoute from './routes/course.route.js';
 import studentRoute from './routes/student.route.js';
 import teacherRoute from './routes/teacher.route.js';
 import adminRoute from './routes/admin.route.js';
-import { addGlobalViewData } from './middlewares/view-data.middleware.js';
 
 const app = express();
 const __dirname = import.meta.dirname;
@@ -73,12 +74,11 @@ app.set('views', __dirname + '/views');
 //Routes and Static Files Configuration
 app.use('/statics', express.static('statics'));
 
-//Global Middleware
-app.use(addGlobalViewData);
-
 //Server Routes
-app.use('/', accountRoute);
+app.use('/', commonRoute);
 app.use('/', homeRoute);
+app.use('/', accountRoute);
+app.use('/', courseRoute);
 app.use('/', studentRoute);
 app.use('/', teacherRoute);
 app.use('/', adminRoute);

@@ -1,0 +1,23 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/teacher/main.css">
+{{/fill_section}}
+
+<div class="container py-4">
+  <h2 class="mb-4">Tạo chương mới</h2>
+  <div class="row">
+    <div class="col-lg-8">
+      <form id="sectionForm">
+        <div class="mb-3">
+          <label class="form-label">Tiêu đề chương</label>
+          <input type="text" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Mô tả</label>
+          <textarea class="form-control" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Tạo chương</button>
+        <a href="/teacher/course/{{courseId}}/content" class="btn btn-secondary">Hủy</a>
+      </form>
+    </div>
+  </div>
+</div>

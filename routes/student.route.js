@@ -2,6 +2,54 @@ import express from 'express';
 
 const router = express.Router();
 
+router.get('/student/dashboard', function(req, res) {
+    res.render('vwStudent/dashboard', {
+        title: 'Trang chủ học viên',
+        user: {
+            full_name: 'Nguyễn Văn A',
+            email: 'student@example.com',
+            avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
+        },
+        stats: {
+            enrolled_courses: 5,
+            completed_courses: 2,
+            in_progress_courses: 3,
+            certificates: 2,
+            total_learning_hours: 48
+        },
+        recentCourses: [
+            {
+                id: 1,
+                title: 'Complete Python Bootcamp',
+                thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
+                progress: 45,
+                last_watched: new Date(),
+                teacher: { full_name: 'Jose Portilla' }
+            },
+            {
+                id: 2,
+                title: 'JavaScript Complete Course',
+                thumbnail_url: 'https://images.pexels.com/photos/4164418/pexels-photo-4164418.jpeg',
+                progress: 78,
+                last_watched: new Date(),
+                teacher: { full_name: 'Jonas Schmedtmann' }
+            }
+        ],
+        recommendedCourses: [
+            {
+                id: 3,
+                title: 'React - The Complete Guide',
+                thumbnail_url: 'https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg',
+                rating_avg: 4.8,
+                rating_count: 6123,
+                discount_price: 449000,
+                category: { name: 'Lập trình' },
+                teacher: { full_name: 'Maximilian Schwarzmüller' }
+            }
+        ]
+    });
+});
+
 router.get('/courses/:id', function(req, res) {
     res.render('vwStudent/course-detail', {
         title: 'Chi tiết khóa học',
@@ -185,6 +233,34 @@ router.get('/learn/:courseId', function(req, res) {
         progress: 8,
         notes: []
     });
+});
+
+router.post('/student/profile', function(req, res) {
+    res.json({ success: true, message: 'Cập nhật thông tin thành công!' });
+});
+
+router.post('/student/change-password', function(req, res) {
+    res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
+});
+
+router.post('/student/watchlist/:courseId', function(req, res) {
+    res.json({ success: true, message: 'Đã thêm vào watchlist!' });
+});
+
+router.delete('/student/watchlist/:courseId', function(req, res) {
+    res.json({ success: true, message: 'Đã xóa khỏi watchlist!' });
+});
+
+router.post('/learn/:courseId/lecture/:lectureId/complete', function(req, res) {
+    res.json({ success: true, message: 'Đã đánh dấu hoàn thành!' });
+});
+
+router.post('/learn/:courseId/notes', function(req, res) {
+    res.json({ success: true, message: 'Đã lưu ghi chú!' });
+});
+
+router.delete('/learn/:courseId/notes/:noteId', function(req, res) {
+    res.json({ success: true, message: 'Đã xóa ghi chú!' });
 });
 
 export default router;

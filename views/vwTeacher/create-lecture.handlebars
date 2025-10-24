@@ -1,0 +1,37 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/teacher/main.css">
+{{/fill_section}}
+
+<div class="container py-4">
+  <h2 class="mb-4">Tạo bài giảng mới</h2>
+  <div class="row">
+    <div class="col-lg-8">
+      <form id="lectureForm">
+        <div class="mb-3">
+          <label class="form-label">Tiêu đề bài giảng</label>
+          <input type="text" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">URL Video</label>
+          <input type="url" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Thời lượng (phút:giây)</label>
+          <input type="text" class="form-control" placeholder="10:30">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Mô tả</label>
+          <textarea class="form-control" rows="4"></textarea>
+        </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox" class="form-check-input" id="isPreview">
+          <label class="form-check-label" for="isPreview">
+            Cho phép xem trước miễn phí
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Tạo bài giảng</button>
+        <a href="/teacher/course/{{courseId}}/content" class="btn btn-secondary">Hủy</a>
+      </form>
+    </div>
+  </div>
+</div>
