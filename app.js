@@ -2,13 +2,11 @@ import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
-import commonRoute from './routes/common.route.js';
 import accountRoute from './routes/account.route.js';
-import courseRoute from './routes/course.route.js';
 import studentRoute from './routes/student.route.js';
 import teacherRoute from './routes/teacher.route.js';
 import adminRoute from './routes/admin.route.js';
-
+import commonRoute from './routes/common.route.js';
 const app = express();
 const __dirname = import.meta.dirname;
 
@@ -73,22 +71,39 @@ app.set('views', __dirname + '/views');
 //Routes and Static Files Configuration
 app.use('/statics', express.static('statics'));
 
+//Global Middleware
+
 //Server Routes
-app.use('/', commonRoute);
 app.use('/', accountRoute);
-app.use('/', courseRoute);
 app.use('/', studentRoute);
 app.use('/', teacherRoute);
 app.use('/', adminRoute);
+app.use('/', commonRoute);
 
-//Error
-app.use(function(req, res, next) {
-    res.status(404).render('vwCommon/404', { layout: false });
+// Explicit error routes (must be before 404 catch-all
+app.get('/400', (req, res) => {
+    res.status(400).render('vwCommon/400', { layout: 'error', title: '400 - Bad Request', bodyClass: 'error-400' });
 });
-app.use(function(req, res, next) {
-    res.status(403).render('vwCommon/403', { layout: false });
+app.get('/403', (req, res) => {
+    res.status(403).render('vwCommon/403', { layout: 'error', title: '403 - Access Denied', bodyClass: 'error-403' });
+});
+app.get('/404', (req, res) => {
+    res.status(404).render('vwCommon/404', { layout: 'error', title: '404 - Page Not Found', bodyClass: 'error-404' });
+});
+app.get('/405', (req, res) => {
+    res.status(405).render('vwCommon/405', { layout: 'error', title: '405 - Method Not Allowed', bodyClass: 'error-405' });
+});
+// 404 catch-all
+app.use((req, res) => {
+    res.status(404).render('vwCommon/404', { layout: 'error', title: '404 - Page Not Found', bodyClass: 'error-404' });
 });
 
+// Generic error handler
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).render('vwCommon/500', { layout: 'error', title: '500 - Internal Server Error', bodyClass: 'error-500' });
+});
 //Server Configuration
 app.listen(process.env.APP_PORT || 3000, function() {
 	console.log('Server is running on port ' + (process.env.APP_PORT || 3000));
