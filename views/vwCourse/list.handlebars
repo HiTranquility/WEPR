@@ -1,0 +1,188 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/course/course-list.css">
+{{/fill_section}}
+
+<div class="course-list-page">
+  <div class="container py-5">
+    <div class="row">
+      <div class="col-lg-3">
+        <div class="filters-sidebar">
+          <h4 class="filter-title">LÍc theo</h4>
+
+          <div class="filter-section">
+            <h5>L)nh vñc</h5>
+            <div class="filter-options">
+              {{#each categories}}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="{{id}}" id="cat-{{id}}"
+                       {{#if (eq ../currentCategory id)}}checked{{/if}}>
+                <label class="form-check-label" for="cat-{{id}}">
+                  {{name}} <span class="text-muted">({{course_count}})</span>
+                </label>
+              </div>
+              {{/each}}
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h5>Giá</h5>
+            <div class="filter-options">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceFilter" id="price-all" value="all" checked>
+                <label class="form-check-label" for="price-all">
+                  T¥t c£
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceFilter" id="price-free" value="free">
+                <label class="form-check-label" for="price-free">
+                  MiÅn phí
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceFilter" id="price-paid" value="paid">
+                <label class="form-check-label" for="price-paid">
+                  Có phí
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h5>ánh giá</h5>
+            <div class="filter-options">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating-4.5">
+                <label class="form-check-label" for="rating-4.5">
+                  P 4.5 trß lên
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating-4">
+                <label class="form-check-label" for="rating-4">
+                  P 4.0 trß lên
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating-3.5">
+                <label class="form-check-label" for="rating-3.5">
+                  P 3.5 trß lên
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-outline-primary w-100 mt-3" id="clearFilters">Xóa bÙ lÍc</button>
+        </div>
+      </div>
+
+      <div class="col-lg-9">
+        <div class="course-list-header">
+          {{#if searchQuery}}
+          <h2>K¿t qu£ tìm ki¿m: "{{searchQuery}}"</h2>
+          <p class="text-muted">Tìm th¥y {{courses.length}} khóa hÍc</p>
+          {{else}}
+          <h2>Danh sách khóa hÍc</h2>
+          <p class="text-muted">{{courses.length}} khóa hÍc</p>
+          {{/if}}
+
+          <div class="sort-options">
+            <label>S¯p x¿p theo:</label>
+            <select class="form-select" id="sortSelect">
+              <option value="popular" {{#if (eq sortBy 'popular')}}selected{{/if}}>PhÕ bi¿n</option>
+              <option value="rating" {{#if (eq sortBy 'rating')}}selected{{/if}}>ánh giá cao</option>
+              <option value="newest" {{#if (eq sortBy 'newest')}}selected{{/if}}>MÛi nh¥t</option>
+              <option value="price-low" {{#if (eq sortBy 'price-low')}}selected{{/if}}>Giá th¥p ¿n cao</option>
+              <option value="price-high" {{#if (eq sortBy 'price-high')}}selected{{/if}}>Giá cao ¿n th¥p</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="courses-grid">
+          {{#each courses}}
+          <div class="course-item">
+            <a href="/courses/{{id}}" class="course-link">
+              <div class="course-thumbnail">
+                <img src="{{thumbnail_url}}" alt="{{title}}">
+                {{#if (isBestSeller enrollment_count)}}
+                <span class="badge badge-bestseller">Best Seller</span>
+                {{/if}}
+              </div>
+              <div class="course-content">
+                <div class="course-category">{{category.name}}</div>
+                <h5 class="course-title">{{title}}</h5>
+                <p class="course-description">{{truncate short_description 100}}</p>
+                <div class="course-teacher">
+                  <img src="{{teacher.avatar_url}}" alt="{{teacher.full_name}}" class="teacher-avatar">
+                  <span>{{teacher.full_name}}</span>
+                </div>
+                <div class="course-stats">
+                  <span class="rating">P {{rating_avg}}</span>
+                  <span class="rating-count">({{formatNumber rating_count}})</span>
+                  <span class="students">" {{formatNumber enrollment_count}} hÍc viên</span>
+                </div>
+                <div class="course-footer">
+                  <div class="course-price">
+                    <span class="price-current">{{formatCurrency discount_price}}</span>
+                    {{#if (gt price discount_price)}}
+                    <span class="price-original">{{formatCurrency price}}</span>
+                    <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+                    {{/if}}
+                  </div>
+                  <button class="btn-wishlist" data-course-id="{{id}}">
+                    <i class="bi bi-heart"></i>
+                  </button>
+                </div>
+              </div>
+            </a>
+          </div>
+          {{/each}}
+        </div>
+
+        {{#if (gt totalPages 1)}}
+        <nav class="pagination-nav mt-5">
+          <ul class="pagination justify-content-center">
+            <li class="page-item {{#if (eq currentPage 1)}}disabled{{/if}}">
+              <a class="page-link" href="?page={{math currentPage '-' 1}}">Tr°Ûc</a>
+            </li>
+            <li class="page-item {{#if (eq currentPage 1)}}active{{/if}}">
+              <a class="page-link" href="?page=1">1</a>
+            </li>
+            {{#if (gt totalPages 1)}}
+            <li class="page-item {{#if (eq currentPage 2)}}active{{/if}}">
+              <a class="page-link" href="?page=2">2</a>
+            </li>
+            {{/if}}
+            <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
+              <a class="page-link" href="?page={{math currentPage '+' 1}}">Sau</a>
+            </li>
+          </ul>
+        </nav>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</div>
+
+{{#fill_section 'js'}}
+<script>
+document.getElementById('sortSelect')?.addEventListener('change', function(e) {
+  const url = new URL(window.location);
+  url.searchParams.set('sort', e.target.value);
+  window.location.href = url.toString();
+});
+
+document.getElementById('clearFilters')?.addEventListener('click', function() {
+  window.location.href = window.location.pathname;
+});
+
+document.querySelectorAll('.btn-wishlist').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const courseId = this.dataset.courseId;
+    console.log('Add to wishlist:', courseId);
+  });
+});
+</script>
+{{/fill_section}}
