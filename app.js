@@ -7,6 +7,7 @@ import studentRoute from './routes/student.route.js';
 import teacherRoute from './routes/teacher.route.js';
 import adminRoute from './routes/admin.route.js';
 import commonRoute from './routes/common.route.js';
+import courseRoute from './routes/course.route.js';
 const app = express();
 const __dirname = import.meta.dirname;
 
@@ -62,6 +63,22 @@ app.engine('handlebars',engine ({
         },
         ne(a, b) {
             return a !== b;
+        },
+        math(lvalue, operator, rvalue) {
+            const left = Number(lvalue);
+            const right = Number(rvalue);
+            switch (operator) {
+                case '+':
+                    return left + right;
+                case '-':
+                    return left - right;
+                case '*':
+                    return left * right;
+                case '/':
+                    return right !== 0 ? left / right : 0;
+                default:
+                    return 0;
+            }
         }
     }
 }));
@@ -79,6 +96,7 @@ app.use('/', studentRoute);
 app.use('/', teacherRoute);
 app.use('/', adminRoute);
 app.use('/', commonRoute);
+app.use('/', courseRoute);
 
 // Explicit error routes (must be before 404 catch-all
 app.get('/400', (req, res) => {
@@ -92,6 +110,9 @@ app.get('/404', (req, res) => {
 });
 app.get('/405', (req, res) => {
     res.status(405).render('vwCommon/405', { layout: 'error', title: '405 - Method Not Allowed', bodyClass: 'error-405' });
+});
+app.get('/500', (req, res) => {
+    res.status(500).render('vwCommon/500', { layout: 'error', title: '500 - Internal Server Error', bodyClass: 'error-500' });
 });
 // 404 catch-all
 app.use((req, res) => {

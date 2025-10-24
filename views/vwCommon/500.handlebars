@@ -1,4 +1,10 @@
 {{! Using error layout; body only }}
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/common/error.css">
+{{/fill_section}}
+
+<div class="bubbles" id="bubbles"></div>
+
 <div class="error-container">
   <div class="error-icon">🔥</div>
   <h1 class="error-code">500</h1>
@@ -8,3 +14,25 @@
   </p>
   <a href="/" class="btn-home">Go Home</a>
 </div>
+
+{{#fill_section 'js'}}
+<script>
+  function createBubbles() {
+    const bubblesContainer = document.getElementById('bubbles');
+    const bubbleCount = 35;
+    for (let i = 0; i < bubbleCount; i++) {
+      const bubble = document.createElement('div');
+      bubble.className = 'star';
+      const size = Math.random() * 6 + 2;
+      bubble.style.width = size + 'px';
+      bubble.style.height = size + 'px';
+      bubble.style.left = Math.random() * 100 + '%';
+      bubble.style.top = Math.random() * 100 + '%';
+      bubble.style.animationDelay = Math.random() * 2 + 's';
+      bubble.style.animationDuration = (Math.random() * 3 + 2) + 's';
+      bubblesContainer.appendChild(bubble);
+    }
+  }
+  createBubbles();
+</script>
+{{/fill_section}}

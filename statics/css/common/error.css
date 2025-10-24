@@ -22,6 +22,18 @@ body.error-403 {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
+body.error-500 {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+body.error-400 {
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+}
+
+body.error-405 {
+  background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+}
+
 .error-container {
   text-align: center;
   color: white;
@@ -44,6 +56,18 @@ body.error-403 {
   animation: shake 1s ease-in-out infinite;
 }
 
+.error-500 .error-code {
+  animation: flicker 2s ease-in-out infinite;
+}
+
+.error-400 .error-code {
+  animation: tilt 2s ease-in-out infinite;
+}
+
+.error-405 .error-code {
+  animation: wave 1.5s ease-in-out infinite;
+}
+
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-20px); }
@@ -55,6 +79,22 @@ body.error-403 {
   75% { transform: translateX(10px); }
 }
 
+@keyframes flicker {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3)); }
+  50% { opacity: 0.8; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.35)); }
+}
+
+@keyframes tilt {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes wave {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-6px); }
+  75% { transform: translateY(6px); }
+}
+
 .error-icon {
   font-size: 100px;
   margin-bottom: 20px;
@@ -62,6 +102,9 @@ body.error-403 {
 
 .error-404 .error-icon { animation: float 3s ease-in-out infinite; }
 .error-403 .error-icon { animation: pulse 2s ease-in-out infinite; }
+.error-500 .error-icon { animation: pulse 2s ease-in-out infinite; }
+.error-400 .error-icon { animation: pulse 2s ease-in-out infinite; }
+.error-405 .error-icon { animation: shake 1.5s ease-in-out infinite; }
 
 @keyframes float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -104,6 +147,9 @@ body.error-403 {
 
 .error-404 .btn-home { color: #667eea; }
 .error-403 .btn-home { color: #f5576c; }
+.error-500 .btn-home { color: #ff8a00; }
+.error-400 .btn-home { color: #0072ff; }
+.error-405 .btn-home { color: #fda085; }
 
 .btn-home:hover {
   transform: translateY(-3px);
