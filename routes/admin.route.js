@@ -3,6 +3,7 @@ import express from 'express';
 const router = express.Router();
 
 router.get('/admin/categories', function(req, res) {
+    
     const categories = [
         { id: 1, name: 'Lập trình', course_count: 245, created_at: new Date('2024-01-15') },
         { id: 2, name: 'Kinh doanh', course_count: 189, created_at: new Date('2024-01-16') },

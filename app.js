@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
-import accountRoute from './routes/account.route.js';
+import authRoute from './routes/auth.route.js';
 import studentRoute from './routes/student.route.js';
 import teacherRoute from './routes/teacher.route.js';
 import adminRoute from './routes/admin.route.js';
@@ -91,39 +91,31 @@ app.use('/statics', express.static('statics'));
 //Global Middleware
 
 //Server Routes
-app.use('/', accountRoute);
+app.use('/', authRoute);
 app.use('/', studentRoute);
 app.use('/', teacherRoute);
 app.use('/', adminRoute);
 app.use('/', commonRoute);
 app.use('/', courseRoute);
 
-// Explicit error routes (must be before 404 catch-all
-app.get('/400', (req, res) => {
-    res.status(400).render('vwCommon/400', { layout: 'error', title: '400 - Bad Request', bodyClass: 'error-400' });
-});
-app.get('/403', (req, res) => {
-    res.status(403).render('vwCommon/403', { layout: 'error', title: '403 - Access Denied', bodyClass: 'error-403' });
-});
-app.get('/404', (req, res) => {
-    res.status(404).render('vwCommon/404', { layout: 'error', title: '404 - Page Not Found', bodyClass: 'error-404' });
-});
-app.get('/405', (req, res) => {
-    res.status(405).render('vwCommon/405', { layout: 'error', title: '405 - Method Not Allowed', bodyClass: 'error-405' });
-});
-app.get('/500', (req, res) => {
-    res.status(500).render('vwCommon/500', { layout: 'error', title: '500 - Internal Server Error', bodyClass: 'error-500' });
-});
-// 404 catch-all
-app.use((req, res) => {
-    res.status(404).render('vwCommon/404', { layout: 'error', title: '404 - Page Not Found', bodyClass: 'error-404' });
-});
+app.use((req, res) => res.redirect('/404'));
 
-// Generic error handler
-// eslint-disable-next-line no-unused-vars
+// Middleware lỗi (4 tham số) – đặt CUỐI CÙNG
 app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    res.status(500).render('vwCommon/500', { layout: 'error', title: '500 - Internal Server Error', bodyClass: 'error-500' });
+  console.error(err);
+  const status = err.status || 500;
+
+  // API/JSON
+  if (req.xhr || req.headers.accept?.includes('application/json')) {
+    return res.status(status).json({ error: status, message: err.message || 'Internal Server Error' });
+  }
+
+  // Pages
+  if (status === 404) return res.redirect('/404');
+  if (status === 403) return res.redirect('/403');
+  if (status >= 500) return res.redirect('/500');
+
+  return res.redirect('/400');
 });
 //Server Configuration
 app.listen(process.env.APP_PORT || 3000, function() {

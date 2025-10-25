@@ -2,7 +2,7 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/', function(req, res) {
+router.get('/', function (req, res) {
     const featuredCourses = [
         {
             id: 1,
@@ -137,19 +137,25 @@ router.get('/', function(req, res) {
     ];
 
     const allCategories = [
-        { id: 1, name: 'Lập trình', children: [
-            { id: 11, name: 'Web Development' },
-            { id: 12, name: 'Mobile Development' },
-            { id: 13, name: 'Game Development' }
-        ]},
-        { id: 2, name: 'Kinh doanh', children: [
-            { id: 21, name: 'Quản trị kinh doanh' },
-            { id: 22, name: 'Khởi nghiệp' }
-        ]},
-        { id: 3, name: 'Thiết kế', children: [
-            { id: 31, name: 'UI/UX Design' },
-            { id: 32, name: 'Graphic Design' }
-        ]}
+        {
+            id: 1, name: 'Lập trình', children: [
+                { id: 11, name: 'Web Development' },
+                { id: 12, name: 'Mobile Development' },
+                { id: 13, name: 'Game Development' }
+            ]
+        },
+        {
+            id: 2, name: 'Kinh doanh', children: [
+                { id: 21, name: 'Quản trị kinh doanh' },
+                { id: 22, name: 'Khởi nghiệp' }
+            ]
+        },
+        {
+            id: 3, name: 'Thiết kế', children: [
+                { id: 31, name: 'UI/UX Design' },
+                { id: 32, name: 'Graphic Design' }
+            ]
+        }
     ];
 
     res.render('vwCommon/landing', {
@@ -163,35 +169,48 @@ router.get('/', function(req, res) {
     });
 });
 
-router.get('/about-us', function(req, res) {
+router.get('/about-us', function (req, res) {
     res.render('vwCommon/about-us', {
         title: 'Về chúng tôi',
         layout: 'main'
     });
 });
 
-router.get('/contact-us', function(req, res) {
+router.get('/contact-us', function (req, res) {
     res.render('vwCommon/contact-us', {
         title: 'Liên hệ',
         layout: 'main'
     });
 });
 
-router.get('/privacy', function(req, res) {
+router.get('/privacy', function (req, res) {
     res.render('vwCommon/privacy', {
         title: 'Chính sách bảo mật',
         layout: 'main'
     });
 });
 
-router.get('/terms', function(req, res) {
+router.get('/terms', function (req, res) {
     res.render('vwCommon/terms', {
         title: 'Điều khoản sử dụng',
         layout: 'main'
     });
 });
 
-router.post('/contact', function(req, res) {
+router.get('/404', (req, res) => {
+    res.status(404).render('vwCommon/404', { layout: 'error', title: '404 - Page Not Found', bodyClass: 'error-404' });
+});
+router.get('/500', (req, res) => {
+    res.status(500).render('vwCommon/500', { layout: 'error', title: '500 - Internal Server Error', bodyClass: 'error-500' });
+});
+router.get('/403', (req, res) => {
+    res.status(403).render('vwCommon/403', { layout: 'error', title: '403 - Access Denied', bodyClass: 'error-403' });
+});
+router.get('/400', (req, res) => {
+    res.status(400).render('vwCommon/400', { layout: 'error', title: '400 - Bad Request', bodyClass: 'error-400' });
+});
+
+router.post('/contact', function (req, res) {
     res.json({ success: true, message: 'Đã gửi tin nhắn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm.' });
 });
 

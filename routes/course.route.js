@@ -1,8 +1,15 @@
 import express from 'express';
+import { getAllCourses } from '../models/course.model.js';
 
 const router = express.Router();
 
-router.get('/courses', function(req, res) {
+router.get('/courses', async function(req, res) {
+    const courses = await getAllCourses();
+    if (!courses) {
+        res.status(404).render('vwCommon/404', { layout: 'error', title: '404 - Page Not Found', bodyClass: 'error-404' });
+    }
+    
+
     const mockCourses = [
         {
             id: 1,
@@ -135,7 +142,12 @@ router.get('/courses', function(req, res) {
     });
 });
 
-router.get('/courses/:id', function(req, res) {
+router.get('/courses/:id', async function(req, res) {
+    
+    const course = await readCourse(req.params.id);
+    if (!course) {
+        res.status(404).render('vwCommon/404', { layout: 'error', title: '404 - Page Not Found', bodyClass: 'error-404' });
+    }
     const mockCourse = {
         id: req.params.id,
         title: 'Complete Python Bootcamp: Go from zero to hero in Python 3',
