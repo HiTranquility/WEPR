@@ -1,0 +1,14 @@
+body.error-500 {
+  background: radial-gradient(circle at 15% 20%, rgba(255, 154, 158, 0.45), transparent 55%),
+              radial-gradient(circle at 80% 15%, rgba(254, 207, 239, 0.4), transparent 60%),
+              linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.error-500 .btn-home {
+  background: #ffffff;
+  color: #f97316;
+}
+
+.error-500 .star {
+  background: rgba(255, 255, 255, 0.9);
+}

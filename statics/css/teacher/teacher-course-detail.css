@@ -1,0 +1,45 @@
+.teacher-course-detail-page {
+  color: #0f172a;
+}
+
+.teacher-course-detail-page h2 {
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.teacher-course-detail-page .btn-group .btn {
+  font-weight: 500;
+}
+
+.teacher-course-detail-page .stat-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 1.75rem;
+  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.teacher-course-detail-page .stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 52px rgba(15, 23, 42, 0.14);
+}
+
+.teacher-course-detail-page .stat-card h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: #2563eb;
+}
+
+.teacher-course-detail-page .stat-card p {
+  margin: 0;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.75rem;
+}

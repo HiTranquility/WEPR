@@ -14,10 +14,7 @@
           </a>
           <ul class="dropdown-menu">
             {{#each allCategories}}
-            <li><a class="dropdown-item fw-bold" href="/courses?category={{id}}">{{name}}</a></li>
-            {{#each children}}
-            <li><a class="dropdown-item ps-4" href="/courses?category={{id}}">{{name}}</a></li>
-            {{/each}}
+            <li><a class="dropdown-item" href="/courses?category={{id}}">{{name}}</a></li>
             {{/each}}
           </ul>
         </li>

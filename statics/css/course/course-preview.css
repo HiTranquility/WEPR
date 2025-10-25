@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  background:#0f172a;
+}
+
+.preview-header {
+  background: #6d85fb;
+  padding: 1rem 0;
+  border-bottom: 1px solid #6d85fb;
+}
+
+.video-wrapper {
+  max-width: 900px;
+  margin: 2rem auto;
+}
+
+.plyr {
+  width: 100%;
+}

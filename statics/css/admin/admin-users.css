@@ -1,0 +1,110 @@
+.admin-users-page {
+  color: #0f172a;
+}
+
+.admin-users-page .admin-header {
+  background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
+  color: #ffffff;
+  padding: 2.5rem 0;
+  margin-bottom: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 22px 48px rgba(249, 115, 22, 0.25);
+}
+
+.admin-users-page .admin-header h2 {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.admin-users-page .admin-header p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.admin-users-page .container-fluid {
+  padding: 0 1.5rem;
+}
+
+.admin-users-page .data-table {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.admin-users-page .table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.admin-users-page .table-toolbar h5 {
+  margin: 0;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.admin-users-page .table-toolbar .form-select,
+.admin-users-page .table-toolbar .btn {
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.admin-users-page .table-responsive {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.admin-users-page .table {
+  margin-bottom: 0;
+}
+
+.admin-users-page .table thead th {
+  background: rgba(248, 250, 252, 0.9);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #475569;
+  border-bottom: 0;
+}
+
+.admin-users-page .table tbody tr:hover {
+  background: rgba(249, 115, 22, 0.08);
+}
+
+.admin-users-page .table tbody td {
+  vertical-align: middle;
+  border-top: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+.admin-users-page .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.admin-users-page .action-buttons .btn {
+  font-weight: 500;
+  border-radius: 10px;
+}
+
+.admin-users-page .modal-content {
+  border-radius: 18px;
+  box-shadow: 0 26px 60px rgba(15, 23, 42, 0.12);
+}
+
+.admin-users-page .modal-header {
+  background: linear-gradient(135deg, #f97316 0%, #f59e0b 100%);
+  color: #ffffff;
+  border-bottom: none;
+}
+
+.admin-users-page .modal-title {
+  font-weight: 600;
+}
+
+.admin-users-page .modal-footer {
+  border-top: none;
+  padding-top: 0;
+}

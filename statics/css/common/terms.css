@@ -1,0 +1,33 @@
+.terms-page {
+  background: linear-gradient(135deg, #fdf4ff 0%, #f1f5f9 100%);
+  padding: 4rem 0 6rem;
+}
+
+.terms-page .container {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 28px 65px rgba(15, 23, 42, 0.08);
+}
+
+.terms-page h1 {
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.terms-page h3 {
+  font-weight: 600;
+  color: #2563eb;
+  margin-top: 2rem;
+}
+
+.terms-page p {
+  color: #475569;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .terms-page .container {
+    padding: 2rem;
+  }
+}

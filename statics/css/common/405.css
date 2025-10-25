@@ -1,0 +1,19 @@
+body.error-405 {
+  background: radial-gradient(circle at 20% 30%, rgba(246, 211, 101, 0.45), transparent 55%),
+              radial-gradient(circle at 80% 25%, rgba(253, 160, 133, 0.4), transparent 60%),
+              linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+}
+
+.error-405 .error-container {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.error-405 .btn-home {
+  background: #ffffff;
+  color: #d97706;
+}
+
+.error-405 .btn-home:hover {
+  color: #b45309;
+}
+

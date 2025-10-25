@@ -1,0 +1,132 @@
+.admin-dashboard-page {
+  color: #0f172a;
+}
+
+.admin-dashboard-page .dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.admin-dashboard-page .dashboard-header h1 {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.35rem;
+}
+
+.admin-dashboard-page .dashboard-header p {
+  color: #64748b;
+  margin: 0;
+}
+
+.admin-dashboard-page .stat-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+}
+
+.admin-dashboard-page .stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 55px rgba(15, 23, 42, 0.12);
+}
+
+.admin-dashboard-page .stat-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.admin-dashboard-page .stat-content h3 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+
+.admin-dashboard-page .stat-content p {
+  margin: 0;
+  color: #64748b;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.admin-dashboard-page .card {
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
+  height: 100%;
+  overflow: hidden;
+}
+
+.admin-dashboard-page .card-header {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(59, 130, 246, 0.1));
+  border-bottom: none;
+  padding: 1.25rem 1.75rem;
+}
+
+.admin-dashboard-page .card-header h5 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.admin-dashboard-page .card-body {
+  padding: 1.75rem;
+}
+
+.admin-dashboard-page .activity-list {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.admin-dashboard-page .activity-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.admin-dashboard-page .activity-item:last-child {
+  border-bottom: none;
+}
+
+.admin-dashboard-page .activity-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.12);
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.admin-dashboard-page .popular-course-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.admin-dashboard-page .popular-course-item:last-child {
+  border-bottom: none;
+}
+
+.admin-dashboard-page .popular-course-item h6 {
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+  color: #1f2937;
+}

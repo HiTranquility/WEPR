@@ -1,99 +1,99 @@
-{{#fill_section 'css'}}
-<link rel="stylesheet" href="/statics/css/admin/main.css">
+﻿{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/admin/admin-dashboard.css">
 {{/fill_section}}
+<div class="admin-dashboard-page">
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p class="text-muted">Tổng quan hệ thống</p>
+  </div>
 
-<div class="dashboard-header">
-  <h1>Dashboard</h1>
-  <p class="text-muted">Tổng quan hệ thống</p>
-</div>
-
-<div class="row g-4 mb-4">
-  <div class="col-md-3">
-    <div class="stat-card">
-      <div class="stat-icon bg-primary">
-        <i class="bi bi-people"></i>
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-primary">
+          <i class="bi bi-people"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{formatNumber stats.total_users}}</h3>
+          <p>Tổng người dùng</p>
+        </div>
       </div>
-      <div class="stat-content">
-        <h3>{{formatNumber stats.total_users}}</h3>
-        <p>Tổng người dùng</p>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-success">
+          <i class="bi bi-book"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{stats.total_courses}}</h3>
+          <p>Tổng khóa học</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-info">
+          <i class="bi bi-person-badge"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{stats.total_teachers}}</h3>
+          <p>Giảng viên</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon bg-warning">
+          <i class="bi bi-clock"></i>
+        </div>
+        <div class="stat-content">
+          <h3>{{stats.pending_courses}}</h3>
+          <p>Khóa học chờ duyệt</p>
+        </div>
       </div>
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="stat-card">
-      <div class="stat-icon bg-success">
-        <i class="bi bi-book"></i>
-      </div>
-      <div class="stat-content">
-        <h3>{{stats.total_courses}}</h3>
-        <p>Tổng khóa học</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card">
-      <div class="stat-icon bg-info">
-        <i class="bi bi-person-badge"></i>
-      </div>
-      <div class="stat-content">
-        <h3>{{stats.total_teachers}}</h3>
-        <p>Giảng viên</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="stat-card">
-      <div class="stat-icon bg-warning">
-        <i class="bi bi-clock"></i>
-      </div>
-      <div class="stat-content">
-        <h3>{{stats.pending_courses}}</h3>
-        <p>Khóa học chờ duyệt</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="row g-4">
-  <div class="col-lg-8">
-    <div class="card">
-      <div class="card-header">
-        <h5>Hoạt động gần đây</h5>
-      </div>
-      <div class="card-body">
-        <div class="activity-list">
-          {{#each recentActivities}}
-          <div class="activity-item">
-            <div class="activity-icon">
-              <i class="bi bi-{{#if (eq type 'new_user')}}person-plus{{else}}book{{/if}}"></i>
+  
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5>Hoạt động gần đây</h5>
+        </div>
+        <div class="card-body">
+          <div class="activity-list">
+            {{#each recentActivities}}
+            <div class="activity-item">
+              <div class="activity-icon">
+                <i class="bi bi-{{#if (eq type 'new_user')}}person-plus{{else}}book{{/if}}"></i>
+              </div>
+              <div class="activity-content">
+                <p class="mb-0">{{message}}</p>
+                <small class="text-muted">{{formatDate timestamp}}</small>
+              </div>
             </div>
-            <div class="activity-content">
-              <p class="mb-0">{{message}}</p>
-              <small class="text-muted">{{formatDate timestamp}}</small>
+            {{/each}}
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5>Khóa học phổ biến</h5>
+        </div>
+        <div class="card-body">
+          {{#each popularCourses}}
+          <div class="popular-course-item">
+            <h6>{{title}}</h6>
+            <div class="d-flex justify-content-between text-muted small">
+              <span>{{formatNumber enrollment_count}} học viên</span>
+              <span>{{rating_avg}}</span>
             </div>
           </div>
           {{/each}}
         </div>
       </div>
     </div>
-  </div>
-
-  <div class="col-lg-4">
-    <div class="card">
-      <div class="card-header">
-        <h5>Khóa học phổ biến</h5>
-      </div>
-      <div class="card-body">
-        {{#each popularCourses}}
-        <div class="popular-course-item">
-          <h6>{{title}}</h6>
-          <div class="d-flex justify-content-between text-muted small">
-            <span>{{formatNumber enrollment_count}} học viên</span>
-            <span>⭐ {{rating_avg}}</span>
-          </div>
-        </div>
-        {{/each}}
-      </div>
-    </div>
-  </div>
 </div>
