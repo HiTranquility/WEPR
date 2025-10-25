@@ -29,6 +29,7 @@ NODE_VERSION = "20"
 [functions]
 
 [functions."*"]
+external_node_modules = ["knex", "pg", "better-sqlite3", "mysql2", "mysql", "sqlite3", "tedious", "pg-query-stream", "oracledb"]
 included_files = ["views/**", "statics/**"]
 node_bundler = "esbuild"
 
