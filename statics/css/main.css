@@ -183,7 +183,7 @@ body {
 @media (max-width: 768px) { .create-course-form { padding: 0 1rem; } }
 
 /* ==============================
-   Student profile/my-courses/watchlist
+   Student profile/my-courses/wishlist
    (migrated from /statics/css/student/main.css)
    ============================== */
 .profile-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 3rem 0; }

@@ -22,7 +22,7 @@
           <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
               <a href="/student/profile" class="sidebar-nav-link">
-                <i class="bi bi-person"></i>
+                <i class="bi bi-persxon"></i>
                 <span>Thông tin cá nhân</span>
               </a>
             </li>
@@ -33,13 +33,13 @@
               </a>
             </li>
             <li class="sidebar-nav-item">
-              <a href="/student/watchlist" class="sidebar-nav-link active">
+              <a href="/student/wishlist" class="sidebar-nav-link active">
                 <i class="bi bi-heart"></i>
                 <span>Danh sách yêu thích</span>
               </a>
             </li>
             <li class="sidebar-nav-item">
-              <a href="/student/change-password" class="sidebar-nav-link">
+              <a href="/reset" class="sidebar-nav-link">
                 <i class="bi bi-lock"></i>
                 <span>Đổi mật khẩu</span>
               </a>
@@ -50,11 +50,11 @@
 
       <div class="col-lg-9">
         <div class="profile-content">
-          <h4 class="mb-4">Danh sách yêu thích ({{watchlist.length}})</h4>
+          <h4 class="mb-4">Danh sách yêu thích ({{wishlist.length}})</h4>
 
-          {{#if watchlist.length}}
-          <div class="watchlist-container">
-            {{#each watchlist}}
+          {{#if wishlist.length}}
+          <div class="wishlist-container">
+            {{#each wishlist}}
             <div class="course-card-horizontal">
               <img src="{{course.thumbnail_url}}" class="course-card-thumbnail" alt="{{course.title}}">
               <div class="course-card-content">
@@ -98,7 +98,7 @@
 <script>
   function removeFromWatchlist(id) {
     if (confirm('Bạn có chắc muốn xóa khóa học này khỏi danh sách yêu thích?')) {
-      alert('Chức năng xóa khỏi watchlist đang được phát triển');
+      alert('Chức năng xóa khỏi wishlist đang được phát triển');
     }
   }
 </script>

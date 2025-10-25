@@ -5,6 +5,11 @@ const router = express.Router();
 router.get('/teacher/dashboard', function(req, res) {
     res.render('vwTeacher/dashboard', {
         title: 'Trang chủ giảng viên',
+        user: {
+            full_name: 'Nguyễn Văn A',
+            email: 'student@example.com',
+            avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
+        },
         stats: {
             total_courses: 8,
             published_courses: 5,

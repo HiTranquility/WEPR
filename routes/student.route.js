@@ -161,15 +161,15 @@ router.get('/student/my-courses', function(req, res) {
     });
 });
 
-router.get('/student/watchlist', function(req, res) {
-    res.render('vwStudent/watchlist', {
+router.get('/student/wishlist', function(req, res) {
+    res.render('vwStudent/wishlist', {
         title: 'Danh sách yêu thích',
         user: {
             full_name: 'Nguyễn Văn A',
             email: 'student@example.com',
             avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
         },
-        watchlist: [
+        wishlist: [
             {
                 id: 1,
                 course: {
@@ -243,12 +243,12 @@ router.post('/student/change-password', function(req, res) {
     res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
 });
 
-router.post('/student/watchlist/:courseId', function(req, res) {
-    res.json({ success: true, message: 'Đã thêm vào watchlist!' });
+router.post('/student/wishlist/:courseId', function(req, res) {
+    res.json({ success: true, message: 'Đã thêm vào wishlist!' });
 });
 
-router.delete('/student/watchlist/:courseId', function(req, res) {
-    res.json({ success: true, message: 'Đã xóa khỏi watchlist!' });
+router.delete('/student/wishlist/:courseId', function(req, res) {
+    res.json({ success: true, message: 'Đã xóa khỏi wishlist!' });
 });
 
 router.post('/learn/:courseId/lecture/:lectureId/complete', function(req, res) {

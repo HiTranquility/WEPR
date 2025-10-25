@@ -179,7 +179,8 @@ router.get('/about-us', function (req, res) {
 router.get('/contact-us', function (req, res) {
     res.render('vwCommon/contact-us', {
         title: 'Liên hệ',
-        layout: 'main'
+        layout: 'main',
+        isSent: false
     });
 });
 
@@ -211,12 +212,10 @@ router.get('/400', (req, res) => {
 });
 
 router.post('/contact-us', function (req, res) {
-    const { fullName, email, message } = req.body;
-    const sentSuccessfully = fullName && email && message;
     res.render('vwCommon/contact-us', {
         title: 'Liên hệ',
         layout: 'main',
-        sent: sentSuccessfully
+        isSent: true
     });
 });
 

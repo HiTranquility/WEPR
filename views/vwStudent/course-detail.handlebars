@@ -91,7 +91,9 @@
                     <i class="bi bi-play-circle lecture-icon"></i>
                     <span>{{title}}</span>
                     {{#if is_preview}}
+                    <a href="/courses/{{id}}/preview/{{id}}" class="text-decoration-none">
                     <span class="preview-badge">Xem trước</span>
+                    </a>
                     {{/if}}
                   </div>
                   <span class="text-muted">{{duration}}</span>
@@ -161,10 +163,10 @@
             </div>
 
             <div class="action-buttons">
-              <button class="btn btn-enroll w-100" id="enrollBtn">Đăng ký học</button>
-              <button class="btn btn-wishlist w-100" id="wishlistBtn">
+              <a class="btn btn-enroll w-100" id="enrollBtn" href="/courses/{{course.id}}/enroll">Đăng ký học</a>
+              <a class="btn btn-wishlist w-100" id="wishlistBtn" href="/courses/{{course.id}}/wishlist">
                 <i class="bi bi-heart"></i> Thêm vào yêu thích
-              </button>
+              </a>
             </div>
           </div>
 
@@ -191,30 +193,7 @@
     <h3 class="mb-4">Các khóa học khác cùng lĩnh vực</h3>
     <div class="row g-4">
       {{#each relatedCourses}}
-      <div class="col-lg-3 col-md-4 col-sm-6">
-        <div class="card course-card">
-          <div class="position-relative">
-            <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
-          </div>
-          <div class="course-body">
-            <div class="course-category">{{category.name}}</div>
-            <h5 class="course-title">{{truncate title 60}}</h5>
-            <div class="course-teacher">
-              <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
-              {{teacher.full_name}}
-            </div>
-            <div class="course-rating">
-              <span class="rating-stars">⭐ {{rating_avg}}</span>
-              <span class="rating-text">({{formatNumber rating_count}})</span>
-            </div>
-            <div class="course-footer">
-              <div class="course-price">
-                <span class="price-current">{{formatCurrency discount_price}}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {{> card/small-course-card}}
       {{/each}}
     </div>
   </div>

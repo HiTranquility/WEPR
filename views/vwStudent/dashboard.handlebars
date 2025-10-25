@@ -69,19 +69,7 @@
     <h3 class="mb-4">Khóa học đề xuất</h3>
     <div class="row g-4">
       {{#each recommendedCourses}}
-      <div class="col-md-4">
-        <div class="card">
-          <img src="{{thumbnail_url}}" class="card-img-top" alt="{{title}}">
-          <div class="card-body">
-            <h6 class="card-title">{{title}}</h6>
-            <p class="text-muted small">{{teacher.full_name}}</p>
-            <div class="d-flex justify-content-between align-items-center">
-              <span class="rating">⭐ {{rating_avg}}</span>
-              <strong class="text-success">{{formatCurrency discount_price}}</strong>
-            </div>
-          </div>
-        </div>
-      </div>
+      {{> card/small-course-card}}
       {{/each}}
     </div>
   </div>

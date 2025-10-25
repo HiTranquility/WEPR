@@ -34,17 +34,7 @@
     <h3>Khóa học gần đây</h3>
     <div class="row g-4">
       {{#each recentCourses}}
-      <div class="col-md-4">
-        <div class="card">
-          <img src="{{thumbnail_url}}" class="card-img-top" alt="{{title}}">
-          <div class="card-body">
-            <h5 class="card-title">{{title}}</h5>
-            <p>Học viên: {{formatNumber enrollment_count}}</p>
-            <p>Đánh giá: {{rating_avg}} ⭐</p>
-            <a href="/teacher/course/{{id}}" class="btn btn-primary btn-sm">Xem chi tiết</a>
-          </div>
-        </div>
-      </div>
+      {{> card/small-course-card}}
       {{/each}}
     </div>
   </div>

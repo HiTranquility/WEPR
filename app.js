@@ -89,6 +89,7 @@ app.set('views', __dirname + '/views');
 app.use('/statics', express.static('statics'));
 
 //Global Middleware
+app.use(express.urlencoded({ extended: true }));
 
 //Server Routes
 app.use('/', authRoute);
