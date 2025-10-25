@@ -137,25 +137,9 @@ router.get('/', function (req, res) {
     ];
 
     const allCategories = [
-        {
-            id: 1, name: 'Lập trình', children: [
-                { id: 11, name: 'Web Development' },
-                { id: 12, name: 'Mobile Development' },
-                { id: 13, name: 'Game Development' }
-            ]
-        },
-        {
-            id: 2, name: 'Kinh doanh', children: [
-                { id: 21, name: 'Quản trị kinh doanh' },
-                { id: 22, name: 'Khởi nghiệp' }
-            ]
-        },
-        {
-            id: 3, name: 'Thiết kế', children: [
-                { id: 31, name: 'UI/UX Design' },
-                { id: 32, name: 'Graphic Design' }
-            ]
-        }
+        { id: 1, name: 'Lập trình' },
+        { id: 2, name: 'Kinh doanh' },
+        { id: 3, name: 'Thiết kế' }
     ];
 
     res.render('vwCommon/landing', {

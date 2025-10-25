@@ -1,87 +1,57 @@
 import database from "../utils/database.js";
 
-export const baseQuery = database("course_categories");
+export async function createCategory(category) {
+  const [id] = await database("categories").insert(category).returning("id");
+  return id;
+}
 
-export const createCourseCategory = async (courseCategory) => {
-    return await baseQuery.insert(courseCategory);
-};
+export async function readCategory(id) {
+  return await database("categories").where("id", id).first();
+}
 
-export const readCourseCategory = async (id) => {
-    return await baseQuery.where("id", id).first();
-};
+export async function updateCategory(id, data) {
+  return await database("categories").where("id", id).update(data);
+}
 
-export const updateCourseCategory = async (id, courseCategory) => {
-    return await baseQuery.where("id", id).update(courseCategory);
-};
+export async function deleteCategory(id) {
+  return await database("categories").where("id", id).del();
+}
 
-export const deleteCourseCategory = async (id) => {
-    return await baseQuery.where("id", id).delete();
-};
+export async function getAllCategories({ includeCounts = false } = {}) {
+  const qb = database("categories");
+  if (!includeCounts) return await qb.select("*").orderBy("name", "asc");
 
-export const getAllCourseCategories = async () => {
-    return await baseQuery.select("*");
-};
+  const rows = await qb
+    .leftJoin("courses", "categories.id", "courses.category_id")
+    .groupBy("categories.id", "categories.name", "categories.description")
+    .select(
+      "categories.id",
+      "categories.name",
+      "categories.description",
+      database.raw("COUNT(courses.id) as course_count"),
+      "categories.created_at"
+    )
+    .orderBy("categories.name", "asc");
+  return rows.map(r => ({
+    id: r.id,
+    name: r.name,
+    description: r.description,
+    course_count: Number(r.course_count || 0),
+    created_at: r.created_at
+  }));
+}
 
-export const getAllCourseCategoriesWithCount = async () => {
-    const rows = await baseQuery.clone()
-      .leftJoin("courses", "course_categories.id", "courses.category_id")
-      .whereNull("course_categories.parent_id")
-      .groupBy("course_categories.id", "course_categories.name", "course_categories.description")
-      .select(
-        "course_categories.id", 
-        "course_categories.name", 
-        "course_categories.description", 
-        database.raw("COUNT(courses.id) as course_count"), 
-        "course_categories.created_at", 
-      );
-    return rows.map((r) => ({
-        id: r.id,
-        name: r.name,
-        description: r.description,
-        course_count: r.course_count,
-        created_at: r.created_at,
-    }));
-};
+// Helper cho trang Courses: không có parent, trả tất cả categories
+export async function getCategoriesForCourses() {
+  return await database("categories")
+    .orderBy("name", "asc")
+    .select("id", "name", "description");
+}
 
-export const getTopCategoriesByEnrollments = async () => {
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const rows = await baseQuery.clone()
-      .leftJoin("courses", "course_categories.id", "courses.category_id")
-      .where("courses.created_at", ">=", oneWeekAgo)
-      .where("courses.status", "completed")
-      .whereNull("course_categories.parent_id")
-      .groupBy("course_categories.id", "course_categories.name", "course_categories.description")
-      .orderBy("course_count", "desc")
-      .limit(6)
-      .select(
-        "course_categories.id", 
-        "course_categories.name", 
-        "course_categories.description", 
-        database.raw("COUNT(courses.id) as course_count"), 
-        "course_categories.created_at", 
-      );
-    return rows.map((r) => ({
-        id: r.id,
-        name: r.name,
-        description: r.description,
-        course_count: r.course_count,
-        created_at: r.created_at,
-    }));
-  };
-
-  export const getCategoriesWithChildren = async () => {
-    const parents = await database("categories")
-      .whereNull("parent_id")
-      .orderBy("name", "asc")
-      .select("id", "name", "description");
-  
-    for (const parent of parents) {
-      const children = await database("categories")
-        .where("parent_id", parent.id)
-        .orderBy("name", "asc")
-        .select("id", "name", "description");
-      parent.children = children;
-    }
-  
-    return parents;
-  };
+// Tree: categories với children (nếu cần)
+export async function getCategoriesWithChildren() {
+  // Không có parent-child trong schema hiện tại; trả danh sách phẳng
+  return await database("categories")
+    .orderBy("name", "asc")
+    .select("id", "name", "description");
+}
