@@ -2,7 +2,15 @@ import express from 'express';
 
 const router = express.Router();
 
-router.get('/student/dashboard', function(req, res) {
+router.get('/student/dashboard', function (req, res) {
+    const stats = {
+        enrolled_courses: 5,
+        completed_courses: 2,
+        in_progress_courses: 3,
+        certificates: 2,
+        total_learning_hours: 48
+    };
+
     res.render('vwStudent/dashboard', {
         title: 'Trang chủ học viên',
         user: {
@@ -10,13 +18,13 @@ router.get('/student/dashboard', function(req, res) {
             email: 'student@example.com',
             avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
         },
-        stats: {
-            enrolled_courses: 5,
-            completed_courses: 2,
-            in_progress_courses: 3,
-            certificates: 2,
-            total_learning_hours: 48
-        },
+        statsList: [
+            { value: stats.enrolled_courses, label: 'Enroll courses' },
+            { value: stats.completed_courses, label: 'Completed courses' },
+            { value: stats.in_progress_courses, label: 'In-progress courses' },
+            { value: stats.certificates, label: 'Certificates' },
+            { value: stats.total_learning_hours, label: 'Learning hours' },
+        ],
         recentCourses: [
             {
                 id: 1,
@@ -50,7 +58,7 @@ router.get('/student/dashboard', function(req, res) {
     });
 });
 
-router.get('/courses/:id', function(req, res) {
+router.get('/courses/:id', function (req, res) {
     res.render('vwStudent/course-detail', {
         title: 'Chi tiết khóa học',
         course: {
@@ -124,7 +132,7 @@ router.get('/courses/:id', function(req, res) {
     });
 });
 
-router.get('/student/profile', function(req, res) {
+router.get('/student/profile', function (req, res) {
     res.render('vwStudent/profile', {
         title: 'Hồ sơ cá nhân',
         user: {
@@ -135,7 +143,7 @@ router.get('/student/profile', function(req, res) {
     });
 });
 
-router.get('/student/my-courses', function(req, res) {
+router.get('/student/my-courses', function (req, res) {
     res.render('vwStudent/my-courses', {
         title: 'Khóa học của tôi',
         user: {
@@ -161,7 +169,7 @@ router.get('/student/my-courses', function(req, res) {
     });
 });
 
-router.get('/student/wishlist', function(req, res) {
+router.get('/student/wishlist', function (req, res) {
     res.render('vwStudent/wishlist', {
         title: 'Danh sách yêu thích',
         user: {
@@ -191,7 +199,7 @@ router.get('/student/wishlist', function(req, res) {
     });
 });
 
-router.get('/learn/:courseId', function(req, res) {
+router.get('/learn/:courseId', function (req, res) {
     res.render('vwStudent/learn', {
         layout: false,
         course: {
@@ -235,31 +243,31 @@ router.get('/learn/:courseId', function(req, res) {
     });
 });
 
-router.post('/student/profile', function(req, res) {
+router.post('/student/profile', function (req, res) {
     res.json({ success: true, message: 'Cập nhật thông tin thành công!' });
 });
 
-router.post('/student/change-password', function(req, res) {
+router.post('/student/change-password', function (req, res) {
     res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
 });
 
-router.post('/student/wishlist/:courseId', function(req, res) {
+router.post('/student/wishlist/:courseId', function (req, res) {
     res.json({ success: true, message: 'Đã thêm vào wishlist!' });
 });
 
-router.delete('/student/wishlist/:courseId', function(req, res) {
+router.delete('/student/wishlist/:courseId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa khỏi wishlist!' });
 });
 
-router.post('/learn/:courseId/lecture/:lectureId/complete', function(req, res) {
+router.post('/learn/:courseId/lecture/:lectureId/complete', function (req, res) {
     res.json({ success: true, message: 'Đã đánh dấu hoàn thành!' });
 });
 
-router.post('/learn/:courseId/notes', function(req, res) {
+router.post('/learn/:courseId/notes', function (req, res) {
     res.json({ success: true, message: 'Đã lưu ghi chú!' });
 });
 
-router.delete('/learn/:courseId/notes/:noteId', function(req, res) {
+router.delete('/learn/:courseId/notes/:noteId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa ghi chú!' });
 });
 

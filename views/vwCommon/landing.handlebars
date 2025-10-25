@@ -99,33 +99,18 @@
   </div>
 </section>
 
-<section class="py-5 bg-light">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h2 class="section-title">Khóa học được xem nhiều nhất</h2>
-      <p class="section-subtitle">Những khóa học đang được quan tâm nhất</p>
-    </div>
-    <div class="row g-4">
-      {{#each mostViewedCourses}}
-      {{> card/small-course-card}}
-      {{/each}}
-    </div>
-  </div>
-</section>
+{{> recommend-course-section
+    title="Khóa học được xem nhiều nhất"
+    subTitle="Những khóa học đang được quan tâm nhất"
+    courses=mostViewedCourses
+}}
 
-<section class="py-5">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h2 class="section-title">Khóa học mới nhất</h2>
-      <p class="section-subtitle">Khám phá những khóa học vừa được ra mắt</p>
-    </div>
-    <div class="row g-4">
-      {{#each newestCourses}}
-      {{> card/small-course-card}}
-      {{/each}}
-    </div>
-  </div>
-</section>
+{{> recommend-course-section
+    title="Khóa học mới nhất"
+    subTitle="Khám phá những khóa học vừa được ra mắt"
+    courses=newestCourses
+}}
+
 
 {{#fill_section 'js'}}
 {{/fill_section}}

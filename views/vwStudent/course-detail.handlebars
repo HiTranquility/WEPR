@@ -73,7 +73,8 @@
 
           <div class="tab-pane fade" id="curriculum">
             <h3 class="mb-4">Nội dung khóa học</h3>
-            <p class="text-muted mb-4">{{course.sections.length}} chương • {{course.total_lectures}} bài giảng • {{course.total_duration}} tổng thời lượng</p>
+            <p class="text-muted mb-4">{{course.sections.length}} chương • {{course.total_lectures}} bài giảng •
+              {{course.total_duration}} tổng thời lượng</p>
 
             {{#each course.sections}}
             <div class="curriculum-section">
@@ -92,7 +93,7 @@
                     <span>{{title}}</span>
                     {{#if is_preview}}
                     <a href="/courses/{{id}}/preview/{{id}}" class="text-decoration-none">
-                    <span class="preview-badge">Xem trước</span>
+                      <span class="preview-badge">Xem trước</span>
                     </a>
                     {{/if}}
                   </div>
@@ -175,7 +176,8 @@
               <h6 class="fw-bold mb-3">Khóa học này bao gồm:</h6>
               <ul class="list-unstyled">
                 <li class="mb-2"><i class="bi bi-play-circle text-primary"></i> {{course.total_duration}} video</li>
-                <li class="mb-2"><i class="bi bi-file-earmark-text text-primary"></i> {{course.total_resources}} tài nguyên</li>
+                <li class="mb-2"><i class="bi bi-file-earmark-text text-primary"></i> {{course.total_resources}} tài
+                  nguyên</li>
                 <li class="mb-2"><i class="bi bi-phone text-primary"></i> Truy cập trên điện thoại và TV</li>
                 <li class="mb-2"><i class="bi bi-infinity text-primary"></i> Truy cập không giới hạn</li>
                 <li class="mb-2"><i class="bi bi-award text-primary"></i> Chứng chỉ hoàn thành</li>
@@ -189,15 +191,13 @@
 </section>
 
 <section class="related-courses">
-  <div class="container">
-    <h3 class="mb-4">Các khóa học khác cùng lĩnh vực</h3>
-    <div class="row g-4">
-      {{#each relatedCourses}}
-      {{> card/small-course-card}}
-      {{/each}}
-    </div>
-  </div>
+
+  {{> recommend-course-section
+    title="Các khóa học khác cùng lĩnh vực"
+    courses=relatedCourses
+  }}
 </section>
+
 
 {{#fill_section 'js'}}
 <script type="module">

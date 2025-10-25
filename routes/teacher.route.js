@@ -1,8 +1,18 @@
 import express from 'express';
+import { hbsHelpers } from '../utils/hbsHelpers.js';
+
 
 const router = express.Router();
 
-router.get('/teacher/dashboard', function(req, res) {
+router.get('/teacher/dashboard', function (req, res) {
+    const stats = {
+        total_courses: 8,
+        published_courses: 5,
+        draft_courses: 2,
+        total_students: 12500,
+        total_revenue: 450000000,
+        avg_rating: 4.6
+    };
     res.render('vwTeacher/dashboard', {
         title: 'Trang chủ giảng viên',
         user: {
@@ -10,14 +20,14 @@ router.get('/teacher/dashboard', function(req, res) {
             email: 'student@example.com',
             avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
         },
-        stats: {
-            total_courses: 8,
-            published_courses: 5,
-            draft_courses: 2,
-            total_students: 12500,
-            total_revenue: 450000000,
-            avg_rating: 4.6
-        },
+        statsList: [
+            { value: stats.total_courses, label: 'Total courses' },
+            { value: stats.published_courses, label: 'Published courses' },
+            { value: stats.draft_courses, label: 'Draft courses' },
+            { value: hbsHelpers.formatNumber(stats.total_students), label: 'Total students' },
+            { value: hbsHelpers.formatCurrency(stats.total_revenue), label: 'Total revenue' },
+            { value: stats.avg_rating, label: 'Average rating' },
+        ],
         recentCourses: [
             {
                 id: 1,
@@ -32,7 +42,7 @@ router.get('/teacher/dashboard', function(req, res) {
     });
 });
 
-router.get('/teacher/courses', function(req, res) {
+router.get('/teacher/courses', function (req, res) {
     res.render('vwTeacher/course-list', {
         title: 'Khóa học của tôi - Giảng viên',
         courses: [
@@ -76,7 +86,7 @@ router.get('/teacher/courses', function(req, res) {
     });
 });
 
-router.get('/teacher/create-course', function(req, res) {
+router.get('/teacher/create-course', function (req, res) {
     res.render('vwTeacher/create-course', {
         title: 'Tạo khóa học mới',
         categories: [
@@ -90,7 +100,7 @@ router.get('/teacher/create-course', function(req, res) {
     });
 });
 
-router.get('/teacher/edit-course/:id', function(req, res) {
+router.get('/teacher/edit-course/:id', function (req, res) {
     res.render('vwTeacher/create-course', {
         title: 'Chỉnh sửa khóa học',
         isEdit: true,
@@ -113,7 +123,7 @@ router.get('/teacher/edit-course/:id', function(req, res) {
     });
 });
 
-router.get('/teacher/course/:id', function(req, res) {
+router.get('/teacher/course/:id', function (req, res) {
     res.render('vwTeacher/course-detail', {
         title: 'Chi tiết khóa học',
         course: {
@@ -127,7 +137,7 @@ router.get('/teacher/course/:id', function(req, res) {
     });
 });
 
-router.get('/teacher/course/:id/manage', function(req, res) {
+router.get('/teacher/course/:id/manage', function (req, res) {
     res.render('vwTeacher/manage-course', {
         title: 'Quản lý khóa học',
         course: {
@@ -138,7 +148,7 @@ router.get('/teacher/course/:id/manage', function(req, res) {
     });
 });
 
-router.get('/teacher/course/:id/content', function(req, res) {
+router.get('/teacher/course/:id/content', function (req, res) {
     res.render('vwTeacher/manage-content', {
         title: 'Quản lý nội dung',
         course: {
@@ -157,7 +167,7 @@ router.get('/teacher/course/:id/content', function(req, res) {
     });
 });
 
-router.get('/teacher/course/:courseId/section/:sectionId/lecture/create', function(req, res) {
+router.get('/teacher/course/:courseId/section/:sectionId/lecture/create', function (req, res) {
     res.render('vwTeacher/create-lecture', {
         title: 'Tạo bài giảng mới',
         courseId: req.params.courseId,
@@ -165,14 +175,14 @@ router.get('/teacher/course/:courseId/section/:sectionId/lecture/create', functi
     });
 });
 
-router.get('/teacher/course/:courseId/section/create', function(req, res) {
+router.get('/teacher/course/:courseId/section/create', function (req, res) {
     res.render('vwTeacher/create-section', {
         title: 'Tạo chương mới',
         courseId: req.params.courseId
     });
 });
 
-router.get('/teacher/course/:courseId/content/:contentId/edit', function(req, res) {
+router.get('/teacher/course/:courseId/content/:contentId/edit', function (req, res) {
     res.render('vwTeacher/edit-content', {
         title: 'Chỉnh sửa nội dung',
         courseId: req.params.courseId,
@@ -185,7 +195,7 @@ router.get('/teacher/course/:courseId/content/:contentId/edit', function(req, re
     });
 });
 
-router.get('/teacher/course/:id/edit', function(req, res) {
+router.get('/teacher/course/:id/edit', function (req, res) {
     res.render('vwTeacher/edit-course', {
         title: 'Chỉnh sửa khóa học',
         course: {
@@ -205,35 +215,35 @@ router.get('/teacher/course/:id/edit', function(req, res) {
     });
 });
 
-router.post('/teacher/courses', function(req, res) {
+router.post('/teacher/courses', function (req, res) {
     res.json({ success: true, message: 'Tạo khóa học thành công!' });
 });
 
-router.post('/teacher/course/:id', function(req, res) {
+router.post('/teacher/course/:id', function (req, res) {
     res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
 });
 
-router.delete('/teacher/course/:id', function(req, res) {
+router.delete('/teacher/course/:id', function (req, res) {
     res.json({ success: true, message: 'Đã xóa khóa học!' });
 });
 
-router.post('/teacher/course/:id/sections', function(req, res) {
+router.post('/teacher/course/:id/sections', function (req, res) {
     res.json({ success: true, message: 'Tạo chương thành công!' });
 });
 
-router.post('/teacher/course/:courseId/section/:sectionId/lectures', function(req, res) {
+router.post('/teacher/course/:courseId/section/:sectionId/lectures', function (req, res) {
     res.json({ success: true, message: 'Tạo bài giảng thành công!' });
 });
 
-router.delete('/teacher/course/:courseId/section/:sectionId', function(req, res) {
+router.delete('/teacher/course/:courseId/section/:sectionId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa chương!' });
 });
 
-router.delete('/teacher/course/:courseId/lecture/:lectureId', function(req, res) {
+router.delete('/teacher/course/:courseId/lecture/:lectureId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa bài giảng!' });
 });
 
-router.post('/teacher/course/:id/publish', function(req, res) {
+router.post('/teacher/course/:id/publish', function (req, res) {
     res.json({ success: true, message: 'Đã xuất bản khóa học!' });
 });
 

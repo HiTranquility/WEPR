@@ -3,37 +3,10 @@
 {{/fill_section}}
 
 <div class="container py-5">
-  <div class="welcome-section mb-5">
-    <h1>Xin chào, {{user.full_name}}!</h1>
-    <p class="text-muted">Sẵn sàng tiếp tục học tập ngày hôm nay?</p>
-  </div>
-
-  <div class="row g-4 mb-5">
-    <div class="col-md-3">
-      <div class="stat-card">
-        <h3>{{stats.enrolled_courses}}</h3>
-        <p>Khóa học đang học</p>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <h3>{{stats.completed_courses}}</h3>
-        <p>Đã hoàn thành</p>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <h3>{{stats.certificates}}</h3>
-        <p>Chứng chỉ</p>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <h3>{{stats.total_learning_hours}}</h3>
-        <p>Giờ học</p>
-      </div>
-    </div>
-  </div>
+  {{> dashboard
+  title="Student Dashboard"
+  message="Sẵn sàng tiếp tục học tập ngày hôm nay?"
+  }}
 
   <div class="mb-5">
     <h3 class="mb-4">Tiếp tục học</h3>
@@ -65,12 +38,9 @@
     </div>
   </div>
 
-  <div>
-    <h3 class="mb-4">Khóa học đề xuất</h3>
-    <div class="row g-4">
-      {{#each recommendedCourses}}
-      {{> card/small-course-card}}
-      {{/each}}
-    </div>
-  </div>
+  {{> recommend-course-section
+  title="Các khóa học khác cùng lĩnh vực"
+  courses=recommendedCourses
+  }}
+
 </div>
