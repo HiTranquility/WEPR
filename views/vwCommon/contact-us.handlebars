@@ -9,21 +9,27 @@
   </div>
   <div class="row">
     <div class="col-lg-6 mx-auto">
-      <form id="contactForm">
+      {{#if sent}}
+      <div class="alert alert-success text-center" role="alert">
+        ✅ Đã gửi tin nhắn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm.
+      </div>
+      {{else}}
+      <form id="contactForm" method="post" action="/contact-us">
         <div class="mb-3">
           <label class="form-label">Họ tên</label>
-          <input type="text" class="form-control" required>
+          <input type="text" class="form-control" name="fullName" required>
         </div>
         <div class="mb-3">
           <label class="form-label">Email</label>
-          <input type="email" class="form-control" required>
+          <input type="email" class="form-control" name="email" required>
         </div>
         <div class="mb-3">
           <label class="form-label">Tin nhắn</label>
-          <textarea class="form-control" rows="5" required></textarea>
+          <textarea class="form-control" rows="5" name="message" required></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Gửi tin nhắn</button>
       </form>
+      {{/if}}
     </div>
   </div>
 </div>

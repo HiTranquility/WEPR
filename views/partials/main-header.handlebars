@@ -27,12 +27,14 @@
       </ul>
 
       <div class="d-flex me-3">
+        <form class="input-group" method="get" action="/search">
         <div class="input-group">
-          <input type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search">
-          <button class="btn btn-outline-primary" type="button">
+          <input type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search" name="q" required>
+          <button class="btn btn-outline-primary" type="submit">
             <i class="bi bi-search"></i>
           </button>
         </div>
+        </form>
       </div>
 
       <ul class="navbar-nav align-items-center">

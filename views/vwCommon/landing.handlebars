@@ -6,7 +6,7 @@
   <div class="carousel-indicators">
     {{#each featuredCourses}}
     <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{@index}}"
-            class="{{#if @first}}active{{/if}}"></button>
+      class="{{#if @first}}active{{/if}}"></button>
     {{/each}}
   </div>
 
@@ -85,11 +85,13 @@
       {{#each topCategories}}
       <div class="col-md-4 col-sm-6">
         <div class="category-card">
-          <div class="category-icon">
-            <i class="bi bi-book"></i>
-          </div>
-          <div class="category-name">{{name}}</div>
-          <div class="category-count">{{enrollment_count}} đăng ký mới | {{course_count}} khóa học</div>
+          <a href="/courses/{{id}}" class="text-decoration-none">
+            <div class="category-icon">
+              <i class="bi bi-book"></i>
+            </div>
+            <div class="category-name">{{name}}</div>
+            <div class="category-count">{{enrollment_count}} đăng ký mới | {{course_count}} khóa học</div>
+          </a>
         </div>
       </div>
       {{/each}}
@@ -106,7 +108,7 @@
     <div class="row g-4">
       {{#each mostViewedCourses}}
       <div class="col-lg-3 col-md-4 col-sm-6">
-        <div class="card course-card">
+        <a href="/courses/{{id}}" class="card course-card text-decoration-none">
           <div class="position-relative">
             <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
             {{#if (isBestSeller enrollment_count)}}
@@ -137,7 +139,7 @@
               {{/if}}
             </div>
           </div>
-        </div>
+        </a>
       </div>
       {{/each}}
     </div>
@@ -153,7 +155,7 @@
     <div class="row g-4">
       {{#each newestCourses}}
       <div class="col-lg-3 col-md-4 col-sm-6">
-        <div class="card course-card">
+        <a href="/courses/{{id}}" class="card course-card text-decoration-none">
           <div class="position-relative">
             <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
             {{#if (isNew created_at)}}
@@ -184,7 +186,7 @@
               {{/if}}
             </div>
           </div>
-        </div>
+        </a>
       </div>
       {{/each}}
     </div>

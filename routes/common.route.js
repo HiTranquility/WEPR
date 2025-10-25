@@ -210,8 +210,14 @@ router.get('/400', (req, res) => {
     res.status(400).render('vwCommon/400', { layout: 'error', title: '400 - Bad Request', bodyClass: 'error-400' });
 });
 
-router.post('/contact', function (req, res) {
-    res.json({ success: true, message: 'Đã gửi tin nhắn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm.' });
+router.post('/contact-us', function (req, res) {
+    const { fullName, email, message } = req.body;
+    const sentSuccessfully = fullName && email && message;
+    res.render('vwCommon/contact-us', {
+        title: 'Liên hệ',
+        layout: 'main',
+        sent: sentSuccessfully
+    });
 });
 
 export default router;
