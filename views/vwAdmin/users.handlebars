@@ -1,158 +1,161 @@
-{{#fill_section 'css'}}
-<link rel="stylesheet" href="/statics/css/admin/main.css">
+﻿{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/admin/admin-users.css">
 {{/fill_section}}
-      <div class="admin-header">
-        <div class="container-fluid">
-          <h2 class="mb-1">Quản lý người dùng</h2>
-          <p class="mb-0 opacity-75">Quản lý học viên và giảng viên</p>
+
+<div class="admin-users-page">
+  <div class="admin-header">
+    <div class="container-fluid">
+      <h2 class="mb-1">Quản lý người dùng</h2>
+      <p class="mb-0 opacity-75">Quản lý học viên và giảng viên</p>
+    </div>
+  </div>
+  
+  <div class="container-fluid">
+    <div class="data-table">
+      <div class="table-toolbar">
+        <h5 class="mb-0">Danh sách người dùng ({{users.length}})</h5>
+        <div class="d-flex gap-2">
+          <select class="form-select form-select-sm" style="width: 150px;" onchange="filterByRole(this.value)">
+            <option value="">Tất cả vai trò</option>
+            <option value="student">Học viên</option>
+            <option value="teacher">Giảng viên</option>
+            <option value="admin">Quản trị viên</option>
+          </select>
+          <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="bi bi-plus-lg"></i> Thêm người dùng
+          </button>
         </div>
       </div>
-
-      <div class="container-fluid">
-        <div class="data-table">
-          <div class="table-toolbar">
-            <h5 class="mb-0">Danh sách người dùng ({{users.length}})</h5>
-            <div class="d-flex gap-2">
-              <select class="form-select form-select-sm" style="width: 150px;" onchange="filterByRole(this.value)">
-                <option value="">Tất cả vai trò</option>
-                <option value="student">Học viên</option>
-                <option value="teacher">Giảng viên</option>
-                <option value="admin">Quản trị viên</option>
-              </select>
-              <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                <i class="bi bi-plus-lg"></i> Thêm người dùng
-              </button>
-            </div>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th style="width: 60px;">Avatar</th>
-                  <th>Họ tên</th>
-                  <th>Email</th>
-                  <th>Vai trò</th>
-                  <th>Ngày tham gia</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {{#each users}}
-                <tr>
-                  <td>
-                    <img src="{{avatar_url}}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" alt="{{full_name}}">
-                  </td>
-                  <td><strong>{{full_name}}</strong></td>
-                  <td>{{email}}</td>
-                  <td>
-                    <span class="badge bg-{{#if (eq role 'admin')}}danger{{else if (eq role 'teacher')}}success{{else}}primary{{/if}}">
-                      {{#if (eq role 'admin')}}Quản trị viên
-                      {{else if (eq role 'teacher')}}Giảng viên
-                      {{else}}Học viên
-                      {{/if}}
-                    </span>
-                  </td>
-                  <td>{{formatDate created_at}}</td>
-                  <td>
-                    <div class="action-buttons">
-                      <button class="btn btn-sm btn-outline-primary" onclick="viewUser('{{id}}')">
-                        <i class="bi bi-eye"></i>
-                      </button>
-                      <button class="btn btn-sm btn-outline-warning" onclick="editUser('{{id}}', '{{full_name}}', '{{email}}', '{{role}}')">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      {{#if (ne role 'admin')}}
-                      <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('{{id}}', '{{full_name}}')">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                      {{/if}}
-                    </div>
-                  </td>
-                </tr>
-                {{/each}}
-              </tbody>
-            </table>
-          </div>
-        </div>
+  
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 60px;">Avatar</th>
+              <th>Họ tên</th>
+              <th>Email</th>
+              <th>Vai trò</th>
+              <th>Ngày tham gia</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each users}}
+            <tr>
+              <td>
+                <img src="{{avatar_url}}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" alt="{{full_name}}">
+              </td>
+              <td><strong>{{full_name}}</strong></td>
+              <td>{{email}}</td>
+              <td>
+                <span class="badge bg-{{#if (eq role 'admin')}}danger{{else if (eq role 'teacher')}}success{{else}}primary{{/if}}">
+                  {{#if (eq role 'admin')}}Quản trị viên
+                  {{else if (eq role 'teacher')}}Giảng viên
+                  {{else}}Học viên
+                  {{/if}}
+                </span>
+              </td>
+              <td>{{formatDate created_at}}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="btn btn-sm btn-outline-primary" onclick="viewUser('{{id}}')">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-warning" onclick="editUser('{{id}}', '{{full_name}}', '{{email}}', '{{role}}')">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  {{#if (ne role 'admin')}}
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('{{id}}', '{{full_name}}')">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                  {{/if}}
+                </div>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
-</div>
-
-<div class="modal fade" id="addUserModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Thêm người dùng mới</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addUserForm">
-          <div class="mb-3">
-            <label class="form-label">Họ tên *</label>
-            <input type="text" class="form-control" id="fullName" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Email *</label>
-            <input type="email" class="form-control" id="email" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Mật khẩu *</label>
-            <input type="password" class="form-control" id="password" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Vai trò *</label>
-            <select class="form-select" id="role" required>
-              <option value="student">Học viên</option>
-              <option value="teacher">Giảng viên</option>
-              <option value="admin">Quản trị viên</option>
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-        <button type="button" class="btn btn-primary" onclick="saveUser()">Lưu</button>
       </div>
     </div>
   </div>
-</div>
-
-<div class="modal fade" id="editUserModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Sửa thông tin người dùng</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="editUserForm">
-          <input type="hidden" id="editUserId">
-          <div class="mb-3">
-            <label class="form-label">Họ tên *</label>
-            <input type="text" class="form-control" id="editFullName" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Email *</label>
-            <input type="email" class="form-control" id="editEmail" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Vai trò *</label>
-            <select class="form-select" id="editRole" required>
-              <option value="student">Học viên</option>
-              <option value="teacher">Giảng viên</option>
-              <option value="admin">Quản trị viên</option>
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-        <button type="button" class="btn btn-primary" onclick="updateUser()">Cập nhật</button>
+  
+  <div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title">Thêm người dùng mới</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
   </div>
+  <div class="modal-body">
+    <form id="addUserForm">
+      <div class="mb-3">
+        <label class="form-label">Họ tên *</label>
+        <input type="text" class="form-control" id="fullName" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email *</label>
+        <input type="email" class="form-control" id="email" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Mật khẩu *</label>
+        <input type="password" class="form-control" id="password" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Vai trò *</label>
+        <select class="form-select" id="role" required>
+          <option value="student">Học viên</option>
+          <option value="teacher">Giảng viên</option>
+          <option value="admin">Quản trị viên</option>
+        </select>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn btn-primary" onclick="saveUser()">Lưu</button>
+  </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+  <div class="modal-header">
+    <h5 class="modal-title">Sửa thông tin người dùng</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  </div>
+  <div class="modal-body">
+    <form id="editUserForm">
+      <input type="hidden" id="editUserId">
+      <div class="mb-3">
+        <label class="form-label">Họ tên *</label>
+        <input type="text" class="form-control" id="editFullName" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email *</label>
+        <input type="email" class="form-control" id="editEmail" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Vai trò *</label>
+        <select class="form-select" id="editRole" required>
+          <option value="student">Học viên</option>
+          <option value="teacher">Giảng viên</option>
+          <option value="admin">Quản trị viên</option>
+        </select>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn btn-primary" onclick="updateUser()">Cập nhật</button>
+    </div>
+  </div>
+  
 </div>
-
 {{#fill_section 'js'}}
 <script>
   function filterByRole(role) {

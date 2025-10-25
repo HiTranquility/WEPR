@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
-import accountRoute from './routes/account.route.js';
+import authRoute from './routes/auth.route.js';
 import studentRoute from './routes/student.route.js';
 import teacherRoute from './routes/teacher.route.js';
 import adminRoute from './routes/admin.route.js';
@@ -91,7 +91,7 @@ app.use('/statics', express.static('statics'));
 //Global Middleware
 
 //Server Routes
-app.use('/', accountRoute);
+app.use('/', authRoute);
 app.use('/', studentRoute);
 app.use('/', teacherRoute);
 app.use('/', adminRoute);

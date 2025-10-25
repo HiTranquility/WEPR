@@ -1,0 +1,35 @@
+.teacher-form-page {
+  color: #0f172a;
+}
+
+.teacher-form-page h2 {
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.teacher-form-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.teacher-form-card .form-label {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.teacher-form-card textarea {
+  min-height: 140px;
+}
+
+.teacher-form-card .btn-primary {
+  padding: 0.75rem 2.25rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.teacher-form-card .btn-secondary {
+  font-weight: 500;
+}

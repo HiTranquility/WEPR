@@ -1,0 +1,33 @@
+.privacy-page {
+  background: linear-gradient(135deg, #eef2ff 0%, #fdf2ff 100%);
+  padding: 4rem 0 6rem;
+}
+
+.privacy-page .container {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 3rem;
+  box-shadow: 0 28px 65px rgba(15, 23, 42, 0.08);
+}
+
+.privacy-page h1 {
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.privacy-page h3 {
+  font-weight: 600;
+  color: #4f46e5;
+  margin-top: 2rem;
+}
+
+.privacy-page p {
+  color: #475569;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+  .privacy-page .container {
+    padding: 2rem;
+  }
+}

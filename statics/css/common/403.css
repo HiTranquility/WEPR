@@ -1,0 +1,18 @@
+body.error-403 {
+  background: radial-gradient(circle at 15% 25%, rgba(240, 147, 251, 0.5), transparent 55%),
+              radial-gradient(circle at 85% 20%, rgba(245, 87, 108, 0.45), transparent 60%),
+              linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.error-403 .bubble {
+  box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.4);
+}
+
+.error-403 .btn-home {
+  background: #ffffff;
+  color: #f5576c;
+}
+
+.error-403 .btn-secondary {
+  border-color: rgba(255, 255, 255, 0.55);
+}
