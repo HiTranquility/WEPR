@@ -11,11 +11,11 @@ import adminRoute from './routes/admin.route.js';
 import commonRoute from './routes/common.route.js';
 import courseRoute from './routes/course.route.js';
 const app = express();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const isNetlify = !!process.env.NETLIFY;
-const viewsRoot = isNetlify ? path.resolve(process.cwd(), 'views') : path.resolve(__dirname, 'views');
-const staticsRoot = isNetlify ? path.resolve(process.cwd(), 'statics') : path.resolve(__dirname, 'statics');
+const __filename = isNetlify ? '' : fileURLToPath(import.meta.url);
+const __dirname = isNetlify ? process.cwd() : path.dirname(__filename);
+const viewsRoot = path.resolve(__dirname, 'views');
+const staticsRoot = path.resolve(__dirname, 'statics');
 
 //App Configuration
 app.engine('handlebars',engine ({
