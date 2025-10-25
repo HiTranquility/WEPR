@@ -1,0 +1,124 @@
+.teacher-header {
+  background: linear-gradient(120deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%);
+  color: #ffffff;
+  padding: 3.5rem 0;
+}
+
+.teacher-header h1 {
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.create-course-form {
+  max-width: 960px;
+}
+
+.form-section {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+  margin-bottom: 2.5rem;
+}
+
+.form-section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+  color: #1f2937;
+}
+
+.image-upload-area {
+  border: 2px dashed rgba(99, 102, 241, 0.45);
+  border-radius: 16px;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  background: rgba(99, 102, 241, 0.08);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.image-upload-area:hover {
+  border-color: #6366f1;
+  transform: translateY(-3px);
+  box-shadow: 0 16px 30px rgba(99, 102, 241, 0.12);
+}
+
+.image-upload-area i {
+  font-size: 3rem;
+  color: #6366f1;
+  margin-bottom: 0.75rem;
+}
+
+.image-preview {
+  max-width: 100%;
+  border-radius: 12px;
+  margin-top: 1.5rem;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+}
+
+.section-builder {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 14px;
+  margin-bottom: 1.75rem;
+  overflow: hidden;
+  background: #f8fafc;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+}
+
+.section-header-input {
+  padding: 1.25rem;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.section-header-input .btn {
+  font-weight: 500;
+}
+
+.lecture-list {
+  padding: 1.25rem;
+  min-height: 72px;
+}
+
+.lecture-item-builder {
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+}
+
+.lecture-item-builder:last-child {
+  margin-bottom: 0;
+}
+
+.wysiwyg-editor {
+  min-height: 320px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: inset 0 2px 12px rgba(15, 23, 42, 0.04);
+}
+
+.create-course-form .btn-success {
+  padding: 0.75rem 2.25rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+@media (max-width: 767.98px) {
+  .form-section {
+    padding: 1.5rem;
+  }
+
+  .image-upload-area {
+    padding: 2rem 1rem;
+  }
+}

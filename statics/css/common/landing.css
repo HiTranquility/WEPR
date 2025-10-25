@@ -1,0 +1,243 @@
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.landing-page #heroCarousel {
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.18);
+}
+
+.landing-page .carousel-item img {
+  height: 520px;
+  object-fit: cover;
+  filter: brightness(0.78);
+}
+
+.landing-page .carousel-caption {
+  background: rgba(15, 23, 42, 0.65);
+  padding: 2.5rem 3rem;
+  border-radius: 24px;
+  backdrop-filter: blur(10px);
+  max-width: 680px;
+  margin: 0 auto;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.35);
+}
+
+.landing-page .carousel-caption h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.landing-page .carousel-caption p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.landing-page .carousel-control-prev-icon,
+.landing-page .carousel-control-next-icon {
+  filter: invert(1);
+}
+
+.landing-page .stats-section {
+  background: #f8fafc;
+  padding: 4rem 0;
+}
+
+.landing-page .stat-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 24px 55px rgba(15, 23, 42, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.landing-page .stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 32px 70px rgba(15, 23, 42, 0.12);
+}
+
+.landing-page .stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.landing-page .stat-label {
+  color: #64748b;
+  letter-spacing: 0.02em;
+}
+
+.landing-page .category-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 2rem;
+  text-align: center;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 24px 52px rgba(15, 23, 42, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.landing-page .category-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 32px 70px rgba(15, 23, 42, 0.12);
+}
+
+.landing-page .category-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 1.5rem;
+}
+
+.landing-page .category-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.landing-page .category-count {
+  color: #64748b;
+}
+
+.landing-page .course-card {
+  border: none;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  height: 100%;
+}
+
+.landing-page .course-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 36px 80px rgba(15, 23, 42, 0.14);
+}
+
+.landing-page .course-image {
+  height: 200px;
+  width: 100%;
+  object-fit: cover;
+}
+
+.landing-page .course-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: #f97316;
+  color: #ffffff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.landing-page .course-badge.bestseller {
+  background: #22c55e;
+}
+
+.landing-page .course-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.landing-page .course-category {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2563eb;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-page .course-teacher {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.landing-page .teacher-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.landing-page .course-rating {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.landing-page .rating-stars {
+  font-weight: 600;
+  color: #f59e0b;
+}
+
+.landing-page .course-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.landing-page .price-current {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.landing-page .price-original {
+  color: #94a3b8;
+  text-decoration: line-through;
+  margin-left: 0.5rem;
+}
+
+.landing-page .discount-badge {
+  background: rgba(248, 113, 113, 0.12);
+  color: #ef4444;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+@media (max-width: 992px) {
+  .landing-page .carousel-item img {
+    height: 420px;
+  }
+
+  .landing-page .carousel-caption {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-page {
+    gap: 3rem;
+  }
+
+  .landing-page .carousel-item img {
+    height: 360px;
+  }
+
+  .landing-page .carousel-caption {
+    padding: 1.5rem;
+  }
+}

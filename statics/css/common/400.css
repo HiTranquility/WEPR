@@ -1,0 +1,19 @@
+body.error-400 {
+  background: radial-gradient(circle at 20% 20%, rgba(0, 198, 255, 0.45), transparent 55%),
+              radial-gradient(circle at 80% 10%, rgba(0, 114, 255, 0.35), transparent 60%),
+              linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+}
+
+.error-400 .error-container {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(18px);
+}
+
+.error-400 .btn-home {
+  background: #ffffff;
+  color: #0058d6;
+}
+
+.error-400 .btn-home:hover {
+  color: #003c97;
+}
