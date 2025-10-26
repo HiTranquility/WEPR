@@ -40,6 +40,43 @@ router.get('/courses', async function(req, res, next) {
     }
 });
 
+router.get("/courses/detail", async function (req, res, next) {
+  try {
+    
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).render("404", {
+        title: "Lỗi truy cập",
+        message: "Thiếu ID khóa học trong yêu cầu.",
+        layout: "main",
+      });
+    }
+
+    // 🔹 Gọi model để lấy chi tiết khóa học
+    const course = await getCourseDetail(Number(id));
+
+    if (!course) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy khóa học",
+        message: "Khóa học bạn yêu cầu không tồn tại hoặc đã bị xóa.",
+        layout: "main",
+      });
+    }
+
+    // 🔹 Render ra view chi tiết riêng biệt
+    res.render("vwCourse/detail", {
+      title: course.title || "Chi tiết khóa học",
+      course, // object chi tiết khóa học
+      layout: false, // ❗ Vì dùng file riêng, không cần layout 'main'
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+            
+
 router.get('/courses/:id', async function(req, res, next) {
     try {
         const course = await getCourseDetail(req.params.id);
@@ -90,37 +127,6 @@ router.get('/courses/:id/preview/:lectureId', function(req, res) {
     });
 });
 
-router.get('/search', function(req, res) {
-    const searchQuery = req.query.q || '';
-    const mockResults = [
-        {
-            id: 1,
-            title: 'Complete Python Bootcamp',
-            short_description: 'Learn Python from scratch',
-            thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-            rating_avg: 4.6,
-            rating_count: 4789,
-            discount_price: 499000,
-            enrollment_count: 42567,
-            category: { name: 'Lập trình' },
-            teacher: {
-                full_name: 'Jose Portilla',
-                avatar_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg'
-            }
-        }
-    ];
-
-    res.render('vwCourse/list', {
-        title: `Kết quả tìm kiếm: ${searchQuery}`,
-        courses: mockResults,
-        categories: [],
-        searchQuery: searchQuery,
-        currentPage: 1,
-        totalPages: 1,
-        sortBy: 'popular',
-        layout: 'main'
-    });
-});
 
 router.post('/courses/:id/enroll', function(req, res) {
     res.json({ success: true, message: 'Đã đăng ký khóa học thành công!' });
