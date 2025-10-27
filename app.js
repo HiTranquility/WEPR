@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
+import path from 'path';
 import authRoute from './routes/auth.route.js';
 import studentRoute from './routes/student.route.js';
 import teacherRoute from './routes/teacher.route.js';
@@ -9,11 +10,13 @@ import adminRoute from './routes/admin.route.js';
 import commonRoute from './routes/common.route.js';
 import courseRoute from './routes/course.route.js';
 const app = express();
-const __dirname = import.meta.dirname;
+const rootDir = process.cwd();
+const viewsRoot = path.resolve(rootDir, 'views');
+const staticsRoot = path.resolve(rootDir, 'statics');
 
 //App Configuration
 app.engine('handlebars',engine ({
-    partialsDir: __dirname + '/views/partials',
+    partialsDir: `${viewsRoot}/partials`,
     helpers: {
         fill_section: hbs_sections(),
         formatNumber(value) {
@@ -83,10 +86,10 @@ app.engine('handlebars',engine ({
     }
 }));
 app.set('view engine', 'handlebars');
-app.set('views', __dirname + '/views');
+app.set('views', viewsRoot);
 
 //Routes and Static Files Configuration
-app.use('/statics', express.static('statics'));
+app.use('/statics', express.static(staticsRoot));
 
 //Global Middleware
 
@@ -118,6 +121,10 @@ app.use((err, req, res, next) => {
   return res.redirect('/400');
 });
 //Server Configuration
-app.listen(process.env.APP_PORT || 3000, function() {
-	console.log('Server is running on port ' + (process.env.APP_PORT || 3000));
-});
+if (!process.env.NETLIFY) {
+    app.listen(process.env.APP_PORT || 3000, function() {
+		console.log('Server is running on port ' + (process.env.APP_PORT || 3000));
+	});
+}
+
+export default app;
