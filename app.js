@@ -82,6 +82,16 @@ app.engine('handlebars',engine ({
                 default:
                     return 0;
             }
+        },
+        buildPaginationUrl(page, searchQuery, category, sortBy) {
+            const params = new URLSearchParams();
+            if (page) params.set('page', page);
+            if (searchQuery) params.set('q', searchQuery);
+            if (category) params.set('category', category);
+            if (sortBy && sortBy !== 'popular') params.set('sort', sortBy);
+            
+            const queryString = params.toString();
+            return queryString ? `?${queryString}` : '?';
         }
     }
 }));

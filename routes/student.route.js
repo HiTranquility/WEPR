@@ -1,5 +1,6 @@
 import express from 'express';
 import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseLearningData } from '../models/user.model.js';
+import { getAllCategories } from '../models/course-category.model.js';
 const router = express.Router();
 
 router.get("/student/dashboard", async (req, res, next) => {
@@ -7,11 +8,14 @@ router.get("/student/dashboard", async (req, res, next) => {
     //const studentId = req.user.id;
     const studentId = "f5555555-5555-5555-5555-555555555555";
     const data = await getStudentDashboard(studentId);
+    const allCategories = await getAllCategories({ includeCounts: false });
     console.log("Dashboard data:", data);
     if (!data) return res.redirect('/404');
     res.render("vwStudent/dashboard", {
       title: "Trang chủ học viên",
       ...data, // user, stats, recentCourses, recommendedCourses
+      allCategories,
+      searchQuery: null,
       layout: "main",   
     });
   } catch (err) {
@@ -34,10 +38,13 @@ router.get("/student/my-courses", async (req, res, next) => {
       });
     }
 
+    const allCategories = await getAllCategories({ includeCounts: false });
     res.render("vwStudent/my-courses", {
       title: "Khóa học của tôi",
       user: data.user,
       enrolledCourses: data.enrolledCourses,
+      allCategories,
+      searchQuery: null,
       layout: "main",
     });
   } catch (err) {

@@ -1,6 +1,7 @@
 import express from 'express';
 import database from '../utils/database.js';
-import { getTeacherDashboard, getTeacherCourses, getAllCategories, getCourseById, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js'; 
+import { getTeacherDashboard, getTeacherCourses, getCourseById, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
+import { getAllCategories } from '../models/course-category.model.js'; 
 const router = express.Router();
 
 router.get("/teacher/dashboard", async (req, res, next) => {
@@ -8,6 +9,7 @@ router.get("/teacher/dashboard", async (req, res, next) => {
     const teacherId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
     const data = await getTeacherDashboard(teacherId);
+    const allCategories = await getAllCategories({ includeCounts: false });
 
     if (!data) {
       return res.status(404).render("404", {
@@ -20,6 +22,8 @@ router.get("/teacher/dashboard", async (req, res, next) => {
     res.render("vwTeacher/dashboard", {
       title: "Trang chủ giảng viên",
       ...data, // teacher, stats, recentCourses
+      allCategories,
+      searchQuery: null,
       layout: "main",
     });
   } catch (err) {

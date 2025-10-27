@@ -24,12 +24,12 @@
       </ul>
 
       <div class="d-flex me-3">
-        <div class="input-group">
-          <input type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search">
-          <button class="btn btn-outline-primary" type="button">
+        <form class="input-group" id="searchForm" action="/courses" method="GET">
+          <input type="search" class="form-control" name="q" id="searchInput" placeholder="Tìm kiếm khóa học..." aria-label="Search" value="{{searchQuery}}">
+          <button class="btn btn-outline-primary" type="submit">
             <i class="bi bi-search"></i>
           </button>
-        </div>
+        </form>
       </div>
 
       <ul class="navbar-nav align-items-center">
@@ -58,3 +58,28 @@
     </div>
   </div>
 </nav>
+
+<script>
+// Xử lý search form
+document.getElementById('searchForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const searchInput = document.getElementById('searchInput');
+  const searchQuery = searchInput.value.trim();
+  
+  if (searchQuery) {
+    // Chuyển hướng đến trang courses với query parameter
+    window.location.href = `/courses?q=${encodeURIComponent(searchQuery)}`;
+  } else {
+    // Nếu không có query, chuyển đến trang courses
+    window.location.href = '/courses';
+  }
+});
+
+// Xử lý clear search
+document.getElementById('searchInput')?.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    this.value = '';
+    this.blur();
+  }
+});
+</script>

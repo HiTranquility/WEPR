@@ -4,6 +4,7 @@ import { getCategoriesForCourses, getAllCategories } from '../models/course-cate
 
 const router = express.Router();
 
+
 router.get('/courses', async function(req, res, next) {
     try {
         const { q, category, sort = 'popular', page = '1', limit = '12', min_price, max_price, only_discounted, featured } = req.query;
@@ -18,15 +19,17 @@ router.get('/courses', async function(req, res, next) {
             minPrice: min_price != null ? Number(min_price) : undefined,
             maxPrice: max_price != null ? Number(max_price) : undefined,
             onlyDiscounted: only_discounted === 'true',
-            isFeatured: featured === 'true'
+            isFeatured: featured ? (featured === 'true') : undefined
         });
 
         const categories = await getAllCategories({ includeCounts: true });
+        const allCategories = await getAllCategories({ includeCounts: false });
 
         res.render('vwCourse/list', {
             title: 'Danh sách khóa học',
             courses: data,
             categories,
+            allCategories,
             currentCategory: category || null,
             currentPage: pagination.page,
             totalPages: pagination.totalPages,
@@ -82,6 +85,8 @@ router.get('/courses/:id', async function(req, res, next) {
             ? await getRelatedCourses(course.id, course.category.id, 6)
             : [];
 
+        const allCategories = await getAllCategories({ includeCounts: false });
+
         res.render('vwCourse/detail', {
             title: course.title,
             course,
@@ -89,6 +94,8 @@ router.get('/courses/:id', async function(req, res, next) {
             reviews: [],
             isEnrolled: false,
             isInWatchlist: false,
+            allCategories,
+            searchQuery: null,
             layout: 'main'
         });
     } catch (err) {

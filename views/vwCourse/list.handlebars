@@ -143,18 +143,18 @@
         <nav class="pagination-nav mt-5">
           <ul class="pagination justify-content-center">
             <li class="page-item {{#if (eq currentPage 1)}}disabled{{/if}}">
-              <a class="page-link" href="?page={{math currentPage '-' 1}}">Trước</a>
+              <a class="page-link" href="?page={{math currentPage '-' 1}}{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Trước</a>
             </li>
             <li class="page-item {{#if (eq currentPage 1)}}active{{/if}}">
-              <a class="page-link" href="?page=1">1</a>
+              <a class="page-link" href="?page=1{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">1</a>
             </li>
             {{#if (gt totalPages 1)}}
             <li class="page-item {{#if (eq currentPage 2)}}active{{/if}}">
-              <a class="page-link" href="?page=2">2</a>
+              <a class="page-link" href="?page=2{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">2</a>
             </li>
             {{/if}}
             <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
-              <a class="page-link" href="?page={{math currentPage '+' 1}}">Sau</a>
+              <a class="page-link" href="?page={{math currentPage '+' 1}}{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau</a>
             </li>
           </ul>
         </nav>
@@ -166,16 +166,62 @@
 
 {{#fill_section 'js'}}
 <script>
+// Xử lý sort với search parameters
 document.getElementById('sortSelect')?.addEventListener('change', function(e) {
   const url = new URL(window.location);
   url.searchParams.set('sort', e.target.value);
   window.location.href = url.toString();
 });
 
+// Xử lý clear filters
 document.getElementById('clearFilters')?.addEventListener('click', function() {
-  window.location.href = window.location.pathname;
+  const url = new URL(window.location);
+  // Chỉ giữ lại search query nếu có
+  const searchQuery = url.searchParams.get('q');
+  if (searchQuery) {
+    window.location.href = `/courses?q=${encodeURIComponent(searchQuery)}`;
+  } else {
+    window.location.href = '/courses';
+  }
 });
 
+// Xử lý category filters
+document.querySelectorAll('input[type="checkbox"][id^="cat-"]').forEach(checkbox => {
+  checkbox.addEventListener('change', function() {
+    const url = new URL(window.location);
+    const categoryId = this.value;
+    
+    if (this.checked) {
+      url.searchParams.set('category', categoryId);
+    } else {
+      url.searchParams.delete('category');
+    }
+    
+    window.location.href = url.toString();
+  });
+});
+
+// Xử lý price filters
+document.querySelectorAll('input[name="priceFilter"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    const url = new URL(window.location);
+    
+    if (this.value === 'free') {
+      url.searchParams.set('min_price', '0');
+      url.searchParams.set('max_price', '0');
+    } else if (this.value === 'paid') {
+      url.searchParams.set('min_price', '1');
+      url.searchParams.delete('max_price');
+    } else {
+      url.searchParams.delete('min_price');
+      url.searchParams.delete('max_price');
+    }
+    
+    window.location.href = url.toString();
+  });
+});
+
+// Xử lý wishlist
 document.querySelectorAll('.btn-wishlist').forEach(btn => {
   btn.addEventListener('click', function(e) {
     e.preventDefault();
