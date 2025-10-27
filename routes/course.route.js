@@ -96,45 +96,44 @@ router.get('/courses/:id', async function(req, res, next) {
     }
 });
 
-router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
-  try {
-    const { id: courseId, lectureId } = req.params;
+router.get('/courses/:courseId/sections/:sectionId/preview/:lectureId', async (req, res, next) => {
+    try {
+      const { courseId, sectionId, lectureId } = req.params;
+      const data = await getLecturePreview(courseId, sectionId, lectureId);
 
-    const data = await getLecturePreview(courseId, lectureId);
-    console.log("getLecturePreview:", data);
+      if (!data) {
+        return res.status(404).render('404', {
+          title: 'Không tìm thấy bài giảng',
+          message:
+            'Bài giảng xem trước không tồn tại, hoặc chưa được bật chế độ preview.',
+          layout: 'main',
+        });
+      }
 
-    if (!data) {
-      return res.status(404).render("404", {
-        title: "Không tìm thấy bài giảng",
-        message:
-          "Bài giảng xem trước không tồn tại, hoặc chưa được bật chế độ preview.",
-        layout: "main",
-      });
-    }
-
-    res.render("vwCourse/preview", {
-      layout: false, 
-      title: `Preview: ${data.lecture_title}`,
-      lecture: {
-        id: data.lecture_id,
-        title: data.lecture_title,
-        video_url: data.video_url,
-        description: data.description,
-        duration: data.duration,
-      },
-      course: {
-        id: data.course_id,
-        title: data.course_title,
-        teacher: {
-          full_name: data.teacher_name,
-          avatar_url: data.teacher_avatar,
+      res.render('vwCourse/preview', {
+        layout: false,
+        title: `Preview: ${data.lecture_title}`,
+        lecture: {
+          id: data.lecture_id,
+          title: data.lecture_title,
+          video_url: data.video_url,
+          duration: data.duration,
         },
-      },
-    });
-  } catch (err) {
-    next(err);
+        course: {
+          id: data.course_id,
+          title: data.course_title,
+          teacher: {
+            full_name: data.teacher_name,
+            avatar_url: data.teacher_avatar,
+          },
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
+
 
 
 router.post('/courses/:id/enroll', function(req, res) {

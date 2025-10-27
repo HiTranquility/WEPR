@@ -640,8 +640,8 @@ export const getStudentWatchlist = async (studentId) => {
 // STUDENT LEARN PAGE (REAL DATA ONLY)
 //=================
 
-export const getCourseLearningData = async (studentId, courseId) => {
-  // 🔹 Lấy thông tin khóa học
+export const getCourseLearningData = async (studentId, courseId, sectionId, lectureId) => {
+  // 🔹 1. Lấy thông tin khóa học
   const course = await database("courses AS c")
     .leftJoin("categories AS cat", "c.category_id", "cat.id")
     .select(
@@ -654,13 +654,13 @@ export const getCourseLearningData = async (studentId, courseId) => {
 
   if (!course) return null;
 
-  // 🔹 Lấy danh sách sections và lectures thật
+  // 🔹 2. Lấy danh sách sections + lectures của khóa học
   const rows = await database("sections AS s")
     .leftJoin("lectures AS l", "s.id", "l.section_id")
     .where("s.course_id", courseId)
     .orderBy([
       { column: "s.order_index", order: "asc" },
-      { column: "l.order_index", order: "asc" }
+      { column: "l.order_index", order: "asc" },
     ])
     .select(
       "s.id AS section_id",
@@ -672,11 +672,14 @@ export const getCourseLearningData = async (studentId, courseId) => {
       "l.is_preview"
     );
 
-  // 🔹 Gom bài giảng theo từng section
+  if (!rows.length) return null;
+
+  // 🔹 3. Gom bài giảng theo từng section
   const sectionMap = new Map();
   rows.forEach((r) => {
     if (!sectionMap.has(r.section_id)) {
       sectionMap.set(r.section_id, {
+        id: r.section_id,
         title: r.section_title,
         lectures: [],
       });
@@ -694,17 +697,14 @@ export const getCourseLearningData = async (studentId, courseId) => {
 
   const sections = Array.from(sectionMap.values());
 
-  // 🔹 Lấy bài giảng đầu tiên làm mặc định (nếu có)
-  const firstLecture = rows.length > 0 && rows[0].lecture_id
-    ? {
-        id: rows[0].lecture_id,
-        title: rows[0].lecture_title,
-        video_url: rows[0].video_url,
-        description: null,
-        resources: [],
-      }
-    : null;
+  // 🔹 4. Xác định bài giảng hiện tại
+  const currentLecture = rows.find(
+    (r) => r.section_id === sectionId && r.lecture_id === lectureId
+  );
 
+  if (!currentLecture) return null;
+
+  // 🔹 5. Trả kết quả cuối cùng
   return {
     course: {
       id: course.id,
@@ -712,8 +712,16 @@ export const getCourseLearningData = async (studentId, courseId) => {
       category: { name: course.category_name },
       sections,
     },
-    currentLecture: firstLecture,
-    currentLectureIndex: firstLecture ? 1 : 0,
-    notes: [],
+    currentLecture: {
+      id: currentLecture.lecture_id,
+      title: currentLecture.lecture_title,
+      video_url: currentLecture.video_url,
+      duration: currentLecture.duration
+        ? `${currentLecture.duration} phút`
+        : null,
+      description: null, // có thể thêm mô tả nếu DB có
+      resources: [],
+    },
+    notes: [], // sau này có thể lấy từ bảng notes
   };
 };

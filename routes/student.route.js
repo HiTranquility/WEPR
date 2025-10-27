@@ -71,17 +71,17 @@ router.get("/student/watchlist", async (req, res, next) => {
   }
 });
 
-router.get("/learn/:courseId", async (req, res, next) => {
+router.get('/learn/:courseId/sections/:sectionId/lectures/:lectureId', async (req, res, next) => {
   try {
     const studentId = "f4444444-4444-4444-4444-444444444444"; // tạm ID học viên
-    const { courseId } = req.params;
+    const { courseId, sectionId, lectureId } = req.params;
 
-    const data = await getCourseLearningData(studentId, courseId);
+    const data = await getCourseLearningData(studentId, courseId, sectionId, lectureId);
 
     if (!data) {
       return res.status(404).render("404", {
-        title: "Không tìm thấy khóa học",
-        message: "Khóa học này không tồn tại hoặc chưa có nội dung.",
+        title: "Không tìm thấy nội dung",
+        message: "Bài học hoặc khóa học này không tồn tại.",
         layout: "main",
       });
     }
@@ -111,10 +111,7 @@ router.delete('/student/watchlist/:courseId', function(req, res) {
     res.json({ success: true, message: 'Đã xóa khỏi watchlist!' });
 });
 
-router.post('/learn/:courseId/lecture/:lectureId/complete', function(req, res) {
-    res.json({ success: true, message: 'Đã đánh dấu hoàn thành!' });
-});
-
+router.post('/learn/:courseId/lecture/:lectureId/complete', function(req, res) { res.json({ success: true, message: 'Đã đánh dấu hoàn thành!' }); });
 router.post('/learn/:courseId/notes', function(req, res) {
     res.json({ success: true, message: 'Đã lưu ghi chú!' });
 });
