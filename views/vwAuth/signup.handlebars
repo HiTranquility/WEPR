@@ -8,7 +8,7 @@
     <div id="alertMessage" class="alert alert-danger hidden"></div>
 
     <div class="social-login">
-      <a href="/google" class="btn-social">
+      <a href="/google?mode=signup" class="btn-social">
         <svg viewBox="0 0 24 24">
           <path fill="#4285F4"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -42,17 +42,17 @@
 
       <div class="form-group">
         <label class="form-label" for="email">Email Address</label>
-        <input type="email" class="form-control" id="email" name="email" required>
+        <input type="email" class="form-control" id="email" name="email" required autocomplete="username">
       </div>
 
       <div class="form-group">
         <label class="form-label" for="password">Password</label>
-        <input type="password" class="form-control" id="password" name="password" required minlength="6">
+        <input type="password" class="form-control" id="password" name="password" required minlength="6" autocomplete="new-password">
       </div>
 
       <div class="form-group">
         <label class="form-label" for="confirmPassword">Confirm Password</label>
-        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required autocomplete="new-password">
       </div>
 
       <div class="form-group">

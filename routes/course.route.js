@@ -4,6 +4,7 @@ import { getCategoriesForCourses, getAllCategories } from '../models/course-cate
 
 const router = express.Router();
 
+
 router.get('/courses', async function(req, res, next) {
     try {
         const { q, category, sort = 'popular', page = '1', limit = '12', min_price, max_price, only_discounted, featured } = req.query;
@@ -18,15 +19,17 @@ router.get('/courses', async function(req, res, next) {
             minPrice: min_price != null ? Number(min_price) : undefined,
             maxPrice: max_price != null ? Number(max_price) : undefined,
             onlyDiscounted: only_discounted === 'true',
-            isFeatured: featured === 'true'
+            isFeatured: featured ? (featured === 'true') : undefined
         });
 
         const categories = await getAllCategories({ includeCounts: true });
+        const allCategories = await getAllCategories({ includeCounts: false });
 
         res.render('vwCourse/list', {
             title: 'Danh sách khóa học',
             courses: data,
             categories,
+            allCategories,
             currentCategory: category || null,
             currentPage: pagination.page,
             totalPages: pagination.totalPages,
@@ -82,6 +85,8 @@ router.get('/courses/:id', async function(req, res, next) {
             ? await getRelatedCourses(course.id, course.category.id, 6)
             : [];
 
+        const allCategories = await getAllCategories({ includeCounts: false });
+
         res.render('vwCourse/detail', {
             title: course.title,
             course,
@@ -89,6 +94,8 @@ router.get('/courses/:id', async function(req, res, next) {
             reviews: [],
             isEnrolled: false,
             isInWatchlist: false,
+            allCategories,
+            searchQuery: null,
             layout: 'main'
         });
     } catch (err) {
@@ -96,11 +103,12 @@ router.get('/courses/:id', async function(req, res, next) {
     }
 });
 
-router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
+router.get("/courses/:courseId/sections/:sectionId/preview/:lectureId", async (req, res, next) => {
   try {
-    const { id: courseId, lectureId } = req.params;
+    const { courseId, sectionId, lectureId } = req.params;
 
-    const data = await getLecturePreview(courseId, lectureId);
+    // Gọi hàm truy vấn lecture preview theo course, section, lecture
+    const data = await getLecturePreview(courseId, sectionId, lectureId);
     console.log("getLecturePreview:", data);
 
     if (!data) {
@@ -113,14 +121,17 @@ router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
     }
 
     res.render("vwCourse/preview", {
-      layout: false, 
+      layout: false,
       title: `Preview: ${data.lecture_title}`,
       lecture: {
         id: data.lecture_id,
         title: data.lecture_title,
         video_url: data.video_url,
-        description: data.description,
         duration: data.duration,
+      },
+      section: {
+        id: data.section_id,
+        title: data.section_title,
       },
       course: {
         id: data.course_id,
@@ -135,16 +146,6 @@ router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
     next(err);
   }
 });
-
-
-router.get('/courses/search?keyword=', async (req, res, next) => {
-  try {
-    const { keyword } = req.query;
-    const data = await searchCourses(keyword);
-    res.json(data);
-  } catch (err) {
-    next(err);
-  }
 
 router.post('/courses/:id/enroll', function(req, res) {
     res.json({ success: true, message: 'Đã đăng ký khóa học thành công!' });
