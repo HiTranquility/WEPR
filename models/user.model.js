@@ -26,6 +26,11 @@ export const getAllUsers = async () => {
   return await baseQuery.select("*").orderBy("id", "asc");
 };
 
+// models/user.model.js
+export const getUserByEmail = async (email) => {
+  return await baseQuery.clone().where('email', email).first();
+};
+
 //=================
 // STUDENTS - CRUD
 //=================

@@ -1,254 +1,125 @@
 <div class="auth-container">
-    <div class="auth-header">
-      <h1>Create Account</h1>
-      <p>Join our online learning community</p>
-    </div>
-
-    <div class="auth-body">
-      <div id="alertMessage" class="alert alert-danger hidden"></div>
-
-      <div class="social-login">
-        <button type="button" class="btn-social" id="googleLogin">
-          <svg viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Google
-        </button>
-        <button type="button" class="btn-social" id="facebookLogin">
-          <svg viewBox="0 0 24 24">
-            <path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-          </svg>
-          Facebook
-        </button>
-      </div>
-
-      <div class="divider">
-        <span>or sign up with email</span>
-      </div>
-
-      <form id="signupForm" novalidate>
-        <div class="form-group">
-          <label class="form-label" for="fullName">Full Name</label>
-          <input type="text" class="form-control" id="fullName" required>
-          <div class="error-message" id="fullNameError">Please enter your full name</div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="email">Email Address</label>
-          <input type="email" class="form-control" id="email" required>
-          <div class="error-message" id="emailError">Please enter a valid email</div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <input type="password" class="form-control" id="password" required minlength="6">
-          <div class="password-strength">
-            <div class="password-strength-bar" id="passwordStrength"></div>
-          </div>
-          <div class="error-message" id="passwordError">Password must be at least 6 characters</div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="confirmPassword">Confirm Password</label>
-          <input type="password" class="form-control" id="confirmPassword" required>
-          <div class="error-message" id="confirmPasswordError">Passwords do not match</div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">I want to:</label>
-          <div class="role-selection">
-            <div class="role-option">
-              <input type="radio" name="role" id="roleStudent" value="student" checked>
-              <label for="roleStudent">Learn</label>
-            </div>
-            <div class="role-option">
-              <input type="radio" name="role" id="roleTeacher" value="teacher">
-              <label for="roleTeacher">Teach</label>
-            </div>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-primary" id="submitBtn">Sign Up</button>
-      </form>
-    </div>
-
-    <div class="auth-footer">
-      Already have an account? <a href="/signin">Sign In</a>
-    </div>
+  <div class="auth-header">
+    <h1>Create Account</h1>
+    <p>Join our online learning community</p>
   </div>
 
-  <script type="module">
-    import { supabase } from '/statics/js/supabase-client.js';
+  <div class="auth-body">
+    <div id="alertMessage" class="alert alert-danger hidden"></div>
 
-    const form = document.getElementById('signupForm');
-    const fullNameInput = document.getElementById('fullName');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirmPassword');
-    const submitBtn = document.getElementById('submitBtn');
+    <div class="social-login">
+      <button type="button" class="btn-social" id="googleLogin">
+        <svg viewBox="0 0 24 24">
+          <path fill="#4285F4"
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="#34A853"
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="#FBBC05"
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+          <path fill="#EA4335"
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
+        Google
+      </button>
+      <button type="button" class="btn-social" id="facebookLogin">
+        <svg viewBox="0 0 24 24">
+          <path fill="#1877F2"
+            d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+        </svg>
+        Facebook
+      </button>
+    </div>
+
+    <div class="divider">
+      <span>or sign up with email</span>
+    </div>
+
+  <form id="signupForm" action="/auth/signup" method="POST" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="fullName">Full Name</label>
+        <input type="text" class="form-control" id="fullName" name="fullName" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required minlength="6">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Confirm Password</label>
+        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">I want to:</label>
+        <div class="role-selection">
+          <div class="role-option">
+            <input type="radio" name="role" id="roleStudent" value="student" checked>
+            <label for="roleStudent">Learn</label>
+          </div>
+          <div class="role-option">
+            <input type="radio" name="role" id="roleTeacher" value="teacher">
+            <label for="roleTeacher">Teach</label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">Sign Up</button>
+    </form>
+  </div>
+
+  <div class="auth-footer">
+    Already have an account? <a href="/signin">Sign In</a>
+  </div>
+</div>
+
+{{#fill_section 'js'}}
+
+<script>
+  document.getElementById('signupForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const role = document.querySelector('input[name="role"]:checked').value;
+
     const alertMessage = document.getElementById('alertMessage');
-    const passwordStrength = document.getElementById('passwordStrength');
+    alertMessage.classList.add('hidden');
 
-    passwordInput.addEventListener('input', (e) => {
-      const password = e.target.value;
-      const strength = calculatePasswordStrength(password);
-
-      passwordStrength.className = 'password-strength-bar';
-      if (strength >= 3) {
-        passwordStrength.classList.add('strong');
-      } else if (strength >= 2) {
-        passwordStrength.classList.add('medium');
-      } else if (strength >= 1) {
-        passwordStrength.classList.add('weak');
-      }
-    });
-
-    function calculatePasswordStrength(password) {
-      let strength = 0;
-      if (password.length >= 6) strength++;
-      if (password.length >= 10) strength++;
-      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-      if (/\d/.test(password)) strength++;
-      if (/[^a-zA-Z\d]/.test(password)) strength++;
-      return strength;
+    if (password !== confirmPassword) {
+      alertMessage.textContent = 'Passwords do not match!';
+      alertMessage.classList.remove('hidden');
+      return;
     }
 
-    function showError(input, errorElement) {
-      input.classList.add('error');
-      errorElement.classList.add('show');
-    }
+    try {
+      const res = await fetch('/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, email, password, role })
+      });
 
-    function hideError(input, errorElement) {
-      input.classList.remove('error');
-      errorElement.classList.remove('show');
-    }
-
-    function validateEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    function validateForm() {
-      let isValid = true;
-
-      const fullName = fullNameInput.value.trim();
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      const confirmPassword = confirmPasswordInput.value;
-
-      if (fullName === '') {
-        showError(fullNameInput, document.getElementById('fullNameError'));
-        isValid = false;
-      } else {
-        hideError(fullNameInput, document.getElementById('fullNameError'));
-      }
-
-      if (!validateEmail(email)) {
-        showError(emailInput, document.getElementById('emailError'));
-        isValid = false;
-      } else {
-        hideError(emailInput, document.getElementById('emailError'));
-      }
-
-      if (password.length < 6) {
-        showError(passwordInput, document.getElementById('passwordError'));
-        isValid = false;
-      } else {
-        hideError(passwordInput, document.getElementById('passwordError'));
-      }
-
-      if (password !== confirmPassword) {
-        showError(confirmPasswordInput, document.getElementById('confirmPasswordError'));
-        isValid = false;
-      } else {
-        hideError(confirmPasswordInput, document.getElementById('confirmPasswordError'));
-      }
-
-      return isValid;
-    }
-
-    document.getElementById('googleLogin').addEventListener('click', async () => {
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/`
-          }
-        });
-        if (error) throw error;
-      } catch (error) {
-        console.error('Google login error:', error);
-        alertMessage.className = 'alert alert-danger';
-        alertMessage.textContent = error.message || 'Google login failed.';
+      const data = await res.json();
+      if (!res.ok) {
+        alertMessage.textContent = data.message || 'Signup failed!';
         alertMessage.classList.remove('hidden');
-      }
-    });
-
-    document.getElementById('facebookLogin').addEventListener('click', async () => {
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'facebook',
-          options: {
-            redirectTo: `${window.location.origin}/`
-          }
-        });
-        if (error) throw error;
-      } catch (error) {
-        console.error('Facebook login error:', error);
-        alertMessage.className = 'alert alert-danger';
-        alertMessage.textContent = error.message || 'Facebook login failed.';
-        alertMessage.classList.remove('hidden');
-      }
-    });
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      alertMessage.classList.add('hidden');
-
-      if (!validateForm()) {
         return;
       }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Creating account...';
+      // Nếu Express redirect, chuyển hướng thủ công
+      window.location.href = data.redirect || '/student/dashboard';
+    } catch (err) {
+      alertMessage.textContent = 'Server error!';
+      alertMessage.classList.remove('hidden');
+    }
+  });
+</script>
 
-      const fullName = fullNameInput.value.trim();
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-      const role = document.querySelector('input[name="role"]:checked').value;
-
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              role: role
-            }
-          }
-        });
-
-        if (error) throw error;
-
-        alertMessage.className = 'alert alert-success';
-        alertMessage.textContent = 'Account created successfully! Redirecting...';
-        alertMessage.classList.remove('hidden');
-
-        setTimeout(() => {
-          window.location.href = '/signin';
-        }, 1500);
-
-      } catch (error) {
-        console.error('Signup error:', error);
-        alertMessage.className = 'alert alert-danger';
-        alertMessage.textContent = error.message || 'An error occurred. Please try again.';
-        alertMessage.classList.remove('hidden');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign Up';
-      }
-    });
-  </script>
+{{/fill_section}}

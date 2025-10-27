@@ -1,24 +1,46 @@
+// middlewares/teacher.middleware.js
+import jwt from 'jsonwebtoken';
+import getToken, { JWT_SECRET, SAFE_METHODS } from '../utils/jwt.js';
+
 export function ensureAuthenticated(req, res, next) {
-    // Works with Passport (req.isAuthenticated) or any middleware that sets req.user
-    if (typeof req.isAuthenticated === 'function' && req.isAuthenticated()) {
-      return next();
-    }
-  
-    if (req.user) {
-      return next();
-    }
-  
+  const token = getToken(req);
+  if (!token) return res.redirect('/signin');
+
+  try {
+    const user = jwt.verify(token, JWT_SECRET);
+    req.user = user;
+    return next();
+  } catch {
     return res.redirect('/signin');
   }
-  
-  export function requireRole(...allowedRoles) {
-    return function roleGuard(req, res, next) {
-      const userRole = req.user && req.user.role;
-      if (userRole && allowedRoles.includes(userRole)) {
-        return next();
-      }
-      return res.status(403).render('vwCommon/403', { layout: false });
-    };
+}
+
+export function requireRole(...roles) {
+  return (req, res, next) => {
+    const role = req.user && req.user.role;
+    if (role && roles.includes(role)) return next();
+    return res.status(403).render('vwCommon/403', { layout: false });
+  };
+}
+
+// Middleware riêng của teacher (độc lập)
+export const teacherOnly = (req, res, next) => {
+  if (req.user && req.user.role === 'teacher') return next();
+  return res.status(403).render('vwCommon/403', { layout: false });
+};
+
+// Chỉ siết với method ghi
+export const teacherWriteOnly = (req, res, next) => {
+  if (SAFE_METHODS.includes(req.method)) return next();
+  const token = getToken(req);
+  if (!token) return res.redirect('/signin');
+
+  try {
+    const user = jwt.verify(token, JWT_SECRET);
+    if (user.role !== 'teacher') return res.status(403).render('vwCommon/403', { layout: false });
+    req.user = user;
+    return next();
+  } catch {
+    return res.redirect('/signin');
   }
-  
-  
+};

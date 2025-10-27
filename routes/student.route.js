@@ -1,6 +1,10 @@
 import express from 'express';
 import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseLearningData } from '../models/user.model.js';
+import { ensureAuthenticated, requireRole, studentOnly, studentWriteOnly } from '../middlewares/student.middleware.js';
+
 const router = express.Router();
+
+router.use('/student', ensureAuthenticated, requireRole('student'), studentOnly, studentWriteOnly);
 
 router.get("/student/dashboard", async (req, res, next) => {
   try {
@@ -87,7 +91,7 @@ router.get("/learn/:courseId", async (req, res, next) => {
     }
 
     res.render("vwStudent/learn", {
-      layout: false,
+        layout: false,
       ...data,
     });
   } catch (err) {

@@ -1,7 +1,11 @@
 import express from 'express';
 import database from '../utils/database.js';
 import { getTeacherDashboard, getTeacherCourses, getAllCategories, getCourseById, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js'; 
+import { ensureAuthenticated, requireRole, teacherOnly, teacherWriteOnly } from '../middlewares/teacher.middleware.js';
+
 const router = express.Router();
+
+router.use('/teacher', ensureAuthenticated, requireRole('teacher'), teacherOnly, teacherWriteOnly);
 
 router.get("/teacher/dashboard", async (req, res, next) => {
   try {
@@ -280,7 +284,7 @@ router.get("/teacher/course/:id/edit", async (req, res, next) => {
 
     res.render("vwTeacher/edit-course", {
       title: "Chỉnh sửa khóa học",
-      course: {
+        course: {
         id: course.course_id,
         title: course.title,
         short_description: course.short_description,

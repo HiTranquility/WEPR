@@ -29,29 +29,30 @@
         <span>or sign in with email</span>
       </div>
 
-      <form id="signinForm" novalidate>
-        <div class="form-group">
-          <label class="form-label" for="email">Email Address</label>
-          <input type="email" class="form-control" id="email" required>
-          <div class="error-message" id="emailError">Please enter a valid email</div>
-        </div>
+<form id="signinForm" action="/auth/signin" method="POST" novalidate>
+  <div class="form-group">
+    <label class="form-label" for="email">Email Address</label>
+    <input type="email" class="form-control" id="email" name="email" required>
+    <div class="error-message" id="emailError">Please enter a valid email</div>
+  </div>
 
-        <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <input type="password" class="form-control" id="password" required>
-          <div class="error-message" id="passwordError">Please enter your password</div>
-        </div>
+  <div class="form-group">
+    <label class="form-label" for="password">Password</label>
+    <input type="password" class="form-control" id="password" name="password" required>
+    <div class="error-message" id="passwordError">Please enter your password</div>
+  </div>
 
-        <div class="form-footer">
-          <div class="checkbox-group">
-            <input type="checkbox" id="rememberMe">
-            <label for="rememberMe">Remember me</label>
-          </div>
-          <a href="/forgot">Forgot password?</a>
-        </div>
+  <div class="form-footer">
+    <div class="checkbox-group">
+      <input type="checkbox" id="rememberMe">
+      <label for="rememberMe">Remember me</label>
+    </div>
+    <a href="/forgot">Forgot password?</a>
+  </div>
 
-        <button type="submit" class="btn-primary" id="submitBtn">Sign In</button>
-      </form>
+  <button type="submit" class="btn-primary" id="submitBtn">Sign In</button>
+</form>
+
     </div>
 
     <div class="auth-footer">
@@ -59,124 +60,106 @@
     </div>
   </div>
 
-  <script type="module">
-    import { supabase } from '/statics/js/supabase-client.js';
+{{#fill_section 'js'}}
+<script>
+  const form = document.getElementById('signinForm');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const submitBtn = document.getElementById('submitBtn');
+  const alertMessage = document.getElementById('alertMessage');
 
-    const form = document.getElementById('signinForm');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const submitBtn = document.getElementById('submitBtn');
-    const alertMessage = document.getElementById('alertMessage');
+  function showError(input, errorElement) {
+    input.classList.add('error');
+    errorElement.classList.add('show');
+  }
 
-    function showError(input, errorElement) {
-      input.classList.add('error');
-      errorElement.classList.add('show');
+  function hideError(input, errorElement) {
+    input.classList.remove('error');
+    errorElement.classList.remove('show');
+  }
+
+  function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function validateForm() {
+    let isValid = true;
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!validateEmail(email)) {
+      showError(emailInput, document.getElementById('emailError'));
+      isValid = false;
+    } else {
+      hideError(emailInput, document.getElementById('emailError'));
     }
 
-    function hideError(input, errorElement) {
-      input.classList.remove('error');
-      errorElement.classList.remove('show');
+    if (password === '') {
+      showError(passwordInput, document.getElementById('passwordError'));
+      isValid = false;
+    } else {
+      hideError(passwordInput, document.getElementById('passwordError'));
     }
 
-    function validateEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
+    return isValid;
+  }
 
-    function validateForm() {
-      let isValid = true;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
+    alertMessage.classList.add('hidden');
+    if (!validateForm()) return;
 
-      if (!validateEmail(email)) {
-        showError(emailInput, document.getElementById('emailError'));
-        isValid = false;
-      } else {
-        hideError(emailInput, document.getElementById('emailError'));
-      }
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
 
-      if (password === '') {
-        showError(passwordInput, document.getElementById('passwordError'));
-        isValid = false;
-      } else {
-        hideError(passwordInput, document.getElementById('passwordError'));
-      }
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
-      return isValid;
-    }
+    try {
+      const res = await fetch('/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-    document.getElementById('googleLogin').addEventListener('click', async () => {
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/`
-          }
-        });
-        if (error) throw error;
-      } catch (error) {
-        console.error('Google login error:', error);
-        alertMessage.className = 'alert alert-danger';
-        alertMessage.textContent = error.message || 'Google login failed.';
-        alertMessage.classList.remove('hidden');
-      }
-    });
-
-    document.getElementById('facebookLogin').addEventListener('click', async () => {
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'facebook',
-          options: {
-            redirectTo: `${window.location.origin}/`
-          }
-        });
-        if (error) throw error;
-      } catch (error) {
-        console.error('Facebook login error:', error);
-        alertMessage.className = 'alert alert-danger';
-        alertMessage.textContent = error.message || 'Facebook login failed.';
-        alertMessage.classList.remove('hidden');
-      }
-    });
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      alertMessage.classList.add('hidden');
-
-      if (!validateForm()) {
+      // Nếu server trả redirect, Express có thể trả HTML, nên ta kiểm tra
+      if (res.redirected) {
+        window.location.href = res.url;
         return;
       }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Signing in...';
-
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) throw error;
-
-        alertMessage.className = 'alert alert-success';
-        alertMessage.textContent = 'Login successful! Redirecting...';
-        alertMessage.classList.remove('hidden');
-
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1000);
-
-      } catch (error) {
-        console.error('Signin error:', error);
+      const data = await res.json();
+      if (!res.ok || !data.success) {
         alertMessage.className = 'alert alert-danger';
-        alertMessage.textContent = error.message || 'Invalid email or password.';
+        alertMessage.textContent = data.message || 'Invalid email or password.';
         alertMessage.classList.remove('hidden');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Sign In';
+        return;
       }
-    });
-  </script>
+
+      // Nếu backend chỉ trả JSON
+      alertMessage.className = 'alert alert-success';
+      alertMessage.textContent = 'Login successful! Redirecting...';
+      alertMessage.classList.remove('hidden');
+
+      setTimeout(() => {
+        if (data.redirect) {
+          window.location.href = data.redirect;
+        } else {
+          window.location.href = '/';
+        }
+      }, 800);
+
+    } catch (err) {
+      console.error('Signin error', err);
+      alertMessage.className = 'alert alert-danger';
+      alertMessage.textContent = 'Server error. Please try again later.';
+      alertMessage.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign In';
+    }
+  });
+</script>
+{{/fill_section}}

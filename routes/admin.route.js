@@ -1,6 +1,10 @@
 import express from 'express';
 import { getAllAdminCategories, getAllAdminCourses, getAllAdminUsers, getAdminDashboardStats} from '../models/admin.model.js';
+import { ensureAuthenticated, requireRole, adminOnly, adminWriteOnly } from '../middlewares/admin.middleware.js';
+
 const router = express.Router();
+
+router.use('/admin', ensureAuthenticated, requireRole('admin'), adminOnly, adminWriteOnly);
 
 router.get("/admin/categories", async (req, res, next) => {
   try {
