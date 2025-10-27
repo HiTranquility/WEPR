@@ -46,12 +46,13 @@
               <li><a class="dropdown-item" href="/my-courses"><i class="bi bi-book me-2"></i>My courses</a></li>
               <li><a class="dropdown-item" href="/student/wishlist"><i class="bi bi-book me-2"></i>Wishlist</a></li>
               <li><hr class="dropdown-divider"></li>
-              <form id="frmSignout" action="/signout" method="post">
-                  <button type="submit" class="dropdown-item">
-                      <i class="bi bi-box-arrow-right"></i>
-                      Sign out
+              <li>
+                <form action="/signout" method="POST" style="display:inline;">
+                  <button type="submit" class="dropdown-item text-danger" style="background:none; border:none;">
+                    <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
                   </button>
-              </form>
+                </form>
+              </li>            
             </ul>
           </li>
         {{else}}
