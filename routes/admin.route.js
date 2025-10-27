@@ -14,7 +14,7 @@ router.get("/admin/categories", async (req, res, next) => {
       layout: "admin",
       title: "Quản lý lĩnh vực",
       activeMenu: "categories",
-      categories, // 🔹 Truyền data vào view
+      categories, 
     });
   } catch (err) {
     next(err);

@@ -1,5 +1,5 @@
 import express from 'express';
-import { searchCourses, getCourseDetail, getRelatedCourses } from '../models/course.model.js';
+import { searchCourses, getCourseDetail, getRelatedCourses, getLecturePreview } from '../models/course.model.js';
 import { getCategoriesForCourses, getAllCategories } from '../models/course-category.model.js';
 
 const router = express.Router();
@@ -53,7 +53,6 @@ router.get("/courses/detail", async function (req, res, next) {
       });
     }
 
-    // 🔹 Gọi model để lấy chi tiết khóa học
     const course = await getCourseDetail(Number(id));
 
     if (!course) {
@@ -64,18 +63,15 @@ router.get("/courses/detail", async function (req, res, next) {
       });
     }
 
-    // 🔹 Render ra view chi tiết riêng biệt
     res.render("vwCourse/detail", {
       title: course.title || "Chi tiết khóa học",
-      course, // object chi tiết khóa học
-      layout: false, // ❗ Vì dùng file riêng, không cần layout 'main'
+      course, 
+      layout: false, 
     });
   } catch (err) {
     next(err);
   }
-});
-
-            
+});            
 
 router.get('/courses/:id', async function(req, res, next) {
     try {
@@ -86,7 +82,6 @@ router.get('/courses/:id', async function(req, res, next) {
             ? await getRelatedCourses(course.id, course.category.id, 6)
             : [];
 
-        // TODO: reviews, sections... khi có schema tương ứng
         res.render('vwCourse/detail', {
             title: course.title,
             course,
@@ -101,30 +96,44 @@ router.get('/courses/:id', async function(req, res, next) {
     }
 });
 
-router.get('/courses/:id/preview/:lectureId', function(req, res) {
-    const mockLecture = {
-        id: req.params.lectureId,
-        title: 'Introduction to Course',
-        video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        description: 'Welcome to the course! In this lecture, we will introduce you to the course content.',
-        duration: '10:30'
-    };
+router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
+  try {
+    const { id: courseId, lectureId } = req.params;
 
-    const mockCourse = {
-        id: req.params.id,
-        title: 'Complete Python Bootcamp',
+    const data = await getLecturePreview(courseId, lectureId);
+    console.log("getLecturePreview:", data);
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy bài giảng",
+        message:
+          "Bài giảng xem trước không tồn tại, hoặc chưa được bật chế độ preview.",
+        layout: "main",
+      });
+    }
+
+    res.render("vwCourse/preview", {
+      layout: false, 
+      title: `Preview: ${data.lecture_title}`,
+      lecture: {
+        id: data.lecture_id,
+        title: data.lecture_title,
+        video_url: data.video_url,
+        description: data.description,
+        duration: data.duration,
+      },
+      course: {
+        id: data.course_id,
+        title: data.course_title,
         teacher: {
-            full_name: 'Jose Portilla',
-            avatar_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg'
-        }
-    };
-
-    res.render('vwCourse/preview', {
-        layout: false,
-        title: 'Preview Lecture',
-        lecture: mockLecture,
-        course: mockCourse
+          full_name: data.teacher_name,
+          avatar_url: data.teacher_avatar,
+        },
+      },
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
 
