@@ -1,31 +1,30 @@
 import express from 'express';
-import { ensureAuthenticated, requireRole } from '../middlewares/teacher.middleware.js';
-
+import database from '../utils/database.js';
+import { getTeacherDashboard, getTeacherCourses, getCourseById, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
+import { getAllCategories } from '../models/course-category.model.js'; 
 const router = express.Router();
-router.use('/', ensureAuthenticated, requireRole('teacher'));
 
-router.get('/dashboard', function(req, res) {
-    res.render('vwTeacher/dashboard', {
-        title: 'Trang chủ giảng viên',
-        stats: {
-            total_courses: 8,
-            published_courses: 5,
-            draft_courses: 2,
-            total_students: 12500,
-            total_revenue: 450000000,
-            avg_rating: 4.6
-        },
-        recentCourses: [
-            {
-                id: 1,
-                title: 'Complete Python Bootcamp',
-                thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-                status: 'published',
-                enrollment_count: 4256,
-                rating_avg: 4.6,
-                revenue: 210000000
-            }
-        ]
+router.get("/teacher/dashboard", async (req, res, next) => {
+  try {
+    const teacherId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+
+    const data = await getTeacherDashboard(teacherId);
+    const allCategories = await getAllCategories({ includeCounts: false });
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy giảng viên",
+        message: "Tài khoản giảng viên không tồn tại.",
+        layout: "main",
+      });
+    }
+
+    res.render("vwTeacher/dashboard", {
+      title: "Trang chủ giảng viên",
+      ...data, // teacher, stats, recentCourses
+      allCategories,
+      searchQuery: null,
+      layout: "main",
     });
 });
 

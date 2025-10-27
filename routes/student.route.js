@@ -1,65 +1,50 @@
 import express from 'express';
-import { ensureAuthenticated, requireRole } from '../middlewares/student.middleware.js';
-
+import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseLearningData } from '../models/user.model.js';
+import { getAllCategories } from '../models/course-category.model.js';
 const router = express.Router();
+
 router.use('/', ensureAuthenticated, requireRole('student'));
 
-router.get('/dashboard', function(req, res) {
-    res.render('vwStudent/dashboard', {
-        title: 'Trang chủ học viên',
-        user: {
-            full_name: 'Nguyễn Văn A',
-            email: 'student@example.com',
-            avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
-        },
-        stats: {
-            enrolled_courses: 5,
-            completed_courses: 2,
-            in_progress_courses: 3,
-            certificates: 2,
-            total_learning_hours: 48
-        },
-        recentCourses: [
-            {
-                id: 1,
-                title: 'Complete Python Bootcamp',
-                thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-                progress: 45,
-                last_watched: new Date(),
-                teacher: { full_name: 'Jose Portilla' }
-            },
-            {
-                id: 2,
-                title: 'JavaScript Complete Course',
-                thumbnail_url: 'https://images.pexels.com/photos/4164418/pexels-photo-4164418.jpeg',
-                progress: 78,
-                last_watched: new Date(),
-                teacher: { full_name: 'Jonas Schmedtmann' }
-            }
-        ],
-        recommendedCourses: [
-            {
-                id: 3,
-                title: 'React - The Complete Guide',
-                thumbnail_url: 'https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg',
-                rating_avg: 4.8,
-                rating_count: 6123,
-                discount_price: 449000,
-                category: { name: 'Lập trình' },
-                teacher: { full_name: 'Maximilian Schwarzmüller' }
-            }
-        ]
+router.get("/student/dashboard", async (req, res, next) => {
+  try {
+    //const studentId = req.user.id;
+    const studentId = "f5555555-5555-5555-5555-555555555555";
+    const data = await getStudentDashboard(studentId);
+    const allCategories = await getAllCategories({ includeCounts: false });
+    console.log("Dashboard data:", data);
+    if (!data) return res.redirect('/404');
+    res.render("vwStudent/dashboard", {
+      title: "Trang chủ học viên",
+      ...data, // user, stats, recentCourses, recommendedCourses
+      allCategories,
+      searchQuery: null,
+      layout: "main",   
     });
 });
 
-router.get('/profile', function(req, res) {
-    res.render('vwStudent/profile', {
-        title: 'Hồ sơ cá nhân',
-        user: {
-            full_name: 'Nguyễn Văn A',
-            email: 'student@example.com',
-            avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
-        }
+router.get("/student/my-courses", async (req, res, next) => {
+  try {
+    
+    const studentId = "f4444444-4444-4444-4444-444444444444";
+
+    const data = await getStudentCourses(studentId);
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy học viên",
+        message: "Tài khoản không tồn tại hoặc chưa ghi danh khóa học nào.",
+        layout: "main",
+      });
+    }
+
+    const allCategories = await getAllCategories({ includeCounts: false });
+    res.render("vwStudent/my-courses", {
+      title: "Khóa học của tôi",
+      user: data.user,
+      enrolledCourses: data.enrolledCourses,
+      allCategories,
+      searchQuery: null,
+      layout: "main",
     });
 });
 

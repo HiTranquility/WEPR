@@ -359,12 +359,13 @@ export const getLandingData = async () => {
 //=================
 // COURSE - PREVIEW LECTURE DETAIL
 //=================
-export const getLecturePreview = async (courseId, lectureId) => {
+export const getLecturePreview = async (courseId, sectionId, lectureId) => {
   const result = await database("lectures as l")
     .leftJoin("sections as s", "l.section_id", "s.id")
     .leftJoin("courses as c", "s.course_id", "c.id")
     .leftJoin("users as t", "c.teacher_id", "t.id")
     .where("l.id", lectureId)
+    .andWhere("s.id", sectionId)
     .andWhere("c.id", courseId)
     .andWhere("l.is_preview", true)
     .first(
@@ -372,7 +373,8 @@ export const getLecturePreview = async (courseId, lectureId) => {
       "l.title as lecture_title",
       "l.video_url",
       "l.duration",
-      "l.description",
+      "s.id as section_id",
+      "s.title as section_title",
       "c.id as course_id",
       "c.title as course_title",
       "t.full_name as teacher_name",

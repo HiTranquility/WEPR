@@ -67,3 +67,28 @@
     </div>
   </div>
 </nav>
+
+<script>
+// Xử lý search form
+document.getElementById('searchForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const searchInput = document.getElementById('searchInput');
+  const searchQuery = searchInput.value.trim();
+  
+  if (searchQuery) {
+    // Chuyển hướng đến trang courses với query parameter
+    window.location.href = `/courses?q=${encodeURIComponent(searchQuery)}`;
+  } else {
+    // Nếu không có query, chuyển đến trang courses
+    window.location.href = '/courses';
+  }
+});
+
+// Xử lý clear search
+document.getElementById('searchInput')?.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    this.value = '';
+    this.blur();
+  }
+});
+</script>
