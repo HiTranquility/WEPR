@@ -150,11 +150,11 @@ router.post('/courses/:id/enroll', function(req, res) {
     res.json({ success: true, message: 'Đã đăng ký khóa học thành công!' });
 });
 
-router.post('/courses/:id/watchlist', function(req, res) {
+router.post('/courses/:id/wishlist', function(req, res) {
     res.json({ success: true, message: 'Đã thêm vào danh sách yêu thích!' });
 });
 
-router.delete('/courses/:id/watchlist', function(req, res) {
+router.delete('/courses/:id/wishlist', function(req, res) {
     res.json({ success: true, message: 'Đã xóa khỏi danh sách yêu thích!' });
 });
 

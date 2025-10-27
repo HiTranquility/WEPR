@@ -1,146 +1,179 @@
-// routes/auth.route.js
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import { signAccessToken } from '../utils/jwt.js';
-import { getUserByEmail, createUser, updateUser } from '../models/user.model.js';
+import express from "express";
+import bcrypt from "bcrypt";
+import { supabase } from "../utils/supabaseClient.js";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../utils/jwt.js";
+import {
+  addRefreshToken,
+  hasRefreshToken,
+  removeRefreshToken,
+} from "../utils/token-store.js";
 
 const router = express.Router();
 
-router.get('/signin', function(req, res) {
-    res.render('vwAuth/signin', {
-        layout: 'auth',
-        title: 'Đăng nhập'
-    });
+// ==== [GET] /signin ====
+router.get("/signin", (req, res) => {
+  res.render("vwAuth/signin", { layout: "auth", title: "Đăng nhập" });
 });
 
-router.get('/signup', function(req, res) {
-    res.render('vwAuth/signup', {
-        layout: 'auth',
-        title: 'Đăng ký tài khoản'
-    });
+// ==== [GET] /signup ====
+router.get("/signup", (req, res) => {
+  res.render("vwAuth/signup", { layout: "auth", title: "Tạo tài khoản" });
 });
 
-router.get('/forgot', function(req, res) {
-    res.render('vwAuth/forgot', {
-        layout: 'auth',
-        title: 'Quên mật khẩu'
-    });
-});
+// ==== [POST] /signup ====
+router.post("/signup", async (req, res) => {
+  try {
+    const { fullName, email, password, role } = req.body;
 
-router.get('/reset', function(req, res) {
-    const token = req.query.token || '';
-    res.render('vwAuth/reset', {
-        layout: 'auth',
-        title: 'Đặt lại mật khẩu',
-        token: token
-    });
-});
-
-// Đăng nhập
-router.post('/signin', async function(req, res) {
-    try {
-        const { email, password } = req.body || {};
-        if (!email || !password) {
-            return res.status(400).json({ success: false, message: 'Thiếu email hoặc mật khẩu' });
-        }
-
-        const user = await getUserByEmail(email);
-        if (!user) {
-            return res.status(401).json({ success: false, message: 'Email không tồn tại!' });
-        }
-        console.log(user);
-
-        // const hashed = user.password_hash || user.password || '';
-        // const ok = await bcrypt.compare(password, String(hashed));
-        // if (!ok) {
-        //     return res.status(401).json({ success: false, message: 'Mật khẩu không chính xác!' });
-        // }
-        const token = signAccessToken({ id: user.id, role: user.role, full_name: user.full_name });
-        res.cookie('access_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 1000 * 60 * 60 * 24 * 7
-        });
-
-        if (user.role === 'admin') return res.redirect('/admin/dashboard');
-        if (user.role === 'teacher') return res.redirect('/teacher/dashboard');
-        return res.redirect('/student/dashboard');
-    } catch (e) {
-        console.error('signin error', e);
-        return res.status(500).json({ success: false, message: 'Lỗi máy chủ!' });
+    if (!fullName || !email || !password) {
+      return res.status(400).json({ message: "Thiếu thông tin cần thiết" });
     }
-});
 
-// Đăng ký
-router.post('/signup', async function(req, res) {
-    try {
-        const { fullName, email, password, role } = req.body || {};
-        if (!fullName || !email || !password) {
-            return res.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc!' });
-        }
+    // 1️⃣ Kiểm tra tài khoản có tồn tại chưa
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .single();
 
-        const existed = await getUserByEmail(email);
-        if (existed) {
-            return res.status(409).json({ success: false, message: 'Email đã tồn tại!' });
-        }
-
-        // const password_hash = await bcrypt.hash(password, 10);
-        const [created] = await createUser({
-            full_name: fullName,
-            email,
-            password_hash,
-            role: role || 'student',
-            status: 'active',
-        });
-        console.log(created);
-        const token = signAccessToken({ id: created.id, role: created.role, full_name: created.full_name });
-        res.cookie('access_token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 1000 * 60 * 60 * 24 * 7
-        });
-
-        if (created.role === 'admin') return res.redirect('/admin/dashboard');
-        if (created.role === 'teacher') return res.redirect('/teacher/dashboard');
-        return res.redirect('/student/dashboard');
-    } catch (e) {
-        console.error('signup error', e);
-        return res.status(500).json({ success: false, message: 'Lỗi máy chủ!' });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email đã tồn tại" });
     }
+
+    // 2️⃣ Mã hoá mật khẩu
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3️⃣ Thêm user mới vào Supabase
+    const { error: insertError } = await supabase.from("users").insert([
+      {
+        full_name: fullName,
+        email: email,
+        password_hash: hashedPassword,
+        role: role || "student",
+      },
+    ]);
+
+    if (insertError) throw insertError;
+
+    console.log("✅ User created:", email);
+    return res.json({
+      success: true,
+      message: "Tạo tài khoản thành công!",
+      redirect:
+        role === "teacher" ? "/teacher/dashboard" : "/student/dashboard",
+    });
+  } catch (err) {
+    console.error("/signup error", err);
+    return res.status(500).json({ message: "Lỗi tạo tài khoản" });
+  }
 });
 
-// Quên mật khẩu (demo)
-router.post('/forgot', async function(req, res) {
-    const { email } = req.body || {};
-    if (!email) return res.status(400).json({ success: false, message: 'Thiếu email!' });
-    const user = await getUserByEmail(email);
-    if (!user) return res.status(401).json({ success: false, message: 'Email không tồn tại!' });
-    return res.json({ success: true, message: 'Đã gửi hướng dẫn đặt lại mật khẩu (demo).' });
+// ==== [POST] /signin ====
+router.post("/signin", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // 1️⃣ Tìm user trong Supabase
+    console.log("🔍 Searching for user with email:", email);
+    const { data: users, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email.trim());  // exact match sau khi trim
+
+    if (error) {
+      console.error("❌ Supabase error:", error);
+    }
+
+    // Log số lượng users tìm được
+    console.log("📊 Found users:", users?.length || 0);
+    if (users?.length > 0) {
+      console.log("👤 First user:", users[0].email);
+    }
+
+    const user = users?.[0];
+    if (!user) {
+      return res.render("vwAuth/signin", {
+        layout: "auth",
+        title: "Đăng nhập",
+        error: "Tài khoản không tồn tại!",
+      });
+    }
+
+    // 2️⃣ Kiểm tra mật khẩu
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.render("vwAuth/signin", {
+        layout: "auth",
+        title: "Đăng nhập",
+        error: "Sai mật khẩu!",
+      });
+    }
+
+    // 3️⃣ Sinh token
+    const payload = {
+      id: user.id,
+      role: user.role,
+      name: user.full_name,
+      email: user.email,
+    };
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+    addRefreshToken(user.id, refreshToken);
+
+    // 4️⃣ Lưu cookie
+    res.cookie("access_token", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 10 * 60 * 1000,
+    });
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/auth",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    // 5️⃣ Điều hướng
+    const redirectByRole = {
+      admin: "/admin/dashboard",
+      teacher: "/teacher/dashboard",
+      student: "/student/dashboard",
+    };
+    return res.redirect(redirectByRole[user.role] || "/");
+  } catch (err) {
+    console.error("/signin error", err);
+    return res.render("vwAuth/signin", {
+      layout: "auth",
+      title: "Đăng nhập",
+      error: "Lỗi máy chủ!",
+    });
+  }
 });
 
-// Đặt lại mật khẩu (demo)
-router.post('/reset', async function(req, res) {
-    const { email, password } = req.body || {};
-    if (!email || !password) return res.status(400).json({ success: false, message: 'Thiếu thông tin!' });
-    const user = await getUserByEmail(email);
-    if (!user) return res.status(401).json({ success: false, message: 'Email không tồn tại!' });
+// ==== [POST] /auth/signout ====
+router.post("/signout", (req, res) => {
+    console.log("🔥 /auth/signout route HIT");
+  const refresh = req.cookies?.refresh_token;
+  try {
+    const payload = verifyRefreshToken(refresh);
+    removeRefreshToken(payload.id, refresh);
+  } catch (err) {
+    console.log("⚠️ refresh token verify failed:", err.message);
+  }
 
-    const password_hash = await bcrypt.hash(password, 10);
-    await updateUser(user.id, { password_hash });
-    return res.json({ success: true, message: 'Đặt lại mật khẩu thành công!' });
-});
+  // ✅ Xóa cookie ở cả 2 path cho chắc
+  res.clearCookie("access_token", { path: "/" });
+  res.clearCookie("refresh_token", { path: "/auth" });
 
-// Đăng xuất
-router.post('/signout', async function(req, res) {
-    res.clearCookie('access_token');
-    res.redirect('/');
-});
-
-// Xác thực OTP (demo)
-router.post('/verify-otp', async function(req, res) {
-    return res.json({ success: true, message: 'Xác thực OTP thành công (demo)!' });
+  console.log("✅ Signed out successfully, clearing cookies.");
+  return res.redirect("/signin");
 });
 
 export default router;

@@ -2,34 +2,12 @@
 <link rel="stylesheet" href="/statics/css/teacher/teacher-dashboard.css">
 {{/fill_section}}
 
-<div class="container py-5 teacher-dashboard-page">
-  <h1 class="mb-4">Dashboard Giảng viên</h1>
-  <div class="row g-4">
-    <div class="col-md-3">
-      <div class="stat-card">
-        <h3>{{stats.total_courses}}</h3>
-        <p>Tổng khóa học</p>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <h3>{{formatNumber stats.total_students}}</h3>
-        <p>Tổng học viên</p>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <h3>{{stats.avg_rating}}</h3>
-        <p>Đánh giá TB</p>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="stat-card">
-        <h3>{{formatCurrency stats.total_revenue}}</h3>
-        <p>Doanh thu</p>
-      </div>
-    </div>
-  </div>
+<div class="container py-5">
+  {{> dashboard
+    title="Teacher Dashboard"
+    message="Sẵn sàng tiếp tục dạy học ngày hôm nay?"
+  }}
+
   <div class="mt-5">
     <h3>Khóa học gần đây</h3>
     <div class="row g-4">

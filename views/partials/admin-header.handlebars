@@ -41,7 +41,13 @@
                         <li><a class="dropdown-item" href="/admin/profile"><i class="bi bi-person"></i> Hồ sơ cá nhân</a></li>
                         <li><a class="dropdown-item" href="/admin/settings"><i class="bi bi-gear"></i> Cài đặt hệ thống</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="/signout"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
+                        <li>
+                            <form action="/signout" method="POST" style="display:inline;">
+                                <button type="submit" class="dropdown-item text-danger" style="background:none; border:none;">
+                                <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                                </button>
+                            </form>                            
+                        </li>                    
                     </ul>
                 </li>
             </ul>
