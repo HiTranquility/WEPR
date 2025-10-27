@@ -14,6 +14,7 @@ const app = express();
 const rootDir = process.cwd();
 const viewsRoot = path.resolve(rootDir, 'views');
 const staticsRoot = path.resolve(rootDir, 'statics');
+const __dirname = import.meta.dirname;
 
 //App Configuration
 app.engine('handlebars', engine({
