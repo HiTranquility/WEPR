@@ -244,3 +244,114 @@ export async function getRelatedCourses(courseId, categoryId, limit = 6) {
     teacher: { full_name: r.teacher_full_name, avatar_url: r.teacher_avatar_url }
   }));
 }
+
+//=================
+// LANDING PAGE DATA
+//=================
+
+export const getLandingData = async () => {
+  // 🔹 Khóa học nổi bật
+  const featuredCourses = await database("courses AS c")
+    .leftJoin("users AS t", "c.teacher_id", "t.id")
+    .select(
+      "c.id",
+      "c.title",
+      "c.short_description",
+      "c.thumbnail_url",
+      "c.price",
+      "c.discount_price",
+      "c.rating_avg",
+      "c.rating_count",
+      "c.enrollment_count",
+      database.ref("t.full_name").as("teacher_full_name")
+    )
+    .where("c.is_featured", true)
+    .orderBy("c.rating_avg", "desc")
+    .limit(6);
+
+  // 🔹 Khóa học xem nhiều
+  const mostViewedCourses = await database("courses AS c")
+    .leftJoin("categories AS cat", "c.category_id", "cat.id")
+    .leftJoin("users AS t", "c.teacher_id", "t.id")
+    .select(
+      "c.id",
+      "c.title",
+      "c.thumbnail_url",
+      "c.rating_avg",
+      "c.rating_count",
+      "c.price",
+      "c.discount_price",
+      "c.enrollment_count",
+      "c.view_count",
+      database.ref("cat.name").as("category_name"),
+      database.ref("t.full_name").as("teacher_full_name"),
+      database.ref("t.avatar_url").as("teacher_avatar_url")
+    )
+    .orderBy("c.view_count", "desc")
+    .limit(6);
+
+  // 🔹 Khóa học mới nhất
+  const newestCourses = await database("courses AS c")
+    .leftJoin("categories AS cat", "c.category_id", "cat.id")
+    .leftJoin("users AS t", "c.teacher_id", "t.id")
+    .select(
+      "c.id",
+      "c.title",
+      "c.thumbnail_url",
+      "c.rating_avg",
+      "c.rating_count",
+      "c.price",
+      "c.discount_price",
+      "c.enrollment_count",
+      "c.view_count",
+      "c.created_at",
+      database.ref("cat.name").as("category_name"),
+      database.ref("t.full_name").as("teacher_full_name"),
+      database.ref("t.avatar_url").as("teacher_avatar_url")
+    )
+    .orderBy("c.created_at", "desc")
+    .limit(6);
+
+  // 🔹 Top danh mục
+  const topCategories = await database("categories AS cat")
+    .leftJoin("courses AS c", "cat.id", "c.category_id")
+    .groupBy("cat.id", "cat.name")
+    .select(
+      "cat.id",
+      "cat.name",
+      database.raw("COUNT(c.id) AS course_count"),
+      database.raw("COALESCE(SUM(c.enrollment_count), 0) AS enrollment_count")
+    )
+    .orderBy("course_count", "desc")
+    .limit(6);
+
+  // 🔹 Danh mục dropdown
+  const allCategories = await database("categories")
+    .select("id", "name")
+    .orderBy("name", "asc");
+
+  return {
+    featuredCourses: featuredCourses.map((c) => ({
+      ...c,
+      teacher: { full_name: c.teacher_full_name },
+    })),
+    mostViewedCourses: mostViewedCourses.map((c) => ({
+      ...c,
+      category: { name: c.category_name },
+      teacher: {
+        full_name: c.teacher_full_name,
+        avatar_url: c.teacher_avatar_url,
+      },
+    })),
+    newestCourses: newestCourses.map((c) => ({
+      ...c,
+      category: { name: c.category_name },
+      teacher: {
+        full_name: c.teacher_full_name,
+        avatar_url: c.teacher_avatar_url,
+      },
+    })),
+    topCategories,
+    allCategories,
+  };
+};
