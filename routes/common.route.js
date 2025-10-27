@@ -35,9 +35,8 @@ router.get('/contact-us', async function (req, res) {
     const allCategories = await getAllCategories({ includeCounts: false });
     res.render('vwCommon/contact-us', {
         title: 'Liên hệ',
-        allCategories,
-        searchQuery: null,
-        layout: 'main'
+        layout: 'main',
+        isSent: false
     });
 });
 
@@ -74,8 +73,12 @@ router.get('/400', (req, res) => {
     res.status(400).render('vwCommon/400', { layout: 'error', title: '400 - Bad Request', bodyClass: 'error-400' });
 });
 
-router.post('/contact', function (req, res) {
-    res.json({ success: true, message: 'Đã gửi tin nhắn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm.' });
+router.post('/contact-us', function (req, res) {
+    res.render('vwCommon/contact-us', {
+        title: 'Liên hệ',
+        layout: 'main',
+        isSent: true
+    });
 });
 
 export default router;
