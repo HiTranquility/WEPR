@@ -179,15 +179,15 @@ router.delete('/watchlist/:courseId', function(req, res) {
     res.json({ success: true, message: 'Đã xóa khỏi watchlist!' });
 });
 
-router.post('/learn/:courseId/lecture/:lectureId/complete', function(req, res) {
+router.post('/learn/:courseId/lecture/:lectureId/complete', function (req, res) {
     res.json({ success: true, message: 'Đã đánh dấu hoàn thành!' });
 });
 
-router.post('/learn/:courseId/notes', function(req, res) {
+router.post('/learn/:courseId/notes', function (req, res) {
     res.json({ success: true, message: 'Đã lưu ghi chú!' });
 });
 
-router.delete('/learn/:courseId/notes/:noteId', function(req, res) {
+router.delete('/learn/:courseId/notes/:noteId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa ghi chú!' });
 });
 

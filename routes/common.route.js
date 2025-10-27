@@ -27,7 +27,8 @@ router.get('/about-us', function (req, res) {
 router.get('/contact-us', function (req, res) {
     res.render('vwCommon/contact-us', {
         title: 'Liên hệ',
-        layout: 'main'
+        layout: 'main',
+        isSent: false
     });
 });
 
@@ -58,8 +59,12 @@ router.get('/400', (req, res) => {
     res.status(400).render('vwCommon/400', { layout: 'error', title: '400 - Bad Request', bodyClass: 'error-400' });
 });
 
-router.post('/contact', function (req, res) {
-    res.json({ success: true, message: 'Đã gửi tin nhắn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm.' });
+router.post('/contact-us', function (req, res) {
+    res.render('vwCommon/contact-us', {
+        title: 'Liên hệ',
+        layout: 'main',
+        isSent: true
+    });
 });
 
 export default router;
