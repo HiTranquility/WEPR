@@ -355,3 +355,29 @@ export const getLandingData = async () => {
     allCategories,
   };
 };
+
+//=================
+// COURSE - PREVIEW LECTURE DETAIL
+//=================
+export const getLecturePreview = async (courseId, lectureId) => {
+  const result = await database("lectures as l")
+    .leftJoin("sections as s", "l.section_id", "s.id")
+    .leftJoin("courses as c", "s.course_id", "c.id")
+    .leftJoin("users as t", "c.teacher_id", "t.id")
+    .where("l.id", lectureId)
+    .andWhere("c.id", courseId)
+    .andWhere("l.is_preview", true)
+    .first(
+      "l.id as lecture_id",
+      "l.title as lecture_title",
+      "l.video_url",
+      "l.duration",
+      "l.description",
+      "c.id as course_id",
+      "c.title as course_title",
+      "t.full_name as teacher_name",
+      "t.avatar_url as teacher_avatar"
+    );
+
+  return result || null;
+};
