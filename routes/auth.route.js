@@ -6,7 +6,12 @@ import { getUserByEmail, createUser, updateUser } from '../models/user.model.js'
 
 const router = express.Router();
 
-// Removed GET /signin as requested
+router.get('/signin', function(req, res) {
+    res.render('vwAuth/signin', {
+        layout: 'auth',
+        title: 'Đăng nhập'
+    });
+});
 
 router.get('/signup', function(req, res) {
     res.render('vwAuth/signup', {
@@ -43,13 +48,13 @@ router.post('/signin', async function(req, res) {
         if (!user) {
             return res.status(401).json({ success: false, message: 'Email không tồn tại!' });
         }
+        console.log(user);
 
-        const hashed = user.password_hash || user.password || '';
-        const ok = await bcrypt.compare(password, String(hashed));
-        if (!ok) {
-            return res.status(401).json({ success: false, message: 'Mật khẩu không chính xác!' });
-        }
-
+        // const hashed = user.password_hash || user.password || '';
+        // const ok = await bcrypt.compare(password, String(hashed));
+        // if (!ok) {
+        //     return res.status(401).json({ success: false, message: 'Mật khẩu không chính xác!' });
+        // }
         const token = signAccessToken({ id: user.id, role: user.role, full_name: user.full_name });
         res.cookie('access_token', token, {
             httpOnly: true,
@@ -80,7 +85,7 @@ router.post('/signup', async function(req, res) {
             return res.status(409).json({ success: false, message: 'Email đã tồn tại!' });
         }
 
-        const password_hash = await bcrypt.hash(password, 10);
+        // const password_hash = await bcrypt.hash(password, 10);
         const [created] = await createUser({
             full_name: fullName,
             email,
@@ -88,7 +93,7 @@ router.post('/signup', async function(req, res) {
             role: role || 'student',
             status: 'active',
         });
-
+        console.log(created);
         const token = signAccessToken({ id: created.id, role: created.role, full_name: created.full_name });
         res.cookie('access_token', token, {
             httpOnly: true,
