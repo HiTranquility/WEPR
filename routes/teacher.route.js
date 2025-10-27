@@ -304,35 +304,35 @@ router.get("/teacher/course/:id/edit", async (req, res, next) => {
   }
 });
 
-router.post('/teacher/courses', function(req, res) {
+router.post('/teacher/courses', function (req, res) {
     res.json({ success: true, message: 'Tạo khóa học thành công!' });
 });
 
-router.post('/teacher/course/:id', function(req, res) {
+router.post('/teacher/course/:id', function (req, res) {
     res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
 });
 
-router.delete('/teacher/course/:id', function(req, res) {
+router.delete('/teacher/course/:id', function (req, res) {
     res.json({ success: true, message: 'Đã xóa khóa học!' });
 });
 
-router.post('/teacher/course/:id/sections', function(req, res) {
+router.post('/teacher/course/:id/sections', function (req, res) {
     res.json({ success: true, message: 'Tạo chương thành công!' });
 });
 
-router.post('/teacher/course/:courseId/section/:sectionId/lectures', function(req, res) {
+router.post('/teacher/course/:courseId/section/:sectionId/lectures', function (req, res) {
     res.json({ success: true, message: 'Tạo bài giảng thành công!' });
 });
 
-router.delete('/teacher/course/:courseId/section/:sectionId', function(req, res) {
+router.delete('/teacher/course/:courseId/section/:sectionId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa chương!' });
 });
 
-router.delete('/teacher/course/:courseId/lecture/:lectureId', function(req, res) {
+router.delete('/teacher/course/:courseId/lecture/:lectureId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa bài giảng!' });
 });
 
-router.post('/teacher/course/:id/publish', function(req, res) {
+router.post('/teacher/course/:id/publish', function (req, res) {
     res.json({ success: true, message: 'Đã xuất bản khóa học!' });
 });
 

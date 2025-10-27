@@ -20,6 +20,13 @@ router.get('/signup', function(req, res) {
     });
 });
 
+router.post('/signout', function (req, res) {
+    // req.session.isAuthenticated = false;
+    // req.session.authUser = null;
+    // // res.redirect('/signin');
+    res.redirect(req.headers.referer);
+});
+
 router.get('/forgot', function(req, res) {
     res.render('vwAuth/forgot', {
         layout: 'auth',
