@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
+import { getLandingData } from "./models/course.model.js";
+
 import path from 'path';
 import authRoute from './routes/auth.route.js';
 import studentRoute from './routes/student.route.js';
@@ -29,6 +31,10 @@ app.use('/statics', express.static(staticsRoot));
 
 //Global Middleware
 app.use(express.urlencoded({ extended: true }));
+app.use(async function (req, res, next) {
+    res.locals.global_categories = await getLandingData();
+    next();
+});
 
 //Server Routes
 app.use('/', authRoute);
