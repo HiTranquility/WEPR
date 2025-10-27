@@ -137,6 +137,15 @@ router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
 });
 
 
+router.get('/courses/search?keyword=', async (req, res, next) => {
+  try {
+    const { keyword } = req.query;
+    const data = await searchCourses(keyword);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+
 router.post('/courses/:id/enroll', function(req, res) {
     res.json({ success: true, message: 'Đã đăng ký khóa học thành công!' });
 });
