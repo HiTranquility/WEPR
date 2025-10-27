@@ -103,11 +103,12 @@ router.get('/courses/:id', async function(req, res, next) {
     }
 });
 
-router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
+router.get("/courses/:courseId/sections/:sectionId/preview/:lectureId", async (req, res, next) => {
   try {
-    const { id: courseId, lectureId } = req.params;
+    const { courseId, sectionId, lectureId } = req.params;
 
-    const data = await getLecturePreview(courseId, lectureId);
+    // Gọi hàm truy vấn lecture preview theo course, section, lecture
+    const data = await getLecturePreview(courseId, sectionId, lectureId);
     console.log("getLecturePreview:", data);
 
     if (!data) {
@@ -120,14 +121,17 @@ router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
     }
 
     res.render("vwCourse/preview", {
-      layout: false, 
+      layout: false,
       title: `Preview: ${data.lecture_title}`,
       lecture: {
         id: data.lecture_id,
         title: data.lecture_title,
         video_url: data.video_url,
-        description: data.description,
         duration: data.duration,
+      },
+      section: {
+        id: data.section_id,
+        title: data.section_title,
       },
       course: {
         id: data.course_id,
@@ -142,7 +146,6 @@ router.get("/courses/:id/preview/:lectureId", async (req, res, next) => {
     next(err);
   }
 });
-
 
 router.post('/courses/:id/enroll', function(req, res) {
     res.json({ success: true, message: 'Đã đăng ký khóa học thành công!' });
