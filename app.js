@@ -2,6 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import hbs_sections from 'express-handlebars-sections';
+import { getLandingData } from "./models/course.model.js";
+
 import path from 'path';
 import session from 'express-session';
 import passport from './middlewares/passport.js';
