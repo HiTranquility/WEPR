@@ -4,6 +4,31 @@ import { getCategoriesForCourses, getAllCategories } from '../models/course-cate
 
 const router = express.Router();
 
+router.get('/courses', async (req, res, next) => {
+  try {
+    const { category, sort = 'popular', page = '1', limit = '12' } = req.query;
+    const { data, pagination } = await searchCourses({
+      q: '', // không có từ khóa
+      categoryId: category,
+      sortBy: sort,
+      page: Number(page),
+      limit: Number(limit),
+    });
+
+    const categories = await getAllCategories({ includeCounts: true });
+    res.render('vwCourse/list', {
+      title: 'Danh sách khóa học',
+      courses: data,
+      categories,
+      currentCategory: category || null,
+      currentPage: pagination.page,
+      totalPages: pagination.totalPages,
+      layout: 'main',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get('/courses/search', async function(req, res, next) {
     try {
