@@ -5,7 +5,7 @@ import { getCategoriesForCourses, getAllCategories } from '../models/course-cate
 const router = express.Router();
 
 
-router.get('/courses', async function(req, res, next) {
+router.get('/courses/search', async function(req, res, next) {
     try {
         const { q, category, sort = 'popular', page = '1', limit = '12', min_price, max_price, only_discounted, featured } = req.query;
         const apiSort = sort === 'price-low' ? 'price_asc' : (sort === 'price-high' ? 'price_desc' : sort);
