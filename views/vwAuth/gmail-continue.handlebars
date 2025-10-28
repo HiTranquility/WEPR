@@ -1,0 +1,250 @@
+<div class="auth-container">
+  <div class="auth-header">
+    <h1>{{#if (eq mode 'signup')}}Complete Signup{{else}}Complete Sign In{{/if}}</h1>
+    <p>{{#if (eq mode 'signup')}}Enter the OTP sent to your Gmail to verify your email.{{else}}Sign in with your email and password.{{/if}}</p>
+  </div>
+
+  <div class="auth-body">
+    <div id="alertMessage" class="alert alert-danger hidden"></div>
+
+    {{!-- ========== SIGNUP: OTP + tạo mật khẩu ========== --}}
+    {{#if (eq mode 'signup')}}
+      <form id="otpForm" method="POST" action="/gmail/verify">
+        <input type="hidden" id="email" name="email">
+        <div class="form-group">
+          <label class="form-label" for="otp">OTP</label>
+          <input type="text" class="form-control" id="otp" name="otp" required minlength="6" maxlength="6">
+        </div>
+
+        <div class="form-group">
+          <button
+                type="button"
+                id="sendOtpBtn"
+                class="btn-primary"
+                style="
+                    background: linear-gradient(90deg, #6c63ff, #7a5fff);
+                    border: none;
+                    border-radius: 8px;
+                    color: #fff;
+                    font-weight: 600;
+                    padding: 10px 24px;
+                    width: 100%;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 2px 6px rgba(108, 99, 255, 0.2);
+                "
+                >
+                Send OTP
+            </button>
+
+
+        </div>
+
+        <button type="submit" class="btn-primary" id="verifyBtn">Verify</button>
+      </form>
+
+      <form id="gmailCompleteForm" method="POST" action="/gmail/signup" class="hidden">
+        <div class="form-group">
+          <label class="form-label" for="username">Username (Email)</label>
+          <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" class="form-control" id="password" name="password" required minlength="6">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Confirm Password</label>
+          <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="6">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">I want to:</label>
+          <div class="role-selection">
+            <div class="role-option">
+              <input type="radio" name="role" id="roleStudent" value="student" checked>
+              <label for="roleStudent">Learn</label>
+            </div>
+            <div class="role-option">
+              <input type="radio" name="role" id="roleTeacher" value="teacher">
+              <label for="roleTeacher">Teach</label>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submitBtn">Complete Signup</button>
+      </form>
+    {{/if}}
+
+    {{!-- ========== SIGNIN: chỉ Email + Password ========== --}}
+    {{#if (eq mode 'signin')}}
+      <form id="gmailSigninForm" method="POST" action="/gmail/signin">
+        <div class="form-group">
+          <label class="form-label" for="signinEmail">Username (Email)</label>
+          <input type="email" class="form-control" id="signinEmail" name="email" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="signinPassword">Password</label>
+          <input type="password" class="form-control" id="signinPassword" name="password" required autocomplete="current-password" minlength="6">
+        </div>
+
+        <button type="submit" class="btn-primary" id="signinBtn">Sign In</button>
+      </form>
+    {{/if}}
+  </div>
+
+  <div class="auth-footer">
+    Back to <a href="/signin">Sign In</a>
+  </div>
+</div>
+
+{{#fill_section 'js'}}
+<script>
+  const MODE = '{{mode}}';
+  const alertMessage = document.getElementById('alertMessage');
+
+  function showAlert(msg, type='danger') {
+    if (!alertMessage) return;
+    alertMessage.textContent = msg;
+    alertMessage.classList.remove('hidden');
+    alertMessage.classList.remove('alert-danger','alert-success');
+    alertMessage.classList.add(type === 'success' ? 'alert-success' : 'alert-danger');
+  }
+
+  /* ========== JS cho SIGNUP (OTP) ========== */
+  if (MODE === 'signup') {
+    const otpForm = document.getElementById('otpForm');
+    const gmailCompleteForm = document.getElementById('gmailCompleteForm');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const otpInput = document.getElementById('otp');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+
+    // Gửi OTP
+    sendOtpBtn?.addEventListener('click', async () => {
+      const email = (usernameInput?.value || '').trim();
+      if (!email) return alert('Please enter a valid email address.');
+      document.getElementById('email').value = email;
+
+      sendOtpBtn.disabled = true; sendOtpBtn.textContent = 'Sending...';
+      try {
+        const res = await fetch('/gmail/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          alert(data.message || 'Failed to send OTP.'); 
+        } else {
+          alert('OTP sent! Check your mailbox.');
+          otpInput.disabled = false; passwordInput.disabled = false; confirmPasswordInput.disabled = false;
+        }
+      } catch (e) {
+        console.error(e); alert('Server error.');
+      } finally {
+        sendOtpBtn.disabled = false; sendOtpBtn.textContent = 'Send OTP';
+      }
+    });
+
+    // Verify OTP
+    otpForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertMessage?.classList.add('hidden');
+      verifyBtn.disabled = true; verifyBtn.textContent = 'Verifying...';
+
+      const body = {
+        email: document.getElementById('email').value || (usernameInput?.value || '').trim(),
+        otp: otpInput?.value || ''
+      };
+
+      try {
+        const res = await fetch('/gmail/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showAlert(data.message || 'Invalid OTP', 'danger');
+        } else {
+          showAlert('✅ OTP verified successfully!', 'success');
+          setTimeout(() => { otpForm.classList.add('hidden'); gmailCompleteForm.classList.remove('hidden'); }, 800);
+        }
+      } catch (e) {
+        console.error(e); showAlert('Server error', 'danger');
+      } finally {
+        verifyBtn.disabled = false; verifyBtn.textContent = 'Verify';
+      }
+    });
+
+    // Complete Signup
+    gmailCompleteForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertMessage?.classList.add('hidden');
+      submitBtn.disabled = true; submitBtn.textContent = 'Processing...';
+
+      const formData = new FormData(gmailCompleteForm);
+      const body = {}; formData.forEach((v,k)=>body[k]=v);
+      body.email = usernameInput.value.trim();
+
+      try {
+        const res = await fetch('/gmail/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const text = await res.text();
+        const data = JSON.parse(text || '{}');
+
+        if (!res.ok || !data.success) {
+          showAlert(data.message || 'An error occurred', 'danger');
+          submitBtn.disabled = false; submitBtn.textContent = 'Complete Signup';
+          return;
+        }
+        window.location.href = data.redirect || '/signin';
+      } catch (e) {
+        console.error(e); showAlert('Server error', 'danger');
+        submitBtn.disabled = false; submitBtn.textContent = 'Complete Signup';
+      }
+    });
+  }
+
+  /* ========== JS cho SIGNIN (Email + Password) ========== */
+  if (MODE === 'signin') {
+    const signinForm = document.getElementById('gmailSigninForm');
+    const signinBtn = document.getElementById('signinBtn');
+
+    signinForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertMessage?.classList.add('hidden');
+      signinBtn.disabled = true; signinBtn.textContent = 'Signing in...';
+
+      const formData = new FormData(signinForm);
+      const body = {}; formData.forEach((v,k)=>body[k]=v);
+
+      try {
+        const res = await fetch('/gmail/signin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showAlert(data.message || 'Invalid email or password.', 'danger');
+          signinBtn.disabled = false; signinBtn.textContent = 'Sign In';
+          return;
+        }
+        window.location.href = data.redirect || '/';
+      } catch (e) {
+        console.error(e); showAlert('Server error. Please try again later.', 'danger');
+        signinBtn.disabled = false; signinBtn.textContent = 'Sign In';
+      }
+    });
+  }
+</script>
+{{/fill_section}}

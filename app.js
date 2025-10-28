@@ -13,6 +13,7 @@ import teacherRoute from './routes/teacher.route.js';
 import adminRoute from './routes/admin.route.js';
 import commonRoute from './routes/common.route.js';
 import courseRoute from './routes/course.route.js';
+import gmailRoute from './routes/gmail.route.js';
 const app = express();
 const rootDir = process.cwd();
 const viewsRoot = path.resolve(rootDir, 'views');
@@ -105,6 +106,13 @@ app.use((req, res, next) => {
 });
 app.use(attachUserFromToken);
 
+// Fix treo fetch (do connection không close)
+app.use((req, res, next) => {
+  res.setHeader("Connection", "close"); // buộc đóng socket sau mỗi response
+  next();
+});
+
+
 //Google OAuth Middleware
 app.use(session({
   secret: 'your_secret_key',
@@ -121,6 +129,7 @@ app.use('/teacher', teacherRoute);
 app.use('/admin', adminRoute);
 app.use('/', commonRoute);
 app.use('/', courseRoute);
+app.use('/gmail', gmailRoute);
 
 app.use((req, res) => {
   console.log(`[404] Missed: ${req.method} ${req.originalUrl}`);
