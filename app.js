@@ -5,6 +5,10 @@ import hbs_sections from 'express-handlebars-sections';
 import { getLandingData } from "./models/course.model.js";
 
 import path from 'path';
+import session from 'express-session';
+import passport from './middlewares/passport.js';
+import cookieParser from "cookie-parser";
+import { attachUserFromToken } from "./middlewares/jwt-auth.middleware.js";
 import authRoute from './routes/auth.route.js';
 import studentRoute from './routes/student.route.js';
 import teacherRoute from './routes/teacher.route.js';
@@ -31,20 +35,35 @@ app.use('/statics', express.static(staticsRoot));
 
 //Global Middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(async function (req, res, next) {
-    res.locals.global_categories = await getLandingData();
-    next();
+app.use(express.json());
+app.use(cookieParser());
+app.use((req, res, next) => {
+  console.log(`[REQ] ${req.method} ${req.originalUrl}`);
+  next();
 });
+app.use(attachUserFromToken);
+
+//Google OAuth Middleware
+app.use(session({
+  secret: 'your_secret_key',
+  resave: false,
+  saveUninitialized: true,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 //Server Routes
 app.use('/', authRoute);
-app.use('/', studentRoute);
-app.use('/', teacherRoute);
-app.use('/', adminRoute);
+app.use('/student', studentRoute);
+app.use('/teacher', teacherRoute);
+app.use('/admin', adminRoute);
 app.use('/', commonRoute);
 app.use('/', courseRoute);
 
-app.use((req, res) => res.redirect('/404'));
+app.use((req, res) => {
+  console.log(`[404] Missed: ${req.method} ${req.originalUrl}`);
+  res.status(404).render('vwCommon/404', { layout: 'error', title: '404 - Page Not Found', bodyClass: 'error-404' });
+});
 
 // Middleware lỗi (4 tham số) – đặt CUỐI CÙNG
 app.use((err, req, res, next) => {

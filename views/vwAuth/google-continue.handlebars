@@ -1,0 +1,126 @@
+<div class="auth-container">
+  <div class="auth-header">
+    <h1>{{#if (eq mode 'signup')}}Complete Signup{{else}}Complete Sign In{{/if}}</h1>
+    <p>Please set your password {{#if (eq mode 'signup')}}and choose your role{{/if}} to finish.</p>
+  </div>
+
+  <div class="auth-body">
+    <div id="alertMessage" class="alert alert-danger hidden"></div>
+
+    <div class="alert alert-success" role="alert">
+      {{#if message}}
+        {{message}}
+      {{/if}}
+    </div>
+
+    <div class="profile-summary">
+      <div><strong>Name:</strong> {{name}}</div>
+      <div><strong>Email:</strong> {{email}}</div>
+    </div>
+
+    <form id="googleCompleteForm" method="POST" action="{{#if (eq mode 'signup')}}/google/complete{{else}}/google/login{{/if}}">
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required minlength="6">
+      </div>
+
+      {{#if (eq mode 'signup')}}
+      <div class="form-group">
+        <label class="form-label" for="confirmPassword">Confirm Password</label>
+        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="6">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">I want to:</label>
+        <div class="role-selection">
+          <div class="role-option">
+            <input type="radio" name="role" id="roleStudent" value="student" checked>
+            <label for="roleStudent">Learn</label>
+          </div>
+          <div class="role-option">
+            <input type="radio" name="role" id="roleTeacher" value="teacher">
+            <label for="roleTeacher">Teach</label>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+
+      <button type="submit" class="btn-primary" id="submitBtn">{{#if (eq mode 'signup')}}Sign Up{{else}}Sign In{{/if}}</button>
+    </form>
+  </div>
+
+  <div class="auth-footer">
+    Back to <a href="/signin">Sign In</a>
+  </div>
+</div>
+
+{{#fill_section 'js'}}
+<script>
+  const form = document.getElementById('googleCompleteForm');
+  const alertMessage = document.getElementById('alertMessage');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertMessage.classList.add('hidden');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processing...';
+
+    const formData = new FormData(form);
+    const body = {};
+    formData.forEach((v,k) => body[k]=v);
+
+    // Client-side confirm password check when in signup mode
+    const isSignup = '{{mode}}' === 'signup';
+    if (isSignup) {
+      const pw = body.password || '';
+      const cpw = body.confirmPassword || '';
+      if (pw !== cpw) {
+        alertMessage.textContent = 'Passwords do not match';
+        alertMessage.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign Up';
+        return;
+      }
+      if (pw.length < 6) {
+        alertMessage.textContent = 'Password must be at least 6 characters';
+        alertMessage.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign Up';
+        return;
+      }
+    }
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (res.redirected) {
+        window.location.href = res.url;
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alertMessage.textContent = data.message || 'An error occurred';
+        alertMessage.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = isSignup ? 'Sign Up' : 'Sign In';
+        return;
+      }
+
+      // Success
+      window.location.href = data.redirect || '/';
+    } catch (err) {
+      console.error(err);
+      alertMessage.textContent = 'Server error';
+      alertMessage.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.textContent = isSignup ? 'Sign Up' : 'Sign In';
+    }
+  });
+</script>
+{{/fill_section}}

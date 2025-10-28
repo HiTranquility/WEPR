@@ -1,46 +1,38 @@
-// middlewares/teacher.middleware.js
-import jwt from 'jsonwebtoken';
-import getToken, { JWT_SECRET, SAFE_METHODS } from '../utils/jwt.js';
+import jwt from "jsonwebtoken";
+
+const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "dev_access_secret_change_me";
 
 export function ensureAuthenticated(req, res, next) {
-  const token = getToken(req);
-  if (!token) return res.redirect('/signin');
+  console.log("[TEACHER] ensureAuthenticated running for", req.originalUrl);
+  console.log("[TEACHER] req.user =", req.user);
+  const token = req.cookies?.access_token;
+  console.log("[TEACHER] cookie token =", token ? "found" : "missing");
+
+  if (req.user) return next();
+  if (!token) return res.redirect("/signin");
 
   try {
-    const user = jwt.verify(token, JWT_SECRET);
-    req.user = user;
+    const decoded = jwt.verify(token, ACCESS_SECRET);
+    console.log("[TEACHER] decoded =", decoded);
+    req.user = decoded;
+    res.locals.user = decoded;
     return next();
-  } catch {
-    return res.redirect('/signin');
+  } catch (err) {
+    console.log("[TEACHER] token invalid:", err.message);
+    return res.redirect("/signin");
   }
 }
 
-export function requireRole(...roles) {
-  return (req, res, next) => {
-    const role = req.user && req.user.role;
-    if (role && roles.includes(role)) return next();
-    return res.status(403).render('vwCommon/403', { layout: false });
+export function requireRole(...allowedRoles) {
+  console.log("[TEACHER] requireRole running. allowed =", allowedRoles);
+  return function roleGuard(req, res, next) {
+    console.log("[TEACHER] user role =", req.user?.role);
+    const userRole = req.user && req.user.role;
+    if (userRole && allowedRoles.includes(userRole)) {
+      console.log("[TEACHER] role OK");
+      return next();
+    }
+    console.log("[TEACHER] role FAIL");
+    return res.status(403).render("vwCommon/403", { layout: false });
   };
 }
-
-// Middleware riêng của teacher (độc lập)
-export const teacherOnly = (req, res, next) => {
-  if (req.user && req.user.role === 'teacher') return next();
-  return res.status(403).render('vwCommon/403', { layout: false });
-};
-
-// Chỉ siết với method ghi
-export const teacherWriteOnly = (req, res, next) => {
-  if (SAFE_METHODS.includes(req.method)) return next();
-  const token = getToken(req);
-  if (!token) return res.redirect('/signin');
-
-  try {
-    const user = jwt.verify(token, JWT_SECRET);
-    if (user.role !== 'teacher') return res.status(403).render('vwCommon/403', { layout: false });
-    req.user = user;
-    return next();
-  } catch {
-    return res.redirect('/signin');
-  }
-};
