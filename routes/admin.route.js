@@ -1,9 +1,13 @@
 import express from 'express';
 import { ensureAuthenticated, requireRole } from '../middlewares/admin.middleware.js';
+import { getAdminDashboardStats } from '../models/admin.model.js';
 const router = express.Router();
+
 router.use('/', ensureAuthenticated, requireRole('admin'));
 
-router.get('/dashboard', function(req, res) {
+router.get('/dashboard', async function(req, res, next) {
+  try {
+    const data = await getAdminDashboardStats();
     res.render('vwAdmin/dashboard', {
         layout: 'admin',
         title: 'Dashboard',
@@ -37,6 +41,9 @@ router.get('/dashboard', function(req, res) {
             }
         ]
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/categories', function(req, res) {

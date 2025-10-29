@@ -1,172 +1,197 @@
 import express from 'express';
-import { ensureAuthenticated, requireRole } from '../middlewares/teacher.middleware.js';
-
+import database from '../utils/database.js';
+import { getTeacherDashboard, getTeacherCourses, getCourseById, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
+import { getAllCategories } from '../models/course-category.model.js'; 
+import { ensureAuthenticated } from '../middlewares/teacher.middleware.js';
+import { requireRole } from '../middlewares/teacher.middleware.js';
 const router = express.Router();
+
 router.use('/', ensureAuthenticated, requireRole('teacher'));
 
-router.get('/dashboard', function(req, res) {
-    res.render('vwTeacher/dashboard', {
-        title: 'Trang chủ giảng viên',
-        stats: {
-            total_courses: 8,
-            published_courses: 5,
-            draft_courses: 2,
-            total_students: 12500,
-            total_revenue: 450000000,
-            avg_rating: 4.6
-        },
-        recentCourses: [
-            {
-                id: 1,
-                title: 'Complete Python Bootcamp',
-                thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-                status: 'published',
-                enrollment_count: 4256,
-                rating_avg: 4.6,
-                revenue: 210000000
-            }
-        ]
+router.get("/teacher/dashboard", async (req, res, next) => {
+  try {
+    const teacherId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+
+    const data = await getTeacherDashboard(teacherId);
+    const allCategories = await getAllCategories({ includeCounts: false });
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy giảng viên",
+        message: "Tài khoản giảng viên không tồn tại.",
+        layout: "main",
+      });
+    }
+
+    res.render("vwTeacher/dashboard", {
+      title: "Trang chủ giảng viên",
+      ...data, // teacher, stats, recentCourses
+      allCategories,
+      searchQuery: null,
+      layout: "main",
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/courses', function(req, res) {
+router.get('/courses', async function(req, res, next) {
+  try {
+    const teacherId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    const data = await getTeacherCourses(teacherId);
+    const allCategories = await getAllCategories({ includeCounts: false });
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy giảng viên",
+        message: "Tài khoản giảng viên không tồn tại.",
+        layout: "main",
+      });
+    }
+
     res.render('vwTeacher/course-list', {
-        title: 'Khóa học của tôi - Giảng viên',
-        courses: [
-            {
-                id: 1,
-                title: 'Complete Python Bootcamp: Go from zero to hero',
-                thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-                status: 'published',
-                enrollment_count: 42567,
-                rating_avg: 4.6,
-                view_count: 125000,
-                discount_price: 499000,
-                updated_at: new Date(),
-                category: { name: 'Lập trình' }
-            },
-            {
-                id: 2,
-                title: 'Advanced Python Programming',
-                thumbnail_url: 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg',
-                status: 'draft',
-                enrollment_count: 0,
-                rating_avg: 0,
-                view_count: 0,
-                discount_price: 599000,
-                updated_at: new Date(),
-                category: { name: 'Lập trình' }
-            },
-            {
-                id: 3,
-                title: 'Python for Data Science',
-                thumbnail_url: 'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg',
-                status: 'incomplete',
-                enrollment_count: 0,
-                rating_avg: 0,
-                view_count: 0,
-                discount_price: 699000,
-                updated_at: new Date(),
-                category: { name: 'Khoa học dữ liệu' }
-            }
-        ]
+      title: 'Khóa học của tôi - Giảng viên',
+      courses: data,
+      allCategories,
+      searchQuery: null,
+      layout: "main",
     });
+  } catch (err) {
+    next(err);
+  }
 });
+router.get('/create-course', async function(req, res, next) {
+  try {
+    const allCategories = await getAllCategories({ includeCounts: false });
 
-router.get('/create-course', function(req, res) {
     res.render('vwTeacher/create-course', {
-        title: 'Tạo khóa học mới',
-        categories: [
-            { id: 1, name: 'Lập trình' },
-            { id: 2, name: 'Kinh doanh' },
-            { id: 3, name: 'Thiết kế' },
-            { id: 4, name: 'Marketing' },
-            { id: 5, name: 'Khoa học dữ liệu' },
-            { id: 6, name: 'Phát triển cá nhân' }
-        ]
+      title: 'Tạo khóa học mới',
+      categories: allCategories,
+      searchQuery: null,
+      layout: "main",
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/edit-course/:id', function(req, res) {
-    res.render('vwTeacher/create-course', {
-        title: 'Chỉnh sửa khóa học',
-        isEdit: true,
-        course: {
-            id: req.params.id,
-            title: 'Complete Python Bootcamp',
-            short_description: 'Learn Python from scratch',
-            full_description: '<h3>About this course</h3><p>Complete Python course</p>',
-            thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-            price: 1999000,
-            discount_price: 499000,
-            status: 'published',
-            category_id: 1
-        },
-        categories: [
-            { id: 1, name: 'Lập trình' },
-            { id: 2, name: 'Kinh doanh' },
-            { id: 3, name: 'Thiết kế' }
-        ]
+router.get('/edit-course/:id', async function(req, res, next) {
+  try {
+    const allCategories = await getAllCategories({ includeCounts: false });
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy khóa học",
+        message: "Khóa học không tồn tại.",
+        layout: "main",
+      });
+    }
+
+    res.render('vwTeacher/edit-course', {
+      title: 'Chỉnh sửa khóa học',
+      isEdit: true,
+      course: data,
+      categories: allCategories,
+      searchQuery: null,
+      layout: "main",
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/course/:id', function(req, res) {
+router.get('/course/:id', async function(req, res, next) {
+  try {
+    const data = await getCourseDetailForEdit(req.params.id);
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy khóa học",
+        message: "Khóa học không tồn tại.",
+        layout: "main",
+      });
+    }
+
     res.render('vwTeacher/course-detail', {
         title: 'Chi tiết khóa học',
-        course: {
-            id: req.params.id,
-            title: 'Complete Python Bootcamp',
-            status: 'published',
-            enrollment_count: 4256,
-            rating_avg: 4.6,
-            revenue: 210000000
-        }
+      course: data,
+      searchQuery: null,
+      layout: "main",
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/course/:id/manage', function(req, res) {
+router.get('/course/:id/manage', async function(req, res, next) {
+  try {
+      const data = await getTeacherManageCourse(req.params.id);
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy khóa học",
+        message: "Khóa học không tồn tại.",
+        layout: "main",
+      });
+    }
+
     res.render('vwTeacher/manage-course', {
-        title: 'Quản lý khóa học',
-        course: {
-            id: req.params.id,
-            title: 'Complete Python Bootcamp',
-            thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg'
-        }
+      title: 'Quản lý khóa học',
+      course: data,
+      searchQuery: null,
+      layout: "main",
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/course/:id/content', function(req, res) {
+router.get('/course/:id/content', async function(req, res, next) {
+  try {
+    const data = await getTeacherManageContent(req.params.id);
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy khóa học",
+        message: "Khóa học không tồn tại.",
+        layout: "main",
+      });
+    }
+
     res.render('vwTeacher/manage-content', {
-        title: 'Quản lý nội dung',
-        course: {
-            id: req.params.id,
-            title: 'Complete Python Bootcamp',
-            sections: [
-                {
-                    id: 1,
-                    title: 'Introduction',
-                    lectures: [
-                        { id: 1, title: 'Welcome', duration: '10:30' }
-                    ]
-                }
-            ]
+      title: 'Quản lý nội dung',
+      course: data,
+      searchQuery: null,
+      layout: "main",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/course/:courseId/section/:sectionId/lecture/create', async function(req, res, next) {
+  try {
+    const data = await getTeacherCreateLecture(req.params.courseId, req.params.sectionId);
+
+    if (!data) {
+      return res.status(404).render("404", {
+        title: "Không tìm thấy khóa học",
+        message: "Khóa học không tồn tại.",
+        layout: "main",
+    });
         }
-    });
-});
 
-router.get('/course/:courseId/section/:sectionId/lecture/create', function(req, res) {
     res.render('vwTeacher/create-lecture', {
-        title: 'Tạo bài giảng mới',
-        courseId: req.params.courseId,
-        sectionId: req.params.sectionId
+      title: 'Tạo bài giảng mới',
+      courseId: req.params.courseId,
+      sectionId: req.params.sectionId,
+      lecture: data,
+      searchQuery: null,
+      layout: "main",
     });
-});
-
-router.get('/course/:courseId/section/create', function(req, res) {
-    res.render('vwTeacher/create-section', {
-        title: 'Tạo chương mới',
-        courseId: req.params.courseId
-    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get('/course/:courseId/content/:contentId/edit', function(req, res) {

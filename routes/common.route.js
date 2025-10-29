@@ -1,14 +1,18 @@
 import express from 'express';
 import { getLandingData } from "../models/course.model.js";
+import { getAllCategories } from '../models/course-category.model.js';
 
 const router = express.Router();
 
 router.get("/", async (req, res, next) => {
   try {
     const data = await getLandingData();
+    const allCategories = await getAllCategories({ includeCounts: false });
 
     res.render("vwCommon/landing", {
       ...data,
+      allCategories,
+      searchQuery: null,
       title: "Online Academy - Learn Anytime, Anywhere",
       layout: "main",
     });
@@ -17,30 +21,41 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get('/about-us', function (req, res) {
+router.get('/about-us', async function (req, res) {
+    const allCategories = await getAllCategories({ includeCounts: false });
     res.render('vwCommon/about-us', {
         title: 'Về chúng tôi',
+        allCategories,
+        searchQuery: null,
         layout: 'main'
     });
 });
 
-router.get('/contact-us', function (req, res) {
+router.get('/contact-us', async function (req, res) {
+    const allCategories = await getAllCategories({ includeCounts: false });
     res.render('vwCommon/contact-us', {
         title: 'Liên hệ',
-        layout: 'main'
+        layout: 'main',
+        isSent: false
     });
 });
 
-router.get('/privacy', function (req, res) {
+router.get('/privacy', async function (req, res) {
+    const allCategories = await getAllCategories({ includeCounts: false });
     res.render('vwCommon/privacy', {
         title: 'Chính sách bảo mật',
+        allCategories,
+        searchQuery: null,
         layout: 'main'
     });
 });
 
-router.get('/terms', function (req, res) {
+router.get('/terms', async function (req, res) {
+    const allCategories = await getAllCategories({ includeCounts: false });
     res.render('vwCommon/terms', {
         title: 'Điều khoản sử dụng',
+        allCategories,
+        searchQuery: null,
         layout: 'main'
     });
 });
@@ -58,8 +73,12 @@ router.get('/400', (req, res) => {
     res.status(400).render('vwCommon/400', { layout: 'error', title: '400 - Bad Request', bodyClass: 'error-400' });
 });
 
-router.post('/contact', function (req, res) {
-    res.json({ success: true, message: 'Đã gửi tin nhắn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm.' });
+router.post('/contact-us', function (req, res) {
+    res.render('vwCommon/contact-us', {
+        title: 'Liên hệ',
+        layout: 'main',
+        isSent: true
+    });
 });
 
 export default router;

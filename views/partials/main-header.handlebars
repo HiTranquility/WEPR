@@ -10,26 +10,28 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown">
-            Lĩnh vực
+            Category
           </a>
           <ul class="dropdown-menu">
-            {{#each allCategories}}
+            {{#each global_categories.allCategories}}
             <li><a class="dropdown-item" href="/courses?category={{id}}">{{name}}</a></li>
             {{/each}}
           </ul>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/courses">Khóa học</a>
+          <a class="nav-link" href="/courses">Courses</a>
         </li>
       </ul>
 
       <div class="d-flex me-3">
+        <form class="input-group" method="get" action="/courses/search">
         <div class="input-group">
-          <input type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search">
-          <button class="btn btn-outline-primary" type="button">
+          <input type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search" name="q" required>
+          <button class="btn btn-outline-primary" type="submit">
             <i class="bi bi-search"></i>
           </button>
         </div>
+        </form>
       </div>
 
       <ul class="navbar-nav align-items-center">
@@ -40,8 +42,9 @@
               <span>{{user.full_name}}</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i>Trang cá nhân</a></li>
-              <li><a class="dropdown-item" href="/my-courses"><i class="bi bi-book me-2"></i>Khóa học của tôi</a></li>
+              <li><a class="dropdown-item" href="/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+              <li><a class="dropdown-item" href="/my-courses"><i class="bi bi-book me-2"></i>My courses</a></li>
+              <li><a class="dropdown-item" href="/student/wishlist"><i class="bi bi-book me-2"></i>Wishlist</a></li>
               <li><hr class="dropdown-divider"></li>
               <li>
                 <form action="/signout" method="POST" style="display:inline;">
@@ -54,13 +57,38 @@
           </li>
         {{else}}
           <li class="nav-item">
-            <a class="btn btn-outline-primary ms-2" href="/signin">Đăng nhập</a>
+            <a class="btn btn-outline-primary ms-2" href="/signin">Sign in</a>
           </li>
           <li class="nav-item">
-            <a class="btn btn-primary ms-2" href="/signup">Đăng ký</a>
+            <a class="btn btn-primary ms-2" href="/signup">Sign up</a>
           </li>
         {{/if}}
       </ul>
     </div>
   </div>
 </nav>
+
+<script>
+// Xử lý search form
+document.getElementById('searchForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const searchInput = document.getElementById('searchInput');
+  const searchQuery = searchInput.value.trim();
+  
+  if (searchQuery) {
+    // Chuyển hướng đến trang courses với query parameter
+    window.location.href = `/courses?q=${encodeURIComponent(searchQuery)}`;
+  } else {
+    // Nếu không có query, chuyển đến trang courses
+    window.location.href = '/courses';
+  }
+});
+
+// Xử lý clear search
+document.getElementById('searchInput')?.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    this.value = '';
+    this.blur();
+  }
+});
+</script>

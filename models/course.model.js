@@ -78,13 +78,40 @@ export async function searchCourses(opts = {}) {
       if (minPrice != null) builder.andWhere('courses.price', '>=', minPrice);
       if (maxPrice != null) builder.andWhere('courses.price', '<=', maxPrice);
       if (q?.trim()) {
-        const kw = `%${q.trim()}%`;
-        builder.andWhere(sub => {
-          sub.whereILike('courses.title', kw)
-            .orWhereILike('courses.short_description', kw)
-            .orWhereILike('category.name', kw)
-            .orWhereILike('teacher.full_name', kw);
-        });
+        const term = q.trim();
+
+        // Prefer PostgreSQL full-text search for better relevance and performance.
+        // Uses combined tsvector from title, short_description, category.name and teacher.full_name.
+        // Falls back to ILIKE when DB is not Postgres or if anything unexpected happens.
+        try {
+          const isPg = (database && database.client && database.client.config && database.client.config.client) === 'pg';
+          if (isPg) {
+            // Use websearch_to_tsquery which supports natural language queries (since PG11+).
+            // We build a combined tsvector on-the-fly from joined fields.
+            builder.andWhereRaw(
+              "to_tsvector('simple', coalesce(courses.title,'') || ' ' || coalesce(courses.short_description,'') || ' ' || coalesce(category.name,'') || ' ' || coalesce(teacher.full_name,'')) @@ websearch_to_tsquery('simple', ?)",
+              [term]
+            );
+          } else {
+            // Fallback for non-postgres: do ILIKE search across important fields
+            const kw = `%${term}%`;
+            builder.andWhere(sub => {
+              sub.whereILike('courses.title', kw)
+                .orWhereILike('courses.short_description', kw)
+                .orWhereILike('category.name', kw)
+                .orWhereILike('teacher.full_name', kw);
+            });
+          }
+        } catch (e) {
+          // On any unexpected error, fallback to ILIKE
+          const kw = `%${term}%`;
+          builder.andWhere(sub => {
+            sub.whereILike('courses.title', kw)
+              .orWhereILike('courses.short_description', kw)
+              .orWhereILike('category.name', kw)
+              .orWhereILike('teacher.full_name', kw);
+          });
+        }
       }
     });
 
@@ -354,4 +381,32 @@ export const getLandingData = async () => {
     topCategories,
     allCategories,
   };
+};
+
+//=================
+// COURSE - PREVIEW LECTURE DETAIL
+//=================
+export const getLecturePreview = async (courseId, sectionId, lectureId) => {
+  const result = await database("lectures as l")
+    .leftJoin("sections as s", "l.section_id", "s.id")
+    .leftJoin("courses as c", "s.course_id", "c.id")
+    .leftJoin("users as t", "c.teacher_id", "t.id")
+    .where("l.id", lectureId)
+    .andWhere("s.id", sectionId)
+    .andWhere("c.id", courseId)
+    .andWhere("l.is_preview", true)
+    .first(
+      "l.id as lecture_id",
+      "l.title as lecture_title",
+      "l.video_url",
+      "l.duration",
+      "s.id as section_id",
+      "s.title as section_title",
+      "c.id as course_id",
+      "c.title as course_title",
+      "t.full_name as teacher_name",
+      "t.avatar_url as teacher_avatar"
+    );
+
+  return result || null;
 };
