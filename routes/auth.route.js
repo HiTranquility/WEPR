@@ -47,7 +47,11 @@ router.get('/google', (req, res, next) => {
   // Store in session as a fallback, but also pass via OAuth state to survive redirects
   req.session.authMode = mode;
   // Start passport flow and include the mode in the OAuth state param so Google returns it
-  passport.authenticate('google', { scope: ['profile', 'email'], state: mode })(req, res, next);
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    state: mode,
+    prompt: 'select_account', // Force Google to show account selection
+  })(req, res, next);
 });
 
 // Callback after Google OAuth
@@ -86,23 +90,33 @@ router.post('/google/complete', async (req, res) => {
   try {
     const profile = req.session.googleProfile;
     const mode = req.session.authMode || 'signup';
-    if (!profile) return res.status(400).json({ success: false, message: 'Missing Google profile' });
+    if (!profile) {
+      console.error('Google profile is missing');
+      return res.status(400).send('Google profile is missing');
+    }
 
     const { password, confirmPassword, role } = req.body;
     if (!password || password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+      console.error('Invalid password:', password);
+      return res.status(400).send('Password must be at least 6 characters');
     }
     if (confirmPassword === undefined || password !== confirmPassword) {
-      return res.status(400).json({ success: false, message: 'Passwords do not match' });
+      console.error('Passwords do not match:', { password, confirmPassword });
+      return res.status(400).send('Passwords do not match');
     }
 
     const email = profile.email || profile.emails?.[0]?.value;
     const fullName = profile.name || profile.displayName || '';
 
     // Check existing
-    const { data: existing } = await supabase.from('users').select('id,role').eq('email', email).maybeSingle();
+    const { data: existing, error: existingError } = await supabase.from('users').select('id,role').eq('email', email).maybeSingle();
+    if (existingError) {
+      console.error('Error checking existing user:', existingError);
+      return res.status(500).send('Failed to check existing user');
+    }
     if (existing) {
-      return res.status(400).json({ success: false, message: 'Email already exists. Please sign in.' });
+      console.error('User already exists:', existing);
+      return res.status(400).send('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -111,42 +125,37 @@ router.post('/google/complete', async (req, res) => {
       email: email,
       password_hash: hashedPassword,
       role: role || 'student',
-      google_id: profile.id || null,
     };
+
+    // Add google_id only if the column exists
+    try {
+      const { data: columns } = await supabase.from('information_schema.columns').select('column_name').eq('table_name', 'users');
+      const columnNames = columns.map(col => col.column_name);
+      if (columnNames.includes('google_id')) {
+        insertPayload.google_id = profile.id || null;
+      }
+    } catch (err) {
+      console.error('Error checking columns:', err);
+    }
 
     console.log('Insert payload:', insertPayload); // Debugging line
 
-    // Try inserting and request the inserted row back in the same call.
-    // If the DB schema doesn't have google_id (PGRST204), retry without that field.
     let user = null;
     try {
-      const { data: inserted, error: insertErr } = await supabase
-        .from('users')
-        .insert([insertPayload])
-        .select('*')
-        .single();
-      if (insertErr) throw insertErr;
-      user = inserted;
-    } catch (err) {
-      // If the error indicates missing google_id column in schema, retry without it
-      if (err?.code === 'PGRST204' || (err?.message && err.message.includes('google_id'))) {
-        const payloadNoGoogle = { ...insertPayload };
-        delete payloadNoGoogle.google_id;
-        const { data: inserted2, error: insertErr2 } = await supabase
-          .from('users')
-          .insert([payloadNoGoogle])
-          .select('*')
-          .single();
-        if (insertErr2) throw insertErr2;
-        user = inserted2;
-      } else {
-        throw err;
+      const { data, error } = await supabase.from('users').insert([insertPayload]).select().single();
+      if (error) {
+        console.error('Error inserting user:', error);
+        return res.status(500).send('Failed to create user');
       }
+      user = data;
+    } catch (err) {
+      console.error('Unexpected error inserting user:', err);
+      return res.status(500).send('Failed to create user');
     }
 
     if (!user) {
-      console.error('Could not retrieve user after signup - insert returned no row');
-      return res.status(500).json({ success: false, message: 'Could not retrieve user after signup' });
+      console.error('User creation failed');
+      return res.status(500).send('User creation failed');
     }
 
     const payload = { id: user.id, role: user.role, name: user.full_name, email: user.email };
@@ -159,37 +168,17 @@ router.post('/google/complete', async (req, res) => {
     res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: false, sameSite: 'lax', path: '/auth', maxAge: 7 * 24 * 60 * 60 * 1000 });
 
     // Ensure Passport session (req.user) reflects DB user so role is available for later checks
-    try {
-      if (typeof req.logIn === 'function') {
-        await new Promise((resolve, reject) => {
-          req.logIn(payload, (err) => {
-            if (err) return reject(err);
-            resolve();
-          });
-        });
-      } else {
-        // fallback: directly set req.user and session.passport.user
-        req.user = payload;
-        req.session = req.session || {};
-        req.session.passport = req.session.passport || {};
-        req.session.passport.user = payload;
-      }
-    } catch (e) {
-      console.error('Failed to attach user to passport session', e);
-    }
+    req.user = payload;
+    res.locals.user = payload;
 
     // Clear session helpers
     delete req.session.googleProfile;
     delete req.session.authMode;
 
-    return res.json({
-      success: true,
-      message: 'Sign up successfully. Please sign in to continue.',
-      redirect: '/signin'
-    });
+    return res.redirect('/student/dashboard');
   } catch (err) {
-    console.error('/google/complete error', err);
-    return res.status(500).json({ success: false, message: 'Server error during Google signup' });
+    console.error('Error completing signup:', err);
+    return res.status(500).send('An error occurred');
   }
 });
 
