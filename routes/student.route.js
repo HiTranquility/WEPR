@@ -56,33 +56,7 @@ router.get("/student/my-courses", async (req, res, next) => {
   }
 });
 
-router.get('/my-courses', function(req, res) {
-    res.render('vwStudent/my-courses', {
-        title: 'Khóa học của tôi',
-        user: {
-            full_name: 'Nguyễn Văn A',
-            email: 'student@example.com',
-            avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
-        },
-        enrolledCourses: [
-            {
-                id: 1,
-                progress: 45,
-                completed_lectures: 15,
-                total_lectures: 33,
-                course: {
-                    id: 1,
-                    title: 'Complete Python Bootcamp',
-                    thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-                    category: { name: 'Lập trình' },
-                    teacher: { full_name: 'Jose Portilla' }
-                }
-            }
-        ]
-    });
-});
-
-router.get('/watchlist', function(req, res) {
+router.get('/student/watchlist', function(req, res) {
     res.render('vwStudent/watchlist', {
         title: 'Danh sách yêu thích',
         user: {
@@ -112,7 +86,7 @@ router.get('/watchlist', function(req, res) {
     });
 });
 
-router.get('/learn/:courseId', function(req, res) {
+router.get('/student/learn/:courseId', function(req, res) {
     res.render('vwStudent/learn', {
         layout: false,
         course: {
@@ -156,31 +130,31 @@ router.get('/learn/:courseId', function(req, res) {
     });
 });
 
-router.post('/profile', function(req, res) {
+router.post('/student/profile', function(req, res) {
     res.json({ success: true, message: 'Cập nhật thông tin thành công!' });
 });
 
-router.post('/change-password', function(req, res) {
+router.post('/student/change-password', function(req, res) {
     res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
 });
 
-router.post('/watchlist/:courseId', function(req, res) {
+router.post('/student/watchlist/:courseId', function(req, res) {
     res.json({ success: true, message: 'Đã thêm vào watchlist!' });
 });
 
-router.delete('/watchlist/:courseId', function(req, res) {
+router.delete('/student/watchlist/:courseId', function(req, res) {
     res.json({ success: true, message: 'Đã xóa khỏi watchlist!' });
 });
 
-router.post('/learn/:courseId/lecture/:lectureId/complete', function (req, res) {
+router.post('/student/learn/:courseId/lecture/:lectureId/complete', function (req, res) {
     res.json({ success: true, message: 'Đã đánh dấu hoàn thành!' });
 });
 
-router.post('/learn/:courseId/notes', function (req, res) {
+router.post('/student/learn/:courseId/notes', function (req, res) {
     res.json({ success: true, message: 'Đã lưu ghi chú!' });
 });
 
-router.delete('/learn/:courseId/notes/:noteId', function (req, res) {
+router.delete('/student/learn/:courseId/notes/:noteId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa ghi chú!' });
 });
 

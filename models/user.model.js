@@ -1,4 +1,6 @@
 import database from "../utils/database.js";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 export const baseQuery = database("users");
 
@@ -24,6 +26,58 @@ export const deleteUser = async (id) => {
 
 export const getAllUsers = async () => {
   return await baseQuery.select("*").orderBy("id", "asc");
+};
+
+// =================
+// AUTH HELPERS
+// =================
+
+// Minimal public profile for attaching to req.user after JWT verification
+export const getUserPublicById = async (id) => {
+  return await baseQuery
+    .clone()
+    .where({ id })
+    .first("id", "full_name", "email", "role", "avatar_url", "status");
+};
+
+// =================
+// AUTH / GOOGLE HELPERS
+// =================
+
+export const buildAuthPayload = (user) => {
+  if (!user) return null;
+  return {
+    id: user.id,
+    role: user.role,
+    name: user.full_name,
+    email: user.email,
+  };
+};
+
+export const getDashboardRedirectByRole = (role) => {
+  const map = { admin: "/admin/dashboard", teacher: "/teacher/dashboard", student: "/student/dashboard" };
+  return map[role] || "/";
+};
+
+export const findOrCreateGoogleUser = async ({ email, fullName, googleId, defaultRole = "student" }) => {
+  const existing = await getUserByEmail(email);
+  if (existing) return existing;
+  try {
+    const randomPassword = crypto.randomUUID();
+    const hashed = await bcrypt.hash(randomPassword, 10);
+    const payload = {
+      full_name: fullName || "",
+      email,
+      password_hash: hashed, // store random hash to satisfy NOT NULL; cannot be used to login
+      role: defaultRole,
+      // Note: do NOT insert google_id unless the column exists in schema
+    };
+    const inserted = await createUser(payload);
+    return inserted && inserted[0] ? inserted[0] : null;
+  } catch (err) {
+    console.error('findOrCreateGoogleUser insert error:', err);
+    throw err;
+  }
 };
 
 // models/user.model.js

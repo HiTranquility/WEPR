@@ -68,38 +68,38 @@ router.get('/courses/search', async function(req, res, next) {
     }
 });
 
-router.get("/courses/detail", async function (req, res, next) {
-  try {
+// router.get("/courses/detail", async function (req, res, next) {
+//   try {
     
-    const { id } = req.query;
+//     const { id } = req.query;
 
-    if (!id) {
-      return res.status(400).render("404", {
-        title: "Lỗi truy cập",
-        message: "Thiếu ID khóa học trong yêu cầu.",
-        layout: "main",
-      });
-    }
+//     if (!id) {
+//       return res.status(400).render("404", {
+//         title: "Lỗi truy cập",
+//         message: "Thiếu ID khóa học trong yêu cầu.",
+//         layout: "main",
+//       });
+//     }
 
-    const course = await getCourseDetail(Number(id));
+//     const course = await getCourseDetail(Number(id));
 
-    if (!course) {
-      return res.status(404).render("404", {
-        title: "Không tìm thấy khóa học",
-        message: "Khóa học bạn yêu cầu không tồn tại hoặc đã bị xóa.",
-        layout: "main",
-      });
-    }
+//     if (!course) {
+//       return res.status(404).render("404", {
+//         title: "Không tìm thấy khóa học",
+//         message: "Khóa học bạn yêu cầu không tồn tại hoặc đã bị xóa.",
+//         layout: "main",
+//       });
+//     }
 
-    res.render("vwCourse/detail", {
-      title: course.title || "Chi tiết khóa học",
-      course, 
-      layout: false, 
-    });
-  } catch (err) {
-    next(err);
-  }
-});            
+//     res.render("vwCourse/detail", {
+//       title: course.title || "Chi tiết khóa học",
+//       course, 
+//       layout: false, 
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// });            
 
 router.get('/courses/:id', async function(req, res, next) {
     try {

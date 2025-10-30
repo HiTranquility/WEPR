@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.use('/', ensureAuthenticated, requireRole('teacher'));
 
-router.get("/teacher/dashboard", async (req, res, next) => {
+router.get("/dashboard", async (req, res, next) => {
   try {
     const teacherId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
@@ -60,6 +60,7 @@ router.get('/courses', async function(req, res, next) {
     next(err);
   }
 });
+
 router.get('/create-course', async function(req, res, next) {
   try {
     const allCategories = await getAllCategories({ includeCounts: false });
