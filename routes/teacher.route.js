@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.use('/', ensureAuthenticated, requireRole('teacher'));
 
-router.get("/teacher/dashboard", async (req, res, next) => {
+router.get("/dashboard", async (req, res, next) => {
   try {
     const teacherId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 
@@ -77,6 +77,9 @@ router.get('/create-course', async function(req, res, next) {
 
 router.get('/edit-course/:id', async function(req, res, next) {
   try {
+    const { courseId } = req.params;
+
+    const data = await getCourseEditData(courseId); // ✅ gọi hàm model lấy dữ liệu
     const allCategories = await getAllCategories({ includeCounts: false });
 
     if (!data) {
@@ -148,7 +151,7 @@ router.get('/course/:id/manage', async function(req, res, next) {
 
 router.get('/course/:id/content', async function(req, res, next) {
   try {
-    const data = await getTeacherManageContent(req.params.id);
+    const data = await getTeacherCourseContent(req.params.id);
 
     if (!data) {
       return res.status(404).render("404", {

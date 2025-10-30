@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.use('/', ensureAuthenticated, requireRole('student'));
 
-router.get("/student/dashboard", async (req, res, next) => {
+router.get("/dashboard", async (req, res, next) => {
   try {
     //const studentId = req.user.id;
     const studentId = "f5555555-5555-5555-5555-555555555555";
@@ -27,7 +27,7 @@ router.get("/student/dashboard", async (req, res, next) => {
   }
 });
 
-router.get("/student/my-courses", async (req, res, next) => {
+router.get("/my-courses", async (req, res, next) => {
   try {
     
     const studentId = "f4444444-4444-4444-4444-444444444444";
@@ -56,34 +56,10 @@ router.get("/student/my-courses", async (req, res, next) => {
   }
 });
 
-router.get('/my-courses', function(req, res) {
-    res.render('vwStudent/my-courses', {
-        title: 'Khóa học của tôi',
-        user: {
-            full_name: 'Nguyễn Văn A',
-            email: 'student@example.com',
-            avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
-        },
-        enrolledCourses: [
-            {
-                id: 1,
-                progress: 45,
-                completed_lectures: 15,
-                total_lectures: 33,
-                course: {
-                    id: 1,
-                    title: 'Complete Python Bootcamp',
-                    thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-                    category: { name: 'Lập trình' },
-                    teacher: { full_name: 'Jose Portilla' }
-                }
-            }
-        ]
-    });
-});
+
 
 router.get('/watchlist', function(req, res) {
-    res.render('vwStudent/watchlist', {
+    res.render('vwStudent/wishlist', {
         title: 'Danh sách yêu thích',
         user: {
             full_name: 'Nguyễn Văn A',
