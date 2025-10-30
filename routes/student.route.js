@@ -5,7 +5,7 @@ import { ensureAuthenticated } from '../middlewares/student.middleware.js';
 import { requireRole } from '../middlewares/student.middleware.js';
 const router = express.Router();
 
-router.use('/', ensureAuthenticated, requireRole('student'));
+//router.use('/', ensureAuthenticated, requireRole('student'));
 
 router.get("/dashboard", async (req, res, next) => {
   try {
@@ -58,78 +58,70 @@ router.get("/my-courses", async (req, res, next) => {
 
 
 
-router.get('/watchlist', function(req, res) {
+router.get('/watchlist', async (req, res, next) => {
+  try {
+    // 👉 Giả sử tạm thời dùng ID học viên cố định (vì chưa có login)
+    const studentId = 'f4444444-4444-4444-4444-444444444444';
+    
+    // Lấy dữ liệu từ DB
+    const watchlist = await getStudentWatchlist(studentId);
+
+    // Render ra view
     res.render('vwStudent/wishlist', {
-        title: 'Danh sách yêu thích',
-        user: {
-            full_name: 'Nguyễn Văn A',
-            email: 'student@example.com',
-            avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
-        },
-        watchlist: [
-            {
-                id: 1,
-                course: {
-                    id: 2,
-                    title: 'The Complete JavaScript Course 2024',
-                    thumbnail_url: 'https://images.pexels.com/photos/4164418/pexels-photo-4164418.jpeg',
-                    rating_avg: 4.7,
-                    rating_count: 5234,
-                    enrollment_count: 35000,
-                    discount_price: 399000,
-                    category: { name: 'Lập trình' },
-                    teacher: {
-                        full_name: 'Jonas Schmedtmann',
-                        avatar_url: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg'
-                    }
-                }
-            }
-        ]
+      title: 'Danh sách yêu thích',
+      user: {
+        full_name: 'Nguyễn Văn A',
+        email: 'student@example.com',
+        avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
+      },
+      watchlist
     });
+  } catch (err) {
+    console.error('Error loading watchlist:', err);
+    next(err);
+  }
 });
 
-router.get('/learn/:courseId', function(req, res) {
+router.get('/learn/:courseId', async (req, res, next) => {
+  try {
+    const { courseId } = req.params;
+
+    // ⚙️ Tạm thời hardcode studentId (sau này thay bằng req.session.user.id)
+    const studentId = 'f1111111-1111-1111-1111-111111111111';
+
+    // 🔹 Lấy dữ liệu học từ model
+    const data = await getCourseLearningData(studentId, courseId);
+
+    if (!data) {
+      return res.status(404).render('404', { title: 'Không tìm thấy khóa học' });
+    }
+
+    // 🔹 Tính thêm tổng số bài giảng, tiến độ nếu cần
+    const totalLectures = data.course.sections.reduce(
+      (sum, sec) => sum + sec.lectures.length,
+      0
+    );
+    const completedLectures = 0; // chưa có bảng progress thì để 0
+    const progress =
+      totalLectures > 0
+        ? Math.round((completedLectures / totalLectures) * 100)
+        : 0;
+
+    // 🔹 Render ra trang học
     res.render('vwStudent/learn', {
-        layout: false,
-        course: {
-            id: req.params.courseId,
-            title: 'Complete Python Bootcamp',
-            category: { name: 'Lập trình' },
-            sections: [
-                {
-                    title: 'Course Introduction',
-                    lectures: [
-                        {
-                            id: 1,
-                            title: 'Introduction to Course',
-                            duration: '10:30',
-                            is_completed: true,
-                            description: 'Welcome to the course!'
-                        },
-                        {
-                            id: 2,
-                            title: 'Course Curriculum Overview',
-                            duration: '15:45',
-                            is_completed: false,
-                            description: 'Overview of what we will learn'
-                        }
-                    ]
-                }
-            ]
-        },
-        currentLecture: {
-            id: 1,
-            title: 'Introduction to Course',
-            video_url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-            description: 'Welcome to the course! In this lecture, we will introduce you to the course content.',
-            resources: []
-        },
-        currentLectureIndex: 1,
-        totalLectures: 185,
-        completedLectures: 15,
-        progress: 8,
-        notes: []
+      layout: false,
+      course: data.course,
+      currentLecture: data.currentLecture,
+      currentLectureIndex: data.currentLectureIndex,
+      totalLectures,
+      completedLectures,
+      progress,
+      notes: data.notes,
     });
+  } catch (err) {
+    console.error('Error in /learn/:courseId:', err);
+    next(err);
+  }
 });
 
 router.post('/profile', function(req, res) {
