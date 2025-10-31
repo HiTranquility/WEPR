@@ -1,38 +1,37 @@
-import jwt from "jsonwebtoken";
+import { verifyAccessToken } from "../utils/jwt.js";
+import { getUserPublicById } from "../models/user.model.js";
 
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "dev_access_secret_change_me";
-
-export function ensureAuthenticated(req, res, next) {
-  console.log("[STUDENT] ensureAuthenticated running for", req.originalUrl);
-  console.log("[STUDENT] req.user =", req.user);
-  const token = req.cookies?.access_token;
-  console.log("[STUDENT] cookie token =", token ? "found" : "missing");
-
-  if (req.user) return next();
-  if (!token) return res.redirect("/signin");
-
+export async function ensureAuthenticated(req, res, next) {
   try {
-    const decoded = jwt.verify(token, ACCESS_SECRET);
-    console.log("[STUDENT] decoded =", decoded);
-    req.user = decoded;
-    res.locals.user = decoded;
+    const token = req.cookies?.access_token;
+    if (!req.user || !req.user.role) {
+      if (!token) return res.redirect("/signin");
+      const decoded = verifyAccessToken(token);
+      console.log('[STUDENT] decoded from JWT:', decoded);
+      const dbUser = await getUserPublicById(decoded.id);
+      console.log('[STUDENT] dbUser loaded:', dbUser && { id: dbUser.id, role: dbUser.role, email: dbUser.email });
+      if (!dbUser) return res.redirect("/signin");
+      req.user = dbUser;
+      res.locals.user = dbUser;
+      return next();
+    }
+    console.log('[STUDENT] req.user present:', { id: req.user.id, role: req.user.role });
+    if (!res.locals.user) res.locals.user = req.user;
     return next();
   } catch (err) {
-    console.log("[STUDENT] token invalid:", err.message);
+    console.log('[STUDENT] ensureAuthenticated error:', err?.message);
     return res.redirect("/signin");
   }
 }
 
 export function requireRole(...allowedRoles) {
-  console.log("[STUDENT] requireRole running. allowed =", allowedRoles);
   return function roleGuard(req, res, next) {
-    console.log("[STUDENT] user role =", req.user?.role);
-    const userRole = req.user && req.user.role;
-    if (userRole && allowedRoles.includes(userRole)) {
-      console.log("[STUDENT] role OK");
+    const userRole = (req.user && req.user.role ? String(req.user.role) : '').toLowerCase();
+    const allowed = allowedRoles.map(r => String(r).toLowerCase());
+    console.log('[STUDENT] requireRole check:', { userRole, allowed });
+    if (userRole && allowed.includes(userRole)) {
       return next();
     }
-    console.log("[STUDENT] role FAIL");
     return res.status(403).render("vwCommon/403", { layout: false });
   };
 }

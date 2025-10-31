@@ -1,14 +1,9 @@
 import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
-import hbs_sections from 'express-handlebars-sections';
-import { getLandingData } from "./models/course.model.js";
-
 import path from 'path';
 import session from 'express-session';
-import passport from './middlewares/passport.js';
 import cookieParser from "cookie-parser";
-import { attachUserFromToken } from "./middlewares/jwt-auth.middleware.js";
 import authRoute from './routes/auth.route.js';
 import studentRoute from './routes/student.route.js';
 import teacherRoute from './routes/teacher.route.js';
@@ -17,6 +12,9 @@ import commonRoute from './routes/common.route.js';
 import courseRoute from './routes/course.route.js';
 import gmailRoute from './routes/gmail.route.js';
 import { hbsHelpers } from './utils/hbsHelpers.js';
+import passport from './utils/passport.js';
+import { verifyAccessToken, verifyRefreshToken, signAccessToken } from './utils/jwt.js';
+import { hasRefreshToken } from './utils/token-store.js';
 const app = express();
 const rootDir = process.cwd();
 const viewsRoot = path.resolve(rootDir, 'views');
@@ -38,11 +36,40 @@ app.use('/statics', express.static(staticsRoot));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
+// Hydrate req.user from JWT cookies and refresh access token if needed
+app.use((req, res, next) => {
+  const access = req.cookies?.access_token;
+  if (access) {
+    try {
+      const payload = verifyAccessToken(access);
+      req.user = payload;
+      res.locals.user = payload;
+      return next();
+    } catch (err) {
+      // fallthrough to refresh flow
+    }
+  }
+
+  // Attempt refresh if refresh_token is available
+  try {
+    const refresh = req.cookies?.refresh_token;
+    if (!refresh) return next();
+    const payload = verifyRefreshToken(refresh);
+    if (!payload?.id || !hasRefreshToken(payload.id, refresh)) return next();
+
+    const newAccess = signAccessToken({ id: payload.id, role: payload.role, name: payload.name, email: payload.email });
+    res.cookie('access_token', newAccess, { httpOnly: true, secure: false, sameSite: 'lax', path: '/', maxAge: 10 * 60 * 1000 });
+    req.user = { id: payload.id, role: payload.role, name: payload.name, email: payload.email };
+    res.locals.user = req.user;
+  } catch (_) {
+    // ignore refresh errors
+  }
+  next();
+});
 app.use((req, res, next) => {
   console.log(`[REQ] ${req.method} ${req.originalUrl}`);
   next();
 });
-app.use(attachUserFromToken);
 
 // Fix treo fetch (do connection không close)
 app.use((req, res, next) => {
@@ -55,16 +82,20 @@ app.use((req, res, next) => {
 app.use(session({
   secret: 'your_secret_key',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
+  cookie: { sameSite: 'lax' }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Ensure req.user has role and expose to views
+// Remove global role-filling; handled in per-role middlewares
+
 //Server Routes
 app.use('/', authRoute);
-app.use('/student', studentRoute);
-app.use('/teacher', teacherRoute);
-app.use('/admin', adminRoute);
+app.use('/', studentRoute);
+app.use('/', teacherRoute);
+app.use('/', adminRoute);
 app.use('/', commonRoute);
 app.use('/', courseRoute);
 app.use('/gmail', gmailRoute);
@@ -91,6 +122,7 @@ app.use((err, req, res, next) => {
 
     return res.redirect('/400');
 });
+
 //Server Configuration
 if (!process.env.NETLIFY) {
     app.listen(process.env.APP_PORT || 3000, function() {

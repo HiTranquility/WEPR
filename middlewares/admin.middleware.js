@@ -1,39 +1,40 @@
-import jwt from "jsonwebtoken";
+import { verifyAccessToken } from "../utils/jwt.js";
+import { getUserPublicById } from "../models/user.model.js";
 
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "dev_access_secret";
-
-// ✅ Middleware kiểm tra đăng nhập
-export function ensureAuthenticated(req, res, next) {
-  console.log("[ADMIN] ensureAuthenticated running for", req.originalUrl);
-  console.log("[ADMIN] req.user =", req.user);
-  const token = req.cookies?.access_token;
-  console.log("[ADMIN] cookie token =", token ? "found" : "missing");
-
-  if (req.user) return next();
-  if (!token) return res.redirect("/signin");
-
+// ✅ Middleware kiểm tra đăng nhập (decode JWT + nạp user từ DB)
+export async function ensureAuthenticated(req, res, next) {
   try {
-    const decoded = jwt.verify(token, ACCESS_SECRET);
-    console.log("🧩 decoded =", decoded);
-    req.user = decoded;
-    res.locals.user = decoded;
+    const token = req.cookies?.access_token;
+    // If no user or missing role, rehydrate from JWT + DB
+    if (!req.user || !req.user.role) {
+      if (!token) return res.redirect("/signin");
+      const decoded = verifyAccessToken(token);
+      console.log('[ADMIN] decoded from JWT:', decoded);
+      const dbUser = await getUserPublicById(decoded.id);
+      console.log('[ADMIN] dbUser loaded:', dbUser && { id: dbUser.id, role: dbUser.role, email: dbUser.email });
+      if (!dbUser) return res.redirect("/signin");
+      req.user = dbUser;
+      res.locals.user = dbUser;
+      return next();
+    }
+    console.log('[ADMIN] req.user present:', { id: req.user.id, role: req.user.role });
+    // Already has user with role
+    if (!res.locals.user) res.locals.user = req.user;
     return next();
   } catch (err) {
-    console.log("🧩 token invalid:", err.message);
+    console.log('[ADMIN] ensureAuthenticated error:', err?.message);
     return res.redirect("/signin");
   }
 }
 
 export function requireRole(...allowedRoles) {
-  console.log("[ADMIN] requireRole running. allowed =", allowedRoles);
   return function roleGuard(req, res, next) {
-    console.log("[ADMIN] user role =", req.user?.role);
-    const userRole = req.user && req.user.role;
-    if (userRole && allowedRoles.includes(userRole)) {
-      console.log("[ADMIN] role OK");
+    const userRole = (req.user && req.user.role ? String(req.user.role) : '').toLowerCase();
+    const allowed = allowedRoles.map(r => String(r).toLowerCase());
+    console.log('[ADMIN] requireRole check:', { userRole, allowed });
+    if (userRole && allowed.includes(userRole)) {
       return next();
     }
-    console.log("[ADMIN] role FAIL");
     return res.status(403).render("vwCommon/403", { layout: false });
   };
 }

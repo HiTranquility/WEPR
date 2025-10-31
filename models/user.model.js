@@ -1,4 +1,6 @@
 import database from "../utils/database.js";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 export const baseQuery = database("users");
 
@@ -7,28 +9,109 @@ export const baseQuery = database("users");
 //=================
 
 export const createUser = async (user) => {
-  return await baseQuery.insert(user).returning("*");
+  return await database("users").insert(user).returning("*");
 };
 
 export const readUser = async (id) => {
-  return await baseQuery.where("id", id).first();
+  return await database("users").where("id", id).first();
 };
 
 export const updateUser = async (id, data) => {
-  return await baseQuery.where("id", id).update(data).returning("*");
+  return await database("users").where("id", id).update(data).returning("*");
 };
 
 export const deleteUser = async (id) => {
-  return await baseQuery.where("id", id).del();
+  return await database("users").where("id", id).del();
 };
 
 export const getAllUsers = async () => {
-  return await baseQuery.select("*").orderBy("id", "asc");
+  return await database("users").select("*").orderBy("id", "asc");
+};
+
+// =================
+// AUTH HELPERS
+// =================
+
+// Minimal public profile for attaching to req.user after JWT verification
+export const getUserPublicById = async (id) => {
+  return await database("users")
+    .where({ id })
+    .first("id", "full_name", "email", "role", "avatar_url");
+};
+
+// =================
+// AUTH / LOCAL SIGNUP
+// =================
+
+export const registerLocalUser = async ({ fullName, email, password, role = "student" }) => {
+  if (!fullName || !email || !password) {
+    const err = new Error("Missing required fields");
+    err.code = "VALIDATION_ERROR";
+    throw err;
+  }
+
+  const existing = await getUserByEmail(email);
+  if (existing) {
+    const err = new Error("Email already exists");
+    err.code = "EMAIL_EXISTS";
+    throw err;
+  }
+
+  const hashed = await bcrypt.hash(password, 10);
+  const payload = {
+    full_name: fullName,
+    email,
+    password_hash: hashed,
+    role: role || "student",
+  };
+
+  const inserted = await createUser(payload);
+  return inserted && inserted[0] ? inserted[0] : null;
+};
+
+// =================
+// AUTH / GOOGLE HELPERS
+// =================
+
+export const buildAuthPayload = (user) => {
+  if (!user) return null;
+  return {
+    id: user.id,
+    role: user.role,
+    name: user.full_name,
+    email: user.email,
+  };
+};
+
+export const getDashboardRedirectByRole = (role) => {
+  const map = { admin: "/admin/dashboard", teacher: "/teacher/dashboard", student: "/student/dashboard" };
+  return map[role] || "/";
+};
+
+export const findOrCreateGoogleUser = async ({ email, fullName, googleId, defaultRole = "student" }) => {
+  const existing = await getUserByEmail(email);
+  if (existing) return existing;
+  try {
+    const randomPassword = crypto.randomUUID();
+    const hashed = await bcrypt.hash(randomPassword, 10);
+    const payload = {
+      full_name: fullName || "",
+      email,
+      password_hash: hashed, // store random hash to satisfy NOT NULL; cannot be used to login
+      role: defaultRole,
+      // Note: do NOT insert google_id unless the column exists in schema
+    };
+    const inserted = await createUser(payload);
+    return inserted && inserted[0] ? inserted[0] : null;
+  } catch (err) {
+    console.error('findOrCreateGoogleUser insert error:', err);
+    throw err;
+  }
 };
 
 // models/user.model.js
 export const getUserByEmail = async (email) => {
-  return await baseQuery.clone().where('email', email).first();
+  return await database("users").where('email', email).first();
 };
 
 //=================
@@ -37,26 +120,25 @@ export const getUserByEmail = async (email) => {
 
 export const createStudent = async (student) => {
   student.role = "student";
-  return await baseQuery.insert(student).returning("*");
+  return await database("users").insert(student).returning("*");
 };
 
 export const readStudent = async (id) => {
-  return await baseQuery.where({ id, role: "student" }).first();
+  return await database("users").where({ id, role: "student" }).first();
 };
 
 export const updateStudent = async (id, data) => {
-  return await baseQuery.where({ id, role: "student" }).update(data).returning("*");
+  return await database("users").where({ id, role: "student" }).update(data).returning("*");
 };
 
 export const deleteStudent = async (id) => {
-  return await baseQuery.where({ id, role: "student" }).del();
+  return await database("users").where({ id, role: "student" }).del();
 };
 
 export const getAllStudents = async () => {
-  return await baseQuery
-    .clone()
+  return await database("users")
     .where("role", "student")
-    .select("id", "full_name", "email", "avatar_url", "created_at", "status")
+    .select("id", "full_name", "email", "avatar_url", "created_at")
     .orderBy("id", "asc");
 };
 
@@ -66,19 +148,19 @@ export const getAllStudents = async () => {
 
 export const createTeacher = async (teacher) => {
   teacher.role = "teacher";
-  return await baseQuery.insert(teacher).returning("*");
+  return await database("users").insert(teacher).returning("*");
 };
 
 export const readTeacher = async (id) => {
-  return await baseQuery.where({ id, role: "teacher" }).first();
+  return await database("users").where({ id, role: "teacher" }).first();
 };
 
 export const updateTeacher = async (id, data) => {
-  return await baseQuery.where({ id, role: "teacher" }).update(data).returning("*");
+  return await database("users").where({ id, role: "teacher" }).update(data).returning("*");
 };
 
 export const deleteTeacher = async (id) => {
-  return await baseQuery.where({ id, role: "teacher" }).del();
+  return await database("users").where({ id, role: "teacher" }).del();
 };
 
 //=================
@@ -562,25 +644,24 @@ export const getStudentCourses = async (studentId) => {
       "c.status",
       database.ref("t.full_name").as("teacher_full_name"),
       database.ref("cat.name").as("category_name")
-    );
+    );  
 
-  // 🔹 Tính progress giả định (vì DB chưa có lectures/progress)
-  const enrolledCourses = rows.map((r, i) => ({
-    id: r.enrollment_id,
-    progress: r.completed_at ? 100 : 50, // ⚙️ demo: 100% nếu completed, 50% nếu đang học
-    completed_lectures: r.completed_at ? 10 : 5,
-    total_lectures: 10,
-    course: {
-      id: r.course_id,
-      title: r.title,
-      thumbnail_url: r.thumbnail_url,
-      category: { name: r.category_name },
-      teacher: { full_name: r.teacher_full_name },
-    },
-  }));
+  const enrolledCourses = rows.map(r => ({
+      enrollment_id: r.enrollment_id,
+      enrolled_at: r.enrolled_at,
+      completed_at: r.completed_at,
+      course: {
+        id: r.course_id,
+        title: r.title,
+        thumbnail_url: r.thumbnail_url,
+        status: r.status,
+        category: { name: r.category_name },
+        teacher: { full_name: r.teacher_full_name },
+      },
+    }));
 
-  return { user: student, enrolledCourses };
-};
+    return { user: student, enrolledCourses };
+  };
 
 //=================
 // STUDENT WATCHLIST
@@ -724,194 +805,10 @@ export const getCourseLearningData = async (studentId, courseId) => {
 };
 
 
-//=================
-// ADMINS - CRUD
-//=================
 
-export const createAdmin = async (admin) => {
-  admin.role = "admin";
-  return await baseQuery.insert(admin).returning("*");
-};
 
-export const readAdmin = async (id) => {
-  return await baseQuery.where({ id, role: "admin" }).first();
-};
 
-export const updateAdmin = async (id, data) => {
-  return await baseQuery.where({ id, role: "admin" }).update(data).returning("*");
-};
 
-export const deleteAdmin = async (id) => {
-  return await baseQuery.where({ id, role: "admin" }).del();
-};
 
-export const getAllAdmins = async () => {
-  return await baseQuery
-    .clone()
-    .where("role", "admin")
-    .select("id", "full_name", "email", "avatar_url", "created_at", "status")
-    .orderBy("id", "asc");
-};
 
-//=================
-// ADMIN - CATEGORIES MANAGEMENT
-//=================
-
-// 🔹 Lấy tất cả lĩnh vực (kèm số lượng khóa học)
-export const getAllAdminCategories = async () => {
-  const rows = await database("categories AS cat")
-    .leftJoin("courses AS c", "cat.id", "c.category_id")
-    .groupBy("cat.id")
-    .select(
-      "cat.id",
-      "cat.name",
-      "cat.description",
-      "cat.created_at",
-      database.raw("COUNT(c.id) AS course_count")
-    )
-    .orderBy("cat.created_at", "asc");
-
-  return rows.map((r) => ({
-    id: r.id,
-    name: r.name,
-    description: r.description || "",
-    course_count: Number(r.course_count || 0),
-    created_at: r.created_at,
-  }));
-};
-
-//=================
-// ADMIN - COURSES MANAGEMENT
-//=================
-
-export const getAllAdminCourses = async () => {
-  const rows = await database("courses AS c")
-    .leftJoin("categories AS cat", "c.category_id", "cat.id")
-    .leftJoin("users AS t", "c.teacher_id", "t.id")
-    .select(
-      "c.id",
-      "c.title",
-      "c.thumbnail_url",
-      "c.discount_price",
-      "c.status",
-      "c.rating_avg",
-      "c.rating_count",
-      "c.enrollment_count",
-      database.ref("cat.name").as("category_name"),
-      database.ref("t.full_name").as("teacher_full_name")
-    )
-    .orderBy("c.created_at", "desc");
-
-  return rows.map((r) => ({
-    id: r.id,
-    title: r.title,
-    thumbnail_url: r.thumbnail_url,
-    discount_price: Number(r.discount_price || 0),
-    status: r.status,
-    rating_avg: Number(r.rating_avg || 0),
-    rating_count: Number(r.rating_count || 0),
-    enrollment_count: Number(r.enrollment_count || 0),
-    category: { name: r.category_name || "Chưa có" },
-    teacher: { full_name: r.teacher_full_name || "Không rõ" },
-  }));
-};
-
-//=================
-// ADMIN - USERS MANAGEMENT
-//=================
-
-export const getAllAdminUsers = async () => {
-  const rows = await database("users")
-    .select(
-      "id",
-      "full_name",
-      "email",
-      "role",
-      "avatar_url",
-      "created_at"
-    )
-    .orderBy("created_at", "desc");
-
-  return rows.map((r) => ({
-    id: r.id,
-    full_name: r.full_name,
-    email: r.email,
-    role: r.role,
-    avatar_url: r.avatar_url || "https://cdn-icons-png.flaticon.com/512/1077/1077114.png",
-    created_at: r.created_at,
-  }));
-};
-
-//=================
-// ADMIN - DASHBOARD STATS
-//=================
-
-export const getAdminDashboardStats = async () => {
-  // 🔹 Tổng số người dùng
-  const [{ total_users }] = await database("users").count("* as total_users");
-
-  // 🔹 Tổng số giảng viên và học viên
-  const [{ total_teachers }] = await database("users")
-    .where("role", "teacher")
-    .count("* as total_teachers");
-
-  const [{ total_students }] = await database("users")
-    .where("role", "student")
-    .count("* as total_students");
-
-  // 🔹 Tổng số khóa học
-  const [{ total_courses }] = await database("courses").count("* as total_courses");
-
-  // 🔹 Số khóa học pending hoặc nháp
-  const [{ pending_courses }] = await database("courses")
-    .where("status", "draft")
-    .count("* as pending_courses");
-
-  // 🔹 Doanh thu tạm tính (giả định = enrollment_count * discount_price)
-  const [{ total_revenue }] = await database("courses")
-    .sum(database.raw("COALESCE(enrollment_count, 0) * COALESCE(discount_price, 0) as total_revenue"));
-
-  // 🔹 5 hoạt động gần đây (giả lập dựa theo thời gian tạo user/course)
-  const recentUsers = await database("users")
-    .select("full_name", "created_at")
-    .orderBy("created_at", "desc")
-    .limit(3);
-
-  const recentCourses = await database("courses")
-    .select("title", "created_at")
-    .orderBy("created_at", "desc")
-    .limit(3);
-
-  const recentActivities = [
-    ...recentUsers.map((u) => ({
-      type: "new_user",
-      message: `${u.full_name} đã đăng ký tài khoản`,
-      timestamp: u.created_at,
-    })),
-    ...recentCourses.map((c) => ({
-      type: "new_course",
-      message: `Khóa học "${c.title}" đã được tạo`,
-      timestamp: c.created_at,
-    })),
-  ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-  // 🔹 Các khóa học phổ biến (top 5 theo enrollment_count)
-  const popularCourses = await database("courses")
-    .select("id", "title", "enrollment_count", "rating_avg")
-    .orderBy("enrollment_count", "desc")
-    .limit(5);
-
-  return {
-    stats: {
-      total_users: Number(total_users || 0),
-      total_courses: Number(total_courses || 0),
-      total_teachers: Number(total_teachers || 0),
-      total_students: Number(total_students || 0),
-      total_revenue: Number(total_revenue || 0),
-      pending_courses: Number(pending_courses || 0),
-    },
-    recentActivities,
-    popularCourses,
-  };
-};
 
