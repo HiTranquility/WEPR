@@ -149,7 +149,7 @@ router.get('/course/:id/manage', async function(req, res, next) {
 
 router.get('/course/:id/content', async function(req, res, next) {
   try {
-    const data = await getTeacherManageContent(req.params.id);
+    const data = await getTeacherCourseContent(req.params.id);
 
     if (!data) {
       return res.status(404).render("404", {
@@ -172,7 +172,7 @@ router.get('/course/:id/content', async function(req, res, next) {
 
 router.get('/course/:courseId/section/:sectionId/lecture/create', async function(req, res, next) {
   try {
-    const data = await getTeacherCreateLecture(req.params.courseId, req.params.sectionId);
+    const data = await getCourseSectionInfo(req.params.courseId, req.params.sectionId);
 
     if (!data) {
       return res.status(404).render("404", {
