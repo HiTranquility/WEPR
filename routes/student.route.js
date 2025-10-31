@@ -57,7 +57,7 @@ router.get("/student/my-courses", async (req, res, next) => {
 });
 
 router.get('/student/watchlist', function(req, res) {
-    res.render('vwStudent/watchlist', {
+    res.render('vwStudent/wishlist', {
         title: 'Danh sách yêu thích',
         user: {
             full_name: 'Nguyễn Văn A',
