@@ -1,26 +1,30 @@
 import express from 'express';
 import { searchCourses, getCourseDetail, getRelatedCourses, getLecturePreview } from '../models/course.model.js';
-import { getCategoriesForCourses, getAllCategories } from '../models/course-category.model.js';
+import { getCategoriesForCourses, getAllCategories, getCategoriesWithChildren } from '../models/course-category.model.js';
 
 const router = express.Router();
 
 router.get('/courses', async (req, res, next) => {
   try {
-    const { category, sort = 'popular', page = '1', limit = '12' } = req.query;
+    const { category, sub, sub_category, subcategory, sort = 'popular', page = '1', limit = '12' } = req.query;
+    const subCategory = sub || sub_category || subcategory;
     const { data, pagination } = await searchCourses({
       q: '', // không có từ khóa
       categoryId: category,
+      subCategoryId: subCategory,
       sortBy: sort,
       page: Number(page),
       limit: Number(limit),
     });
 
-    const categories = await getAllCategories({ includeCounts: true });
+    const categories = await getCategoriesWithChildren({ includeCounts: true });
     res.render('vwCourse/list', {
       title: 'Danh sách khóa học',
       courses: data,
       categories,
+      query: req.query,
       currentCategory: category || null,
+      currentSub: subCategory || null,
       currentPage: pagination.page,
       totalPages: pagination.totalPages,
       layout: 'main',
@@ -32,12 +36,14 @@ router.get('/courses', async (req, res, next) => {
 
 router.get('/courses/search', async function(req, res, next) {
     try {
-        const { q, category, sort = 'popular', page = '1', limit = '12', min_price, max_price, only_discounted, featured } = req.query;
+    const { q, category, sub, sub_category, subcategory, sort = 'popular', page = '1', limit = '12', min_price, max_price, only_discounted, featured } = req.query;
+    const subCategory = sub || sub_category || subcategory;
         const apiSort = sort === 'price-low' ? 'price_asc' : (sort === 'price-high' ? 'price_desc' : sort);
 
         const { data, pagination } = await searchCourses({
             q,
             categoryId: category,
+      subCategoryId: subCategory,
             sortBy: apiSort,
             page: Number(page),
             limit: Number(limit),
@@ -47,22 +53,24 @@ router.get('/courses/search', async function(req, res, next) {
             isFeatured: featured ? (featured === 'true') : undefined
         });
 
-        const categories = await getAllCategories({ includeCounts: true });
-        const allCategories = await getAllCategories({ includeCounts: false });
+  const categories = await getCategoriesWithChildren({ includeCounts: true });
+  const allCategories = await getAllCategories({ includeCounts: false });
 
-        res.render('vwCourse/list', {
-            title: 'Danh sách khóa học',
-            courses: data,
-            categories,
-            allCategories,
-            currentCategory: category || null,
-            currentPage: pagination.page,
-            totalPages: pagination.totalPages,
-            sortBy: sort,
-            searchQuery: q,
-            q,
-            layout: 'main'
-        });
+    res.render('vwCourse/list', {
+      title: 'Danh sách khóa học',
+      courses: data,
+      categories,
+      allCategories,
+      query: req.query,
+      currentCategory: category || null,
+      currentSub: subCategory || null,
+      currentPage: pagination.page,
+      totalPages: pagination.totalPages,
+      sortBy: sort,
+      searchQuery: q,
+      q,
+      layout: 'main'
+    });
     } catch (err) {
         next(err);
     }

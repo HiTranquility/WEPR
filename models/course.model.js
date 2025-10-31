@@ -50,6 +50,7 @@ export async function searchCourses(opts = {}) {
   const {
     q,
     categoryId,
+    subCategoryId,
     teacherId,
     minPrice,
     maxPrice,
@@ -72,7 +73,17 @@ export async function searchCourses(opts = {}) {
     .where(builder => {
       if (status) builder.where('courses.status', status);
       if (isFeatured != null) builder.andWhere('courses.is_featured', !!isFeatured);
-      if (categoryId) builder.andWhere('courses.category_id', categoryId);
+      // Sub-category has priority: if provided, filter exactly by it.
+      if (subCategoryId) {
+        builder.andWhere('courses.category_id', subCategoryId);
+      } else if (categoryId) {
+        // If only parent category provided, include both parent and its direct children.
+        // This assumes `categories` table has a `parent_id` column for sub-categories.
+        builder.whereIn('courses.category_id', function() {
+          this.select('id').from('categories').where('id', categoryId).orWhere('parent_id', categoryId);
+        });
+      }
+      
       if (teacherId) builder.andWhere('courses.teacher_id', teacherId);
       if (onlyDiscounted) builder.andWhereNotNull('courses.discount_price');
       if (minPrice != null) builder.andWhere('courses.price', '>=', minPrice);

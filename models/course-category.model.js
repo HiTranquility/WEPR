@@ -49,9 +49,51 @@ export async function getCategoriesForCourses() {
 }
 
 // Tree: categories với children (nếu cần)
-export async function getCategoriesWithChildren() {
-  // Không có parent-child trong schema hiện tại; trả danh sách phẳng
-  return await database("categories")
-    .orderBy("name", "asc")
-    .select("id", "name", "description");
+export async function getCategoriesWithChildren({ includeCounts = false } = {}) {
+  // Build a parent -> children tree. categories table has parent_id.
+  // If includeCounts is true, join courses to get counts per category.
+  const qb = database('categories as c')
+    .leftJoin('categories as p', 'c.parent_id', 'p.id')
+    .select(
+      'c.id',
+      'c.name',
+      'c.description',
+      'c.parent_id'
+    )
+    .orderBy('c.name', 'asc');
+
+  if (includeCounts) {
+    // join courses to count per category
+    qb.leftJoin('courses as co', 'c.id', 'co.category_id')
+      .groupBy('c.id', 'c.name', 'c.description', 'c.parent_id')
+      .select(database.raw('COUNT(co.id) as course_count'));
+  }
+
+  const rows = await qb;
+
+  // build tree: parents (parent_id null) with children array
+  const map = new Map();
+  rows.forEach(r => {
+    map.set(r.id, {
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      parent_id: r.parent_id,
+      course_count: includeCounts ? Number(r.course_count || 0) : undefined,
+      children: []
+    });
+  });
+
+  const roots = [];
+  map.forEach(item => {
+    if (item.parent_id) {
+      const parent = map.get(item.parent_id);
+      if (parent) parent.children.push(item);
+      else roots.push(item); // orphaned, treat as root
+    } else {
+      roots.push(item);
+    }
+  });
+
+  return roots;
 }

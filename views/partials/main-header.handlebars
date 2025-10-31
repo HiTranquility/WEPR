@@ -24,13 +24,18 @@
       </ul>
 
       <div class="d-flex me-3">
-        <form class="input-group" method="get" action="/courses/search">
+        <form id="searchForm" class="input-group" method="get" action="/courses/search">
         <div class="input-group">
-          <input type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search" name="q" required>
+          <input id="searchInput" type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search" name="q" required>
           <button class="btn btn-outline-primary" type="submit">
             <i class="bi bi-search"></i>
           </button>
         </div>
+          <!-- Preserve current category / sub-category when searching from header -->
+          <input type="hidden" name="category" value="{{currentCategory}}">
+          <input type="hidden" name="sub" value="{{currentSub}}">
+          <input type="hidden" name="sub_category" value="{{currentSubCategory}}">
+          <input type="hidden" name="subcategory" value="{{subCategory}}">
         </form>
       </div>
 
@@ -79,22 +84,7 @@
 </nav>
 
 <script>
-// Xử lý search form
-document.getElementById('searchForm')?.addEventListener('submit', function(e) {
-  e.preventDefault();
-  const searchInput = document.getElementById('searchInput');
-  const searchQuery = searchInput.value.trim();
-  
-  if (searchQuery) {
-    // Chuyển hướng đến trang courses với query parameter
-    window.location.href = `/courses?q=${encodeURIComponent(searchQuery)}`;
-  } else {
-    // Nếu không có query, chuyển đến trang courses
-    window.location.href = '/courses';
-  }
-});
-
-// Xử lý clear search
+// Xử lý clear search (Giữ behavior: ESC để xóa input)
 document.getElementById('searchInput')?.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     this.value = '';
