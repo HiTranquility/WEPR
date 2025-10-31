@@ -130,6 +130,20 @@ router.get('/student/learn/:courseId', function(req, res) {
     });
 });
 
+router.get('/student/settings', async function(req, res, next) {
+  try {
+      const allCategories = await getAllCategories({ includeCounts: false });
+      res.render('vwStudent/settings', {
+          title: 'Cài đặt tài khoản',
+          allCategories,
+          searchQuery: null,
+          layout: 'main'
+      });
+  } catch (err) {
+      next(err);
+  }
+});
+
 router.post('/student/profile', function(req, res) {
     res.json({ success: true, message: 'Cập nhật thông tin thành công!' });
 });
