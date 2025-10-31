@@ -5,7 +5,7 @@ import { ensureAuthenticated } from '../middlewares/student.middleware.js';
 import { requireRole } from '../middlewares/student.middleware.js';
 const router = express.Router();
 
-router.use('/', ensureAuthenticated, requireRole('student'));
+router.use('/student', ensureAuthenticated, requireRole('student'));
 
 router.get("/student/dashboard", async (req, res, next) => {
   try {

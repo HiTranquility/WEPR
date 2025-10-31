@@ -42,7 +42,8 @@ app.use((req, res, next) => {
 app.use(session({
   secret: 'your_secret_key',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
+  cookie: { sameSite: 'lax' }
 }));
 app.use(passport.initialize());
 app.use(passport.session());

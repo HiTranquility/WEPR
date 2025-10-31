@@ -87,12 +87,12 @@ router.get(
       if (!user) return res.redirect('/signin');
 
       const payload = buildAuthPayload(user);
-      const accessToken = signAccessToken(payload);
-      const refreshToken = signRefreshToken(payload);
-      addRefreshToken(user.id, refreshToken);
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+    addRefreshToken(user.id, refreshToken);
 
-      res.cookie('access_token', accessToken, { httpOnly: true, secure: false, sameSite: 'lax', path: '/', maxAge: 10 * 60 * 1000 });
-      res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: false, sameSite: 'lax', path: '/auth', maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.cookie('access_token', accessToken, { httpOnly: true, secure: false, sameSite: 'lax', path: '/', maxAge: 10 * 60 * 1000 });
+    res.cookie('refresh_token', refreshToken, { httpOnly: true, secure: false, sameSite: 'lax', path: '/auth', maxAge: 7 * 24 * 60 * 60 * 1000 });
 
       // Attach to session for SSR routes expecting req.user
       try {
@@ -103,7 +103,7 @@ router.get(
       } catch (_) {}
 
       return res.redirect(getDashboardRedirectByRole(user.role));
-    } catch (err) {
+  } catch (err) {
       return res.redirect('/signin');
     }
   }

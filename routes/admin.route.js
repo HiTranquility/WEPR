@@ -3,9 +3,9 @@ import { ensureAuthenticated, requireRole } from '../middlewares/admin.middlewar
 import { getAdminDashboardStats } from '../models/admin.model.js';
 const router = express.Router();
 
-router.use('/', ensureAuthenticated, requireRole('admin'));
+router.use('/admin', ensureAuthenticated, requireRole('admin'));
 
-router.get('/dashboard', async function(req, res, next) {
+router.get('/admin/dashboard', async function(req, res, next) {
   try {
     const data = await getAdminDashboardStats();
     res.render('vwAdmin/dashboard', {
@@ -46,7 +46,7 @@ router.get('/dashboard', async function(req, res, next) {
   }
 });
 
-router.get('/categories', function(req, res) {
+router.get('/admin/categories', function(req, res) {
     
     const categories = [
         { id: 1, name: 'Lập trình', course_count: 245, created_at: new Date('2024-01-15') },
@@ -73,7 +73,7 @@ router.get('/categories', function(req, res) {
     });
 });
 
-router.get('/courses', function(req, res) {
+router.get('/admin/courses', function(req, res) {
     res.render('vwAdmin/courses', {
         layout: 'admin',
         title: 'Quản lý khóa học',
@@ -150,7 +150,7 @@ router.get('/courses', function(req, res) {
     });
 });
 
-router.get('/users', function(req, res) {
+router.get('/admin/users', function(req, res) {
     res.render('vwAdmin/users', {
         layout: 'admin',
         title: 'Quản lý người dùng',
@@ -209,39 +209,39 @@ router.get('/users', function(req, res) {
 });
 
 
-router.post('/categories', function(req, res) {
+router.post('/admin/categories', function(req, res) {
     res.json({ success: true, message: 'Tạo lĩnh vực thành công!' });
 });
 
-router.post('/categories/:id', function(req, res) {
+router.post('/admin/categories/:id', function(req, res) {
     res.json({ success: true, message: 'Cập nhật lĩnh vực thành công!' });
 });
 
-router.delete('/categories/:id', function(req, res) {
+router.delete('/admin/categories/:id', function(req, res) {
     res.json({ success: true, message: 'Đã xóa lĩnh vực!' });
 });
 
-router.post('/courses/:id', function(req, res) {
+router.post('/admin/courses/:id', function(req, res) {
     res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
 });
 
-router.delete('/courses/:id', function(req, res) {
+router.delete('/admin/courses/:id', function(req, res) {
     res.json({ success: true, message: 'Đã gỡ bỏ khóa học!' });
 });
 
-router.post('/users', function(req, res) {
+router.post('/admin/users', function(req, res) {
     res.json({ success: true, message: 'Tạo người dùng thành công!' });
 });
 
-router.post('/users/:id', function(req, res) {
+router.post('/admin/users/:id', function(req, res) {
     res.json({ success: true, message: 'Cập nhật người dùng thành công!' });
 });
 
-router.delete('/users/:id', function(req, res) {
+router.delete('/admin/users/:id', function(req, res) {
     res.json({ success: true, message: 'Đã xóa người dùng!' });
 });
 
-router.post('/users/:id/role', function(req, res) {
+router.post('/admin/users/:id/role', function(req, res) {
     res.json({ success: true, message: 'Cập nhật quyền thành công!' });
 });
 
