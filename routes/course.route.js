@@ -173,10 +173,16 @@ router.get("/courses/:courseId/sections/:sectionId/preview/:lectureId", async (r
 });
 
 router.post('/courses/:id/enroll', function(req, res) {
+  if (!req.user) {
+    return res.redirect('/signin');
+  }
     res.json({ success: true, message: 'Đã đăng ký khóa học thành công!' });
 });
 
 router.post('/courses/:id/wishlist', function(req, res) {
+  if (!req.user) {
+    return res.redirect('/signin');
+  }
     res.json({ success: true, message: 'Đã thêm vào danh sách yêu thích!' });
 });
 

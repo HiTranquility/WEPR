@@ -9,23 +9,23 @@ export const baseQuery = database("users");
 //=================
 
 export const createUser = async (user) => {
-  return await baseQuery.insert(user).returning("*");
+  return await database("users").insert(user).returning("*");
 };
 
 export const readUser = async (id) => {
-  return await baseQuery.where("id", id).first();
+  return await database("users").where("id", id).first();
 };
 
 export const updateUser = async (id, data) => {
-  return await baseQuery.where("id", id).update(data).returning("*");
+  return await database("users").where("id", id).update(data).returning("*");
 };
 
 export const deleteUser = async (id) => {
-  return await baseQuery.where("id", id).del();
+  return await database("users").where("id", id).del();
 };
 
 export const getAllUsers = async () => {
-  return await baseQuery.select("*").orderBy("id", "asc");
+  return await database("users").select("*").orderBy("id", "asc");
 };
 
 // =================
@@ -34,10 +34,39 @@ export const getAllUsers = async () => {
 
 // Minimal public profile for attaching to req.user after JWT verification
 export const getUserPublicById = async (id) => {
-  return await baseQuery
-    .clone()
+  return await database("users")
     .where({ id })
-    .first("id", "full_name", "email", "role", "avatar_url", "status");
+    .first("id", "full_name", "email", "role", "avatar_url");
+};
+
+// =================
+// AUTH / LOCAL SIGNUP
+// =================
+
+export const registerLocalUser = async ({ fullName, email, password, role = "student" }) => {
+  if (!fullName || !email || !password) {
+    const err = new Error("Missing required fields");
+    err.code = "VALIDATION_ERROR";
+    throw err;
+  }
+
+  const existing = await getUserByEmail(email);
+  if (existing) {
+    const err = new Error("Email already exists");
+    err.code = "EMAIL_EXISTS";
+    throw err;
+  }
+
+  const hashed = await bcrypt.hash(password, 10);
+  const payload = {
+    full_name: fullName,
+    email,
+    password_hash: hashed,
+    role: role || "student",
+  };
+
+  const inserted = await createUser(payload);
+  return inserted && inserted[0] ? inserted[0] : null;
 };
 
 // =================
@@ -82,7 +111,7 @@ export const findOrCreateGoogleUser = async ({ email, fullName, googleId, defaul
 
 // models/user.model.js
 export const getUserByEmail = async (email) => {
-  return await baseQuery.clone().where('email', email).first();
+  return await database("users").where('email', email).first();
 };
 
 //=================
@@ -91,26 +120,25 @@ export const getUserByEmail = async (email) => {
 
 export const createStudent = async (student) => {
   student.role = "student";
-  return await baseQuery.insert(student).returning("*");
+  return await database("users").insert(student).returning("*");
 };
 
 export const readStudent = async (id) => {
-  return await baseQuery.where({ id, role: "student" }).first();
+  return await database("users").where({ id, role: "student" }).first();
 };
 
 export const updateStudent = async (id, data) => {
-  return await baseQuery.where({ id, role: "student" }).update(data).returning("*");
+  return await database("users").where({ id, role: "student" }).update(data).returning("*");
 };
 
 export const deleteStudent = async (id) => {
-  return await baseQuery.where({ id, role: "student" }).del();
+  return await database("users").where({ id, role: "student" }).del();
 };
 
 export const getAllStudents = async () => {
-  return await baseQuery
-    .clone()
+  return await database("users")
     .where("role", "student")
-    .select("id", "full_name", "email", "avatar_url", "created_at", "status")
+    .select("id", "full_name", "email", "avatar_url", "created_at")
     .orderBy("id", "asc");
 };
 
@@ -120,19 +148,19 @@ export const getAllStudents = async () => {
 
 export const createTeacher = async (teacher) => {
   teacher.role = "teacher";
-  return await baseQuery.insert(teacher).returning("*");
+  return await database("users").insert(teacher).returning("*");
 };
 
 export const readTeacher = async (id) => {
-  return await baseQuery.where({ id, role: "teacher" }).first();
+  return await database("users").where({ id, role: "teacher" }).first();
 };
 
 export const updateTeacher = async (id, data) => {
-  return await baseQuery.where({ id, role: "teacher" }).update(data).returning("*");
+  return await database("users").where({ id, role: "teacher" }).update(data).returning("*");
 };
 
 export const deleteTeacher = async (id) => {
-  return await baseQuery.where({ id, role: "teacher" }).del();
+  return await database("users").where({ id, role: "teacher" }).del();
 };
 
 //=================

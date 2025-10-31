@@ -12,6 +12,8 @@ import commonRoute from './routes/common.route.js';
 import courseRoute from './routes/course.route.js';
 import { hbsHelpers } from './utils/hbsHelpers.js';
 import passport from './utils/passport.js';
+import { verifyAccessToken, verifyRefreshToken, signAccessToken } from './utils/jwt.js';
+import { hasRefreshToken } from './utils/token-store.js';
 const app = express();
 const rootDir = process.cwd();
 const viewsRoot = path.resolve(rootDir, 'views');
@@ -33,6 +35,36 @@ app.use('/statics', express.static(staticsRoot));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
+// Hydrate req.user from JWT cookies and refresh access token if needed
+app.use((req, res, next) => {
+  const access = req.cookies?.access_token;
+  if (access) {
+    try {
+      const payload = verifyAccessToken(access);
+      req.user = payload;
+      res.locals.user = payload;
+      return next();
+    } catch (err) {
+      // fallthrough to refresh flow
+    }
+  }
+
+  // Attempt refresh if refresh_token is available
+  try {
+    const refresh = req.cookies?.refresh_token;
+    if (!refresh) return next();
+    const payload = verifyRefreshToken(refresh);
+    if (!payload?.id || !hasRefreshToken(payload.id, refresh)) return next();
+
+    const newAccess = signAccessToken({ id: payload.id, role: payload.role, name: payload.name, email: payload.email });
+    res.cookie('access_token', newAccess, { httpOnly: true, secure: false, sameSite: 'lax', path: '/', maxAge: 10 * 60 * 1000 });
+    req.user = { id: payload.id, role: payload.role, name: payload.name, email: payload.email };
+    res.locals.user = req.user;
+  } catch (_) {
+    // ignore refresh errors
+  }
+  next();
+});
 app.use((req, res, next) => {
   console.log(`[REQ] ${req.method} ${req.originalUrl}`);
   next();
