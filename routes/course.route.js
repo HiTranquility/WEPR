@@ -8,16 +8,25 @@ router.get('/courses', async (req, res, next) => {
   try {
     const { category, sub, sub_category, subcategory, sort = 'popular', page = '1', limit = '12' } = req.query;
     const subCategory = sub || sub_category || subcategory;
+
+    // 🔥 Nếu người dùng chọn category cha, tự động lấy luôn các sub-category con
+    let categoryIds = [];
+    if (category) {
+      categoryIds = await getCategoryWithChildren(category);
+    } else if (subCategory) {
+      categoryIds = [subCategory];
+    }
+
     const { data, pagination } = await searchCourses({
-      q: '', // không có từ khóa
-      categoryId: category,
-      subCategoryId: subCategory,
+      q: '',
+      categoryIds, // 👈 truyền mảng ID thay vì 1 cái
       sortBy: sort,
       page: Number(page),
       limit: Number(limit),
     });
 
     const categories = await getCategoriesWithChildren({ includeCounts: true });
+
     res.render('vwCourse/list', {
       title: 'Danh sách khóa học',
       courses: data,
