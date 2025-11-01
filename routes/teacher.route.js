@@ -1,6 +1,5 @@
 import express from 'express';
-import database from '../utils/database.js';
-import { getTeacherDashboard, getTeacherCourses, getCourseById, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
+import { getTeacherDashboard, getTeacherCourses, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
 import { getAllCategories } from '../models/course-category.model.js'; 
 import { ensureAuthenticated } from '../middlewares/teacher.middleware.js';
 import { requireRole } from '../middlewares/teacher.middleware.js';
@@ -64,7 +63,7 @@ router.get('/teacher/courses', async function(req, res, next) {
   }
 });
 
-router.get('/teacher/create-course', async function(req, res, next) {
+router.get('/teacher/course/:id/edit', async function(req, res, next) {
   try {
     const allCategories = await getAllCategories({ includeCounts: false });
 
@@ -107,7 +106,7 @@ router.get('/teacher/edit-course/:id', async function(req, res, next) {
 
 router.get('/teacher/course/:id', async function(req, res, next) {
   try {
-    const data = await getCourseDetailForEdit(req.params.id);
+    const data = await getTeacherCourseDetail(req.params.id);
 
     if (!data) {
       return res.status(404).render("404", {
@@ -235,29 +234,6 @@ router.get('/teacher/course/:courseId/content/:contentId/edit', async function(r
         description: foundLecture.description || '',
         is_preview: foundLecture.is_preview || false
       },
-      searchQuery: null,
-      layout: 'main'
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get('/teacher/course/:id/edit', async function(req, res, next) {
-  try {
-    const courseId = req.params.id;
-    const course = await getCourseDetailForEdit(courseId);
-    if (!course) {
-      return res.status(404).render('404', { title: 'Không tìm thấy khóa học', message: 'Khóa học không tồn tại.', layout: 'main' });
-    }
-
-    const allCategories = await getAllCategories({ includeCounts: false });
-
-    res.render('vwTeacher/edit-course', {
-      title: 'Chỉnh sửa khóa học',
-      isEdit: true,
-      course,
-      categories: allCategories,
       searchQuery: null,
       layout: 'main'
     });

@@ -1,11 +1,6 @@
 import express from 'express';
 import { ensureAuthenticated, requireRole } from '../middlewares/admin.middleware.js';
-import {
-    getAdminDashboardStats,
-    getAllAdminCategories,
-    getAllAdminCourses,
-    getAllAdminUsers,
-} from '../models/admin.model.js';
+import {getAdminDashboardStats, getAllAdminCategories, getAllAdminCourses, getAllAdminUsers } from '../models/admin.model.js';
 const router = express.Router();
 
 router.use('/admin', ensureAuthenticated, requireRole('admin'));

@@ -1,5 +1,7 @@
 import database from "../utils/database.js";
 
+console.log('[course-category.model] module loaded');
+
 export async function createCategory(category) {
   const [id] = await database("categories").insert(category).returning("id");
   return id;
@@ -69,7 +71,12 @@ export async function getCategoriesWithChildren({ includeCounts = false } = {}) 
       .select(database.raw('COUNT(co.id) as course_count'));
   }
 
-  const rows = await qb;
+  let rows = [];
+  try {
+    rows = await qb;
+  } catch (err) {
+    rows = [];
+  }
 
   // build tree: parents (parent_id null) with children array
   const map = new Map();
