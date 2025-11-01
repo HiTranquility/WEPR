@@ -234,4 +234,64 @@ router.get('/student/dashboard', ensureStudent, requireStudentRole('student'), (
   res.render('vwStudent/dashboard', { layout: 'main', user: req.user });
 });
 
+router.get('/admin/login', function(req, res) {
+  if (req.user && req.user.role === 'admin') {
+    return res.redirect('/admin/dashboard');
+  }
+  res.render('vwAuth/admin-signin', {
+    title: 'Admin Login',
+    layout: false,
+    error: req.query.error
+  });
+});
+
+router.post('/admin/login', async function(req, res) {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.redirect('/admin/login?error=Vui lòng nhập đầy đủ thông tin');
+    }
+
+    const user = await getUserByEmail(email);
+
+    if (!user) {
+      return res.redirect('/admin/login?error=Email không tồn tại');
+    }
+
+    if (user.role !== 'admin') {
+      return res.redirect('/admin/login?error=Bạn không có quyền truy cập');
+    }
+
+    if (user.status === 'blocked') {
+      return res.redirect('/admin/login?error=Tài khoản đã bị khóa');
+    }
+
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+    if (!validPassword) {
+      return res.redirect('/admin/login?error=Mật khẩu không đúng');
+    }
+
+    const payload = buildAuthPayload(user);
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+
+    await addRefreshToken(user.id, refreshToken);
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      maxAge: 15 * 60 * 1000
+    });
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.redirect('/admin/dashboard');
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.redirect('/admin/login?error=Có lỗi xảy ra');
+  }
+});
+
 export default router;
