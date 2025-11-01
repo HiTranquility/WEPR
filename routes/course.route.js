@@ -47,27 +47,27 @@ router.get('/courses', async (req, res, next) => {
   }
 });
 
-router.get('/courses/search', async function (req, res, next) {
-  try {
+router.get('/courses/search', async function(req, res, next) {
+    try {
     const { q, category, sub, sub_category, subcategory, sort = 'popular', page = '1', limit = '12', min_price, max_price, only_discounted, featured } = req.query;
     const subCategory = sub || sub_category || subcategory;
-    const apiSort = sort === 'price-low' ? 'price_asc' : (sort === 'price-high' ? 'price_desc' : sort);
+        const apiSort = sort === 'price-low' ? 'price_asc' : (sort === 'price-high' ? 'price_desc' : sort);
 
-    const { data, pagination } = await searchCourses({
-      q,
-      categoryId: category,
+        const { data, pagination } = await searchCourses({
+            q,
+            categoryId: category,
       subCategoryId: subCategory,
-      sortBy: apiSort,
-      page: Number(page),
-      limit: Number(limit),
-      minPrice: min_price != null ? Number(min_price) : undefined,
-      maxPrice: max_price != null ? Number(max_price) : undefined,
-      onlyDiscounted: only_discounted === 'true',
-      isFeatured: featured ? (featured === 'true') : undefined
-    });
+            sortBy: apiSort,
+            page: Number(page),
+            limit: Number(limit),
+            minPrice: min_price != null ? Number(min_price) : undefined,
+            maxPrice: max_price != null ? Number(max_price) : undefined,
+            onlyDiscounted: only_discounted === 'true',
+            isFeatured: featured ? (featured === 'true') : undefined
+        });
 
-    const categories = await getCategoriesWithChildren({ includeCounts: true });
-    const allCategories = await getAllCategories({ includeCounts: false });
+  const categories = await getCategoriesWithChildren({ includeCounts: true });
+  const allCategories = await getAllCategories({ includeCounts: false });
 
     res.render('vwCourse/list', {
       title: 'Danh sách khóa học',
@@ -84,14 +84,14 @@ router.get('/courses/search', async function (req, res, next) {
       q,
       layout: 'main'
     });
-  } catch (err) {
-    next(err);
-  }
+    } catch (err) {
+        next(err);
+    }
 });
 
 // router.get("/courses/detail", async function (req, res, next) {
 //   try {
-
+    
 //     const { id } = req.query;
 
 //     if (!id) {
@@ -122,31 +122,31 @@ router.get('/courses/search', async function (req, res, next) {
 //   }
 // });            
 
-router.get('/courses/:id', async function (req, res, next) {
-  try {
-    const course = await getCourseDetail(req.params.id);
-    if (!course) return res.redirect('/404');
+router.get('/courses/:id', async function(req, res, next) {
+    try {
+        const course = await getCourseDetail(req.params.id);
+        if (!course) return res.redirect('/404');
 
-    const relatedCourses = course.category?.id
-      ? await getRelatedCourses(course.id, course.category.id, 6)
-      : [];
+        const relatedCourses = course.category?.id
+            ? await getRelatedCourses(course.id, course.category.id, 6)
+            : [];
 
-    const allCategories = await getAllCategories({ includeCounts: false });
+        const allCategories = await getAllCategories({ includeCounts: false });
 
-    res.render('vwCourse/detail', {
-      title: course.title,
-      course,
-      relatedCourses,
-      reviews: [],
-      isEnrolled: false,
-      isInWatchlist: false,
-      allCategories,
-      searchQuery: null,
-      layout: 'main'
-    });
-  } catch (err) {
-    next(err);
-  }
+        res.render('vwCourse/detail', {
+            title: course.title,
+            course,
+            relatedCourses,
+            reviews: [],
+            isEnrolled: false,
+            isInWatchlist: false,
+            allCategories,
+            searchQuery: null,
+            layout: 'main'
+        });
+    } catch (err) {
+        next(err);
+    }
 });
 
 router.get('/courses/:courseId/preview/lecture/:lectureId', async (req, res, next) => {
@@ -189,36 +189,26 @@ router.get('/courses/:courseId/preview/lecture/:lectureId', async (req, res, nex
   }
 });
 
-router.post('/courses/:id/enroll', function (req, res) {
+router.post('/courses/:id/enroll', function(req, res) {
   if (!req.user) {
     return res.redirect('/signin');
   }
-
-  if (req.user.role !== 'student') {
-    return;
-  }
-
-  res.json({ success: true, message: 'Đã đăng ký khóa học thành công!' });
+    res.json({ success: true, message: 'Đã đăng ký khóa học thành công!' });
 });
 
-router.post('/courses/:id/wishlist', function (req, res) {
+router.post('/courses/:id/wishlist', function(req, res) {
   if (!req.user) {
     return res.redirect('/signin');
   }
-
-  if (req.user.role !== 'student') {
-    return;
-  }
-
-  res.json({ success: true, message: 'Đã thêm vào danh sách yêu thích!' });
+    res.json({ success: true, message: 'Đã thêm vào danh sách yêu thích!' });
 });
 
-router.delete('/courses/:id/wishlist', function (req, res) {
-  res.json({ success: true, message: 'Đã xóa khỏi danh sách yêu thích!' });
+router.delete('/courses/:id/wishlist', function(req, res) {
+    res.json({ success: true, message: 'Đã xóa khỏi danh sách yêu thích!' });
 });
 
-router.post('/courses/:id/reviews', function (req, res) {
-  res.json({ success: true, message: 'Đã gửi đánh giá thành công!' });
+router.post('/courses/:id/reviews', function(req, res) {
+    res.json({ success: true, message: 'Đã gửi đánh giá thành công!' });
 });
 
 export default router;
