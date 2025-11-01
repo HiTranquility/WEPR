@@ -178,24 +178,20 @@ router.get('/courses/:id', async function(req, res, next) {
     }
 });
 
-router.get("/courses/:courseId/sections/:sectionId/preview/:lectureId", async (req, res, next) => {
+router.get('/courses/:courseId/preview/lecture/:lectureId', async (req, res, next) => {
   try {
-    const { courseId, sectionId, lectureId } = req.params;
-
-    // Gọi hàm truy vấn lecture preview theo course, section, lecture
-    const data = await getLecturePreview(courseId, sectionId, lectureId);
-    console.log("getLecturePreview:", data);
+    const { courseId, lectureId } = req.params;
+    const data = await getLecturePreview(courseId, lectureId);
 
     if (!data) {
-      return res.status(404).render("404", {
-        title: "Không tìm thấy bài giảng",
-        message:
-          "Bài giảng xem trước không tồn tại, hoặc chưa được bật chế độ preview.",
-        layout: "main",
+      return res.status(404).render('vwCommon/404', {
+        layout: 'error',
+        title: 'Không tìm thấy bài giảng',
+        bodyClass: 'error-404'
       });
     }
 
-    res.render("vwCourse/preview", {
+    res.render('vwCourse/preview', {
       layout: false,
       title: `Preview: ${data.lecture_title}`,
       lecture: {

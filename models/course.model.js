@@ -2,7 +2,11 @@ import database from "../utils/database.js";
 import { getCategoryWithChildren } from './course-category.model.js';
 // 🔹 Tạo course mới
 export async function createCourse(course) {
-  const [id] = await database("courses").insert(course).returning("id");
+  const payload = {
+    ...course,
+    description: course.description ?? course.detailed_description ?? course.short_description ?? ''
+  };
+  const [id] = await database("courses").insert(payload).returning("id");
   return id;
 }
 
@@ -15,9 +19,14 @@ export async function readCourse(id) {
 
 // 🔹 Cập nhật course
 export async function updateCourse(id, data) {
+  const payload = {
+    ...data,
+    description: data?.description ?? data?.detailed_description ?? data?.short_description ?? undefined
+  };
+  if (payload.description === undefined) delete payload.description;
   return await database("courses")
     .where("id", id)
-    .update(data);
+    .update(payload);
 }
 
 // 🔹 Xoá course (hard delete)
@@ -246,7 +255,7 @@ export async function searchCourses(opts = {}) {
 
 // 🔹 Chi tiết khoá học (join teacher, category) theo shape của view detail
 export async function getCourseDetail(courseId) {
-  const r = await database('courses as c')
+  const courseRow = await database('courses as c')
     .leftJoin('users as t', 'c.teacher_id', 't.id')
     .leftJoin('categories as cat', 'c.category_id', 'cat.id')
     .where('c.id', courseId)
@@ -257,42 +266,116 @@ export async function getCourseDetail(courseId) {
       database.ref('t.bio').as('teacher_bio'),
       database.ref('cat.name').as('category_name')
     );
-  if (!r) return null;
-  // Aggregate teacher stats
-  const [stats] = await database('courses')
-    .where('teacher_id', r.teacher_id)
+  if (!courseRow) return null;
+
+  const [teacherStats] = await database('courses')
+    .where('teacher_id', courseRow.teacher_id)
     .select(
       database.raw('COUNT(*) as total_courses'),
       database.raw('COALESCE(SUM(enrollment_count), 0) as total_students'),
       database.raw('COALESCE(AVG(rating_avg), 0) as teacher_rating_avg')
     );
+
+  const sections = await database('sections')
+    .where('course_id', courseId)
+    .orderBy('order_index', 'asc')
+    .select('id', 'title', 'order_index');
+
+  const lectures = sections.length > 0
+    ? await database('lectures')
+        .whereIn('section_id', sections.map(s => s.id))
+        .orderBy('order_index', 'asc')
+        .select('id', 'section_id', 'title', 'video_url', 'duration', 'is_preview', 'order_index')
+    : [];
+
+  const formatMinutes = (mins) => {
+    if (!mins || Number.isNaN(Number(mins))) return '';
+    const total = Number(mins);
+    const hours = Math.floor(total / 60);
+    const minutes = total % 60;
+    if (hours && minutes) return `${hours} giờ ${minutes} phút`;
+    if (hours) return `${hours} giờ`;
+    return `${minutes} phút`;
+  };
+
+  const sectionMap = new Map();
+  sections.forEach(section => {
+    sectionMap.set(section.id, {
+      id: section.id,
+      title: section.title,
+      order: section.order_index || 0,
+      lectures: [],
+      duration_minutes: 0,
+      duration_text: ''
+    });
+  });
+
+  let totalLectures = 0;
+  let totalDurationMinutes = 0;
+
+  lectures.forEach(lecture => {
+    const minutes = Number(lecture.duration || 0);
+    const section = sectionMap.get(lecture.section_id);
+    if (!section) return;
+
+    section.lectures.push({
+      id: lecture.id,
+      title: lecture.title,
+      duration_minutes: minutes,
+      duration_text: formatMinutes(minutes),
+      order: lecture.order_index || 0,
+      is_preview: !!lecture.is_preview,
+      video_url: lecture.video_url || ''
+    });
+
+    section.duration_minutes += minutes;
+    totalLectures += 1;
+    totalDurationMinutes += minutes;
+  });
+
+  const structuredSections = Array.from(sectionMap.values())
+    .sort((a, b) => a.order - b.order)
+    .map(section => ({
+      ...section,
+      duration_text: formatMinutes(section.duration_minutes),
+      lectures: section.lectures.sort((a, b) => a.order - b.order),
+      preview_lecture: section.lectures.find(l => l.is_preview) || null
+    }));
+
+  const previewLectures = structuredSections.flatMap(section => section.lectures.filter(l => l.is_preview));
+  const firstPreview = previewLectures.length ? previewLectures[0] : null;
+
+  const totalDurationText = formatMinutes(totalDurationMinutes);
+
   return {
-    id: r.id,
-    title: r.title,
-    short_description: r.short_description,
-    full_description: r.detailed_description || '',
-    thumbnail_url: r.thumbnail_url,
-    price: Number(r.price || 0),
-    discount_price: Number(r.discount_price ?? r.price ?? 0),
-    rating_avg: Number(r.rating_avg || 0),
-    rating_count: Number(r.rating_count || 0),
-    enrollment_count: Number(r.enrollment_count || 0),
-    view_count: Number(r.view_count || 0),
-    created_at: r.created_at,
-    updated_at: r.updated_at,
-    category: { id: r.category_id || null, name: r.category_name || 'Khác' },
+    id: courseRow.id,
+    title: courseRow.title,
+    short_description: courseRow.short_description,
+    full_description: courseRow.detailed_description || '',
+    thumbnail_url: courseRow.thumbnail_url,
+    price: Number(courseRow.price || 0),
+    discount_price: Number(courseRow.discount_price ?? courseRow.price ?? 0),
+    rating_avg: Number(courseRow.rating_avg || 0),
+    rating_count: Number(courseRow.rating_count || 0),
+    enrollment_count: Number(courseRow.enrollment_count || 0),
+    view_count: Number(courseRow.view_count || 0),
+    created_at: courseRow.created_at,
+    updated_at: courseRow.updated_at,
+    category: { id: courseRow.category_id || null, name: courseRow.category_name || 'Khác' },
     teacher: {
-      id: r.teacher_id || null,
-      full_name: r.teacher_full_name || 'Giảng viên',
-      avatar_url: r.teacher_avatar_url || '',
-      bio: r.teacher_bio || '',
-      rating_avg: Number(stats?.teacher_rating_avg || 0),
-      total_students: Number(stats?.total_students || 0),
-      total_courses: Number(stats?.total_courses || 0)
+      id: courseRow.teacher_id || null,
+      full_name: courseRow.teacher_full_name || 'Giảng viên',
+      avatar_url: courseRow.teacher_avatar_url || '',
+      bio: courseRow.teacher_bio || '',
+      rating_avg: Number(teacherStats?.teacher_rating_avg || 0),
+      total_students: Number(teacherStats?.total_students || 0),
+      total_courses: Number(teacherStats?.total_courses || 0)
     },
-    sections: [],
-    total_lectures: 0,
-    total_duration: '',
+    sections: structuredSections,
+    preview_lectures: previewLectures,
+    preview_lecture: firstPreview,
+    total_lectures: totalLectures,
+    total_duration: totalDurationText,
     total_resources: 0,
     what_you_will_learn: []
   };
@@ -328,107 +411,183 @@ export async function getRelatedCourses(courseId, categoryId, limit = 6) {
 //=================
 
 export const getLandingData = async () => {
-  // 🔹 Khóa học nổi bật
-  const featuredCourses = await database("courses AS c")
-    .leftJoin("users AS t", "c.teacher_id", "t.id")
-    .select(
-      "c.id",
-      "c.title",
-      "c.short_description",
-      "c.thumbnail_url",
-      "c.price",
-      "c.discount_price",
-      "c.rating_avg",
-      "c.rating_count",
-      "c.enrollment_count",
-      database.ref("t.full_name").as("teacher_full_name")
-    )
-    .where("c.is_featured", true)
-    .orderBy("c.rating_avg", "desc")
-    .limit(6);
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-  // 🔹 Khóa học xem nhiều
-  const mostViewedCourses = await database("courses AS c")
-    .leftJoin("categories AS cat", "c.category_id", "cat.id")
-    .leftJoin("users AS t", "c.teacher_id", "t.id")
-    .select(
-      "c.id",
-      "c.title",
-      "c.thumbnail_url",
-      "c.rating_avg",
-      "c.rating_count",
-      "c.price",
-      "c.discount_price",
-      "c.enrollment_count",
-      "c.view_count",
-      database.ref("cat.name").as("category_name"),
-      database.ref("t.full_name").as("teacher_full_name"),
-      database.ref("t.avatar_url").as("teacher_avatar_url")
-    )
-    .orderBy("c.view_count", "desc")
-    .limit(6);
+  const COURSE_COLUMNS = [
+    'c.id',
+    'c.title',
+    'c.short_description',
+    'c.thumbnail_url',
+    'c.price',
+    'c.discount_price',
+    'c.rating_avg',
+    'c.rating_count',
+    'c.enrollment_count',
+    'c.view_count',
+    'c.created_at',
+    database.ref('t.full_name').as('teacher_full_name'),
+    database.ref('t.avatar_url').as('teacher_avatar'),
+    database.ref('cat.name').as('category_name'),
+  ];
 
-  // 🔹 Khóa học mới nhất
-  const newestCourses = await database("courses AS c")
-    .leftJoin("categories AS cat", "c.category_id", "cat.id")
-    .leftJoin("users AS t", "c.teacher_id", "t.id")
-    .select(
-      "c.id",
-      "c.title",
-      "c.thumbnail_url",
-      "c.rating_avg",
-      "c.rating_count",
-      "c.price",
-      "c.discount_price",
-      "c.enrollment_count",
-      "c.view_count",
-      "c.created_at",
-      database.ref("cat.name").as("category_name"),
-      database.ref("t.full_name").as("teacher_full_name"),
-      database.ref("t.avatar_url").as("teacher_avatar_url")
-    )
-    .orderBy("c.created_at", "desc")
-    .limit(6);
+  const formatCourseRow = (row) => ({
+    id: row.id,
+    title: row.title,
+    short_description: row.short_description,
+    thumbnail_url: row.thumbnail_url,
+    price: row.price,
+    discount_price: row.discount_price,
+    rating_avg: row.rating_avg,
+    rating_count: row.rating_count,
+    enrollment_count: row.enrollment_count,
+    view_count: row.view_count,
+    created_at: row.created_at,
+    teacher: {
+      full_name: row.teacher_full_name,
+      avatar_url: row.teacher_avatar,
+    },
+    category: row.category_name ? { name: row.category_name } : null,
+  });
 
-  // 🔹 Top danh mục
-  const topCategories = await database("categories AS cat")
-    .leftJoin("courses AS c", "cat.id", "c.category_id")
-    .groupBy("cat.id", "cat.name")
-    .select(
-      "cat.id",
-      "cat.name",
-      database.raw("COUNT(c.id) AS course_count"),
-      database.raw("COALESCE(SUM(c.enrollment_count), 0) AS enrollment_count")
-    )
-    .orderBy("course_count", "desc")
-    .limit(6);
+  const mergeUnique = (primary, fallback, limit) => {
+    const map = new Map();
+    primary.forEach((item) => {
+      if (item?.id && !map.has(item.id)) map.set(item.id, item);
+    });
+    fallback.forEach((item) => {
+      if (map.size >= limit) return;
+      if (item?.id && !map.has(item.id)) map.set(item.id, item);
+    });
+    return Array.from(map.values()).slice(0, limit);
+  };
 
-  // 🔹 Danh mục dropdown
-  const allCategories = await database("categories")
-    .select("id", "name")
-    .orderBy("name", "asc");
+  // Featured courses (top 3 this week, fallback older)
+  const featuredPrimary = await database('courses as c')
+    .leftJoin('users as t', 'c.teacher_id', 't.id')
+    .leftJoin('categories as cat', 'c.category_id', 'cat.id')
+    .select(COURSE_COLUMNS)
+    .where('c.status', 'completed')
+    .andWhere('c.is_featured', true)
+    .andWhere('c.created_at', '>=', oneWeekAgo)
+    .orderBy('c.enrollment_count', 'desc')
+    .orderBy('c.rating_avg', 'desc')
+    .limit(3);
+
+  const featuredFallback = featuredPrimary.length < 3
+    ? await database('courses as c')
+        .leftJoin('users as t', 'c.teacher_id', 't.id')
+        .leftJoin('categories as cat', 'c.category_id', 'cat.id')
+        .select(COURSE_COLUMNS)
+        .where('c.status', 'completed')
+        .andWhere('c.is_featured', true)
+        .orderBy('c.enrollment_count', 'desc')
+        .orderBy('c.rating_avg', 'desc')
+        .limit(5)
+    : [];
+
+  const featuredExtra = featuredPrimary.length + featuredFallback.length < 3
+    ? await database('courses as c')
+        .leftJoin('users as t', 'c.teacher_id', 't.id')
+        .leftJoin('categories as cat', 'c.category_id', 'cat.id')
+        .select(COURSE_COLUMNS)
+        .where('c.status', 'completed')
+        .orderBy('c.rating_avg', 'desc')
+        .orderBy('c.enrollment_count', 'desc')
+        .limit(5)
+    : [];
+
+  const featuredCourses = mergeUnique(featuredPrimary, [...featuredFallback, ...featuredExtra], 3).map(formatCourseRow);
+
+  // Most viewed courses (top 10 overall, fallback include all statuses)
+  const mostViewedPrimary = await database('courses as c')
+    .leftJoin('users as t', 'c.teacher_id', 't.id')
+    .leftJoin('categories as cat', 'c.category_id', 'cat.id')
+    .select(COURSE_COLUMNS)
+    .where('c.status', 'completed')
+    .orderBy('c.view_count', 'desc')
+    .orderBy('c.rating_avg', 'desc')
+    .limit(10);
+
+  const mostViewedFallback = mostViewedPrimary.length < 10
+    ? await database('courses as c')
+        .leftJoin('users as t', 'c.teacher_id', 't.id')
+        .leftJoin('categories as cat', 'c.category_id', 'cat.id')
+        .select(COURSE_COLUMNS)
+        .orderBy('c.view_count', 'desc')
+        .orderBy('c.rating_avg', 'desc')
+        .limit(12)
+    : [];
+
+  const mostViewedCourses = mergeUnique(mostViewedPrimary, mostViewedFallback, 10).map(formatCourseRow);
+
+  // Newest courses (top 10 newest completed, fallback include all statuses)
+  const newestPrimary = await database('courses as c')
+    .leftJoin('users as t', 'c.teacher_id', 't.id')
+    .leftJoin('categories as cat', 'c.category_id', 'cat.id')
+    .select(COURSE_COLUMNS)
+    .where('c.status', 'completed')
+    .orderBy('c.created_at', 'desc')
+    .limit(10);
+
+  const newestFallback = newestPrimary.length < 10
+    ? await database('courses as c')
+        .leftJoin('users as t', 'c.teacher_id', 't.id')
+        .leftJoin('categories as cat', 'c.category_id', 'cat.id')
+        .select(COURSE_COLUMNS)
+        .orderBy('c.created_at', 'desc')
+        .limit(12)
+    : [];
+
+  const newestCourses = mergeUnique(newestPrimary, newestFallback, 10).map(formatCourseRow);
+
+  // Top categories (enrollments this week, fallback by total courses)
+  const topCategoriesPrimary = await database('categories as cat')
+    .leftJoin('courses as c', 'cat.id', 'c.category_id')
+    .leftJoin('enrollments as e', function() {
+      this.on('c.id', '=', 'e.course_id')
+        .andOn('e.enrolled_at', '>=', database.raw('?', [oneWeekAgo]));
+    })
+    .groupBy('cat.id', 'cat.name')
+    .select(
+      'cat.id',
+      'cat.name',
+      database.raw('COUNT(DISTINCT e.id) AS enrollment_count'),
+      database.raw('COUNT(DISTINCT c.id) AS course_count')
+    )
+    .orderBy('enrollment_count', 'desc')
+    .limit(5);
+
+  const topCategoriesFallback = topCategoriesPrimary.length < 5
+    ? await database('categories as cat')
+        .leftJoin('courses as c', 'cat.id', 'c.category_id')
+        .groupBy('cat.id', 'cat.name')
+        .select(
+          'cat.id',
+          'cat.name',
+          database.raw('COUNT(DISTINCT c.id) AS course_count'),
+          database.raw('COALESCE(SUM(c.enrollment_count), 0) AS enrollment_count')
+        )
+        .orderBy('enrollment_count', 'desc')
+        .limit(6)
+    : [];
+
+  const topCategories = mergeUnique(topCategoriesPrimary, topCategoriesFallback, 5).map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    course_count: Number(cat.course_count || 0),
+    enrollment_count: Number(cat.enrollment_count || 0),
+  }));
+
+  // All categories for header
+  const allCategories = await database('categories')
+    .select('id', 'name')
+    .orderBy('name', 'asc');
 
   return {
-    featuredCourses: featuredCourses.map((c) => ({
-      ...c,
-      teacher: { full_name: c.teacher_full_name },
-    })),
-    mostViewedCourses: mostViewedCourses.map((c) => ({
-      ...c,
-      category: { name: c.category_name },
-      teacher: {
-        full_name: c.teacher_full_name,
-        avatar_url: c.teacher_avatar_url,
-      },
-    })),
-    newestCourses: newestCourses.map((c) => ({
-      ...c,
-      category: { name: c.category_name },
-      teacher: {
-        full_name: c.teacher_full_name,
-        avatar_url: c.teacher_avatar_url,
-      },
-    })),
+    featuredCourses,
+    mostViewedCourses,
+    newestCourses,
     topCategories,
     allCategories,
   };
@@ -437,26 +596,25 @@ export const getLandingData = async () => {
 //=================
 // COURSE - PREVIEW LECTURE DETAIL
 //=================
-export const getLecturePreview = async (courseId, sectionId, lectureId) => {
-  const result = await database("lectures as l")
-    .leftJoin("sections as s", "l.section_id", "s.id")
-    .leftJoin("courses as c", "s.course_id", "c.id")
-    .leftJoin("users as t", "c.teacher_id", "t.id")
-    .where("l.id", lectureId)
-    .andWhere("s.id", sectionId)
-    .andWhere("c.id", courseId)
-    .andWhere("l.is_preview", true)
+export const getLecturePreview = async (courseId, lectureId) => {
+  const result = await database('lectures as l')
+    .leftJoin('sections as s', 'l.section_id', 's.id')
+    .leftJoin('courses as c', 's.course_id', 'c.id')
+    .leftJoin('users as t', 'c.teacher_id', 't.id')
+    .where('l.id', lectureId)
+    .andWhere('c.id', courseId)
+    .andWhere('l.is_preview', true)
     .first(
-      "l.id as lecture_id",
-      "l.title as lecture_title",
-      "l.video_url",
-      "l.duration",
-      "s.id as section_id",
-      "s.title as section_title",
-      "c.id as course_id",
-      "c.title as course_title",
-      "t.full_name as teacher_name",
-      "t.avatar_url as teacher_avatar"
+      'l.id as lecture_id',
+      'l.title as lecture_title',
+      'l.video_url',
+      'l.duration',
+      's.id as section_id',
+      's.title as section_title',
+      'c.id as course_id',
+      'c.title as course_title',
+      't.full_name as teacher_name',
+      't.avatar_url as teacher_avatar'
     );
 
   return result || null;

@@ -83,6 +83,13 @@ export const hbsHelpers = {
   },
   hasBadge(badge) {
     return badge && badge.length > 0;
+  },
+  json(value) {
+    try {
+      return JSON.stringify(value ?? null);
+    } catch (err) {
+      return 'null';
+    }
   }
 };
 export default hbsHelpers;

@@ -35,6 +35,14 @@
             <strong>{{course.teacher.full_name}}</strong>
           </div>
         </div>
+
+        {{#if course.preview_lecture}}
+        <div class="mb-4">
+          <a class="btn btn-outline-light" href="/courses/{{course.id}}/preview/lecture/{{course.preview_lecture.id}}" target="_blank">
+            <i class="bi bi-play-circle"></i> Xem thử bài giảng
+          </a>
+        </div>
+        {{/if}}
       </div>
 
       <div class="col-lg-4">
@@ -73,7 +81,7 @@
 
           <div class="tab-pane fade" id="curriculum">
             <h3 class="mb-4">Nội dung khóa học</h3>
-            <p class="text-muted mb-4">{{course.sections.length}} chương • {{course.total_lectures}} bài giảng • {{course.total_duration}} tổng thời lượng</p>
+            <p class="text-muted mb-4">{{course.sections.length}} chương • {{course.total_lectures}} bài giảng • {{course.total_duration}}</p>
 
             {{#each course.sections}}
             <div class="curriculum-section">
@@ -91,10 +99,10 @@
                     <i class="bi bi-play-circle lecture-icon"></i>
                     <span>{{title}}</span>
                     {{#if is_preview}}
-                    <span class="preview-badge">Xem trước</span>
+                    <a class="preview-badge" href="/courses/{{../../course.id}}/preview/lecture/{{id}}" target="_blank">Xem trước</a>
                     {{/if}}
                   </div>
-                  <span class="text-muted">{{duration}}</span>
+                    <span class="text-muted">{{duration_text}}</span>
                 </div>
                 {{/each}}
               </div>
@@ -222,31 +230,48 @@
 
 {{#fill_section 'js'}}
 <script type="module">
-  import { supabase } from '/statics/js/supabase-client.js';
-
   const enrollBtn = document.getElementById('enrollBtn');
   const wishlistBtn = document.getElementById('wishlistBtn');
 
-  enrollBtn.addEventListener('click', async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
+  async function handleResponse(res) {
+    if (res.status === 401) {
       window.location.href = '/signin';
-      return;
+      return null;
     }
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (_) {}
+    if (!res.ok) {
+      const message = data?.message || 'Có lỗi xảy ra.';
+      alert(message);
+      return null;
+    }
+    return data;
+  }
 
-    alert('Chức năng đăng ký học đang được phát triển');
+  enrollBtn?.addEventListener('click', async () => {
+    const res = await fetch(`/courses/{{course.id}}/enroll`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    const data = await handleResponse(res);
+    if (!data) return;
+    alert(data.message || 'Đăng ký khóa học thành công!');
   });
 
-  wishlistBtn.addEventListener('click', async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      window.location.href = '/signin';
-      return;
-    }
-
-    alert('Chức năng thêm vào yêu thích đang được phát triển');
+  wishlistBtn?.addEventListener('click', async () => {
+    const res = await fetch(`/courses/{{course.id}}/wishlist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    const data = await handleResponse(res);
+    if (!data) return;
+    alert(data.message || 'Đã thêm vào danh sách yêu thích!');
+    wishlistBtn.classList.add('active');
+    wishlistBtn.innerHTML = '<i class="bi bi-heart-fill"></i> Đã thêm vào yêu thích';
   });
 </script>
 {{/fill_section}}

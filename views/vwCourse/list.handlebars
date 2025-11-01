@@ -14,26 +14,28 @@
             <div class="filter-options">
               {{#each categories}}
                 <div class="mb-2">
-                  <!-- Category cha -->
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="cat-{{id}}" value="{{id}}"
-                          {{#if (eq ../currentCategory id)}}checked{{/if}}>
-                    <label class="form-check-label fw-semibold" for="cat-{{id}}">
-                      {{name}} {{#if course_count}}<span class="text-muted">({{course_count}})</span>{{/if}}
-                    </label>
-                  </div>
+                  <button class="btn btn-link d-flex align-items-center gap-2 px-0 category-toggle"
+                          type="button"
+                          data-category-id="{{id}}"
+                          data-has-children="{{#if children}}true{{else}}false{{/if}}">
+                    {{#if children}}
+                      <i class="bi bi-caret-right-fill toggle-icon {{#if (eq ../currentCategory id)}}rotated{{/if}}"></i>
+                    {{else}}
+                      <i class="bi bi-dot"></i>
+                    {{/if}}
+                    <span class="fw-semibold">{{name}}</span>
+                    {{#if course_count}}<span class="text-muted small">({{course_count}})</span>{{/if}}
+                  </button>
 
-                  <!-- Sub-category -->
                   {{#if children}}
-                    <div class="ms-4 mt-1 border-start ps-3">
+                    <div class="ms-4 mt-1 border-start ps-3 subcategory-list {{#unless (eq ../currentCategory id)}}d-none{{/unless}}"
+                         id="subcats-{{id}}">
                       {{#each children}}
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" id="subcat-{{id}}" value="{{id}}"
-                                {{#if (eq ../../currentSub id)}}checked{{/if}}>
-                          <label class="form-check-label text-muted small" for="subcat-{{id}}">
-                            {{name}} {{#if course_count}}<span class="text-muted">({{course_count}})</span>{{/if}}
-                          </label>
-                        </div>
+                        <button class="btn btn-sm btn-outline-secondary w-100 text-start mb-1 subcategory-btn"
+                                data-sub-id="{{id}}">
+                          {{name}}
+                          {{#if course_count}}<span class="text-muted small"> ({{course_count}})</span>{{/if}}
+                        </button>
                       {{/each}}
                     </div>
                   {{/if}}
@@ -203,19 +205,42 @@ document.getElementById('clearFilters')?.addEventListener('click', function() {
   }
 });
 
-// Xử lý category filters
-document.querySelectorAll('input[type="checkbox"][id^="cat-"]').forEach(checkbox => {
-  checkbox.addEventListener('change', function() {
-    const url = new URL(window.location);
-    const categoryId = this.value;
-    
-    if (this.checked) {
-      url.searchParams.set('category', categoryId);
+function navigateWithParams(params = {}) {
+  const url = new URL(window.location.origin + window.location.pathname);
+  const current = new URL(window.location);
+  current.searchParams.forEach((value, key) => {
+    url.searchParams.set(key, value);
+  });
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') {
+      url.searchParams.delete(key);
     } else {
-      url.searchParams.delete('category');
+      url.searchParams.set(key, value);
     }
-    
-    window.location.href = url.toString();
+  });
+  window.location.href = url.toString();
+}
+
+document.querySelectorAll('.category-toggle').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const categoryId = this.dataset.categoryId;
+    const hasChildren = this.dataset.hasChildren === 'true';
+    const subList = document.getElementById(`subcats-${categoryId}`);
+
+    if (hasChildren && subList) {
+      subList.classList.toggle('d-none');
+      this.querySelector('.toggle-icon')?.classList.toggle('rotated');
+      navigateWithParams({ category: categoryId, sub: null, sub_category: null, subcategory: null });
+    } else {
+      navigateWithParams({ category: categoryId, sub: null, sub_category: null, subcategory: null });
+    }
+  });
+});
+
+document.querySelectorAll('.subcategory-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const subId = this.dataset.subId;
+    navigateWithParams({ sub: subId });
   });
 });
 
