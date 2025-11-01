@@ -122,20 +122,9 @@
             <a href="/courses/{{id}}" class="course-link">
               <div class="course-thumbnail">
                 <img src="{{thumbnail_url}}" alt="{{title}}">
-                <div class="course-badges">
-                  {{#if (isBestSeller enrollment_count)}}
-                  <span class="badge badge-bestseller">Best Seller</span>
-                  {{/if}}
-                  {{#if is_featured}}
-                  <span class="badge badge-featured">Nổi bật</span>
-                  {{/if}}
-                  {{#if (isNew created_at)}}
-                  <span class="badge badge-new">Mới</span>
-                  {{/if}}
-                  {{#if (hasDiscount price discount_price)}}
-                  <span class="badge badge-discount">Giảm giá</span>
-                  {{/if}}
-                </div>
+                {{#if (isBestSeller enrollment_count)}}
+                <span class="badge badge-bestseller">Best Seller</span>
+                {{/if}}
               </div>
               <div class="course-content">
                 <div class="course-category">{{category.name}}</div>

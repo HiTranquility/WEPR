@@ -1,6 +1,6 @@
 import express from 'express';
 import { searchCourses, getCourseDetail, getRelatedCourses, getLecturePreview } from '../models/course.model.js';
-import { getCategoriesForCourses, getAllCategories, getCategoriesWithChildren } from '../models/course-category.model.js';
+import { getCategoriesForCourses, getAllCategories, getCategoriesWithChildren, getCategoryWithChildren } from '../models/course-category.model.js';
 import database from '../utils/database.js';
 
 const router = express.Router();
@@ -14,6 +14,9 @@ router.get('/courses', async (req, res, next) => {
     let categoryIds = [];
     if (category) {
       categoryIds = await getCategoryWithChildren(category);
+      if (categoryIds.length === 0) {
+        categoryIds = [category];
+      }
     } else if (subCategory) {
       categoryIds = [subCategory];
     }

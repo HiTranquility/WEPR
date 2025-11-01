@@ -13,7 +13,7 @@
   <div class="container-fluid">
     <div class="data-table">
       <div class="table-toolbar">
-        <h5 class="mb-0">Danh sách khóa học ({{courses.length}})</h5>
+        <h5 class="mb-0">Danh sách khóa học (<span id="coursesCount">{{courses.length}}</span>)</h5>
         <div class="d-flex gap-2">
           <select class="form-select form-select-sm" style="width: 200px;" onchange="filterByCategory(this.value)">
             <option value="">Tất cả lĩnh vực</option>
@@ -31,7 +31,7 @@
       </div>
   
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0" id="coursesTable">
           <thead class="table-light">
             <tr>
               <th style="width: 60px;">Ảnh</th>
@@ -44,9 +44,9 @@
               <th>Thao tác</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="coursesTableBody">
             {{#each courses}}
-            <tr>
+            <tr data-course-id="{{id}}" data-category="{{category.id}}" data-status="{{status}}">
               <td>
                 <img src="{{thumbnail_url}}" class="rounded" style="width: 50px; height: 30px; object-fit: cover;" alt="{{title}}">
               </td>
@@ -88,17 +88,62 @@
 </div>
 {{#fill_section 'js'}}
 <script>
+  const courseNotifications = {
+    show(message, variant = 'success') {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `
+        <div class="alert alert-${variant} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow" role="alert" style="z-index:1055; min-width:260px;">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+      const alertEl = wrapper.firstElementChild;
+      document.body.appendChild(alertEl);
+      setTimeout(() => {
+        if (alertEl) bootstrap.Alert.getOrCreateInstance(alertEl).close();
+      }, 4000);
+    }
+  };
+
+  function updateCourseCount() {
+    const rows = document.querySelectorAll('#coursesTableBody tr:not(.d-none)');
+    const label = document.getElementById('coursesCount');
+    if (label) label.textContent = rows.length;
+  }
+
   function filterByCategory(categoryId) {
-    alert('Chức năng lọc theo lĩnh vực đang được phát triển');
+    const rows = document.querySelectorAll('#coursesTableBody tr');
+    rows.forEach(row => {
+      const match = !categoryId || row.dataset.category === categoryId;
+      row.dataset.categoryVisible = match ? '1' : '0';
+      const statusVisible = row.dataset.statusVisible !== '0';
+      row.classList.toggle('d-none', !(match && statusVisible));
+    });
+    updateCourseCount();
   }
 
   function filterByStatus(status) {
-    alert('Chức năng lọc theo trạng thái đang được phát triển');
+    const rows = document.querySelectorAll('#coursesTableBody tr');
+    rows.forEach(row => {
+      const match = !status || row.dataset.status === status;
+      row.dataset.statusVisible = match ? '1' : '0';
+      const categoryVisible = row.dataset.categoryVisible !== '0';
+      row.classList.toggle('d-none', !(match && categoryVisible));
+    });
+    updateCourseCount();
   }
 
-  function removeCourse(courseId, courseTitle) {
-    if (confirm(`Bạn có chắc muốn gỡ bỏ khóa học "${courseTitle}"?\nKhóa học sẽ không còn hiển thị công khai.`)) {
-      alert('Chức năng gỡ bỏ khóa học đang được phát triển');
+  async function removeCourse(courseId, courseTitle) {
+    if (!confirm(`Bạn có chắc muốn gỡ bỏ khóa học "${courseTitle}"?\nKhóa học sẽ không còn hiển thị công khai.`)) return;
+
+    try {
+      const res = await fetch(`/admin/courses/${courseId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Không thể gỡ khóa học.');
+      document.querySelector(`tr[data-course-id="${courseId}"]`)?.remove();
+      courseNotifications.show('Đã gỡ khóa học thành công!');
+      updateCourseCount();
+    } catch (err) {
+      courseNotifications.show(err.message || 'Có lỗi xảy ra khi gỡ khóa học.', 'danger');
     }
   }
 </script>

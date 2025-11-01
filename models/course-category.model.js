@@ -1,5 +1,40 @@
 import database from "../utils/database.js";
 
+export async function getCategoryWithChildren(rootId) {
+  if (!rootId) return [];
+
+  const rows = await database("categories").select("id", "parent_id");
+  if (!rows || rows.length === 0) return [];
+
+  const exists = rows.some((row) => row.id === rootId);
+  if (!exists) return [];
+
+  const childrenMap = rows.reduce((map, row) => {
+    const parent = row.parent_id || null;
+    if (!map.has(parent)) map.set(parent, []);
+    map.get(parent).push(row.id);
+    return map;
+  }, new Map());
+
+  const result = [];
+  const stack = [rootId];
+  const visited = new Set();
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || visited.has(current)) continue;
+    visited.add(current);
+    result.push(current);
+
+    const children = childrenMap.get(current);
+    if (children && children.length) {
+      stack.push(...children);
+    }
+  }
+
+  return result;
+}
+
 export async function createCategory(category) {
   const [id] = await database("categories").insert(category).returning("id");
   return id;

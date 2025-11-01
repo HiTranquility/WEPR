@@ -3,14 +3,29 @@ import bcrypt from 'bcrypt';
 
 const baseQuery = database('users');
 
+function normalizeStatus(rawStatus) {
+  if (typeof rawStatus === 'boolean') {
+    return rawStatus ? 'active' : 'blocked';
+  }
+  if (rawStatus === null || rawStatus === undefined || rawStatus === '') {
+    return 'active';
+  }
+  const lowered = String(rawStatus).toLowerCase();
+  if (lowered === 'blocked' || lowered === 'inactive' || lowered === 'false' || lowered === '0') {
+    return 'blocked';
+  }
+  return 'active';
+}
+
 export async function getAdminByEmailForAuth(email) {
   if (!email) return null;
   const columns = ['id', 'full_name', 'email', 'role', 'status', 'password_hash'];
   try {
-    return await baseQuery
+    const record = await baseQuery
       .clone()
       .where({ email })
       .first(columns);
+    return record ? { ...record, status: normalizeStatus(record.status) } : null;
   } catch (err) {
     if (err?.code === '42703') {
       const fallbackCols = columns.filter((col) => col !== 'status');
@@ -54,7 +69,7 @@ export async function authenticateAdmin({ email, password }) {
     return { ok: false, code: 'FORBIDDEN' };
   }
 
-  const status = adminRecord.status || 'active';
+  const status = normalizeStatus(adminRecord.status);
   if (status === 'blocked') {
     return { ok: false, code: 'BLOCKED' };
   }
@@ -196,7 +211,7 @@ export const getAllAdminUsers = async () => {
     full_name: r.full_name,
     email: r.email,
     role: r.role,
-    status: r.status || 'active',
+    status: normalizeStatus(r.status),
     avatar_url: r.avatar_url || "https://cdn-icons-png.flaticon.com/512/1077/1077114.png",
     created_at: r.created_at,
   }));

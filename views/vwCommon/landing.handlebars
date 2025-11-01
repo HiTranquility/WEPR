@@ -1,13 +1,12 @@
 {{#fill_section 'css'}}
-<link rel="stylesheet" href="/statics/css/common/landing.css">
+<link rel="stylesheet" href="/statics/css/main.css">
 {{/fill_section}}
 
-<div class="landing-page">
 <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
   <div class="carousel-indicators">
     {{#each featuredCourses}}
     <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{@index}}"
-      class="{{#if @first}}active{{/if}}"></button>
+            class="{{#if @first}}active{{/if}}"></button>
     {{/each}}
   </div>
 
@@ -86,13 +85,11 @@
       {{#each topCategories}}
       <div class="col-md-4 col-sm-6">
         <div class="category-card">
-          <a href="/courses?category={{id}}" class="text-decoration-none">
-            <div class="category-icon">
-              <i class="bi bi-book"></i>
-            </div>
-            <div class="category-name">{{name}}</div>
-            <div class="category-count">{{enrollment_count}} đăng ký mới | {{course_count}} khóa học</div>
-          </a>
+          <div class="category-icon">
+            <i class="bi bi-book"></i>
+          </div>
+          <div class="category-name">{{name}}</div>
+          <div class="category-count">{{enrollment_count}} đăng ký mới | {{course_count}} khóa học</div>
         </div>
       </div>
       {{/each}}
@@ -100,18 +97,99 @@
   </div>
 </section>
 
-{{> recommend-course-section
-    title="Khóa học được xem nhiều nhất"
-    subTitle="Những khóa học đang được quan tâm nhất"
-    courses=mostViewedCourses
-}}
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Khóa học được xem nhiều nhất</h2>
+      <p class="section-subtitle">Những khóa học đang được quan tâm nhất</p>
+    </div>
+    <div class="row g-4">
+      {{#each mostViewedCourses}}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="card course-card">
+          <div class="position-relative">
+            <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
+            {{#if (isBestSeller enrollment_count)}}
+            <span class="course-badge bestseller">Best Seller</span>
+            {{/if}}
+          </div>
+          <div class="course-body">
+            <div class="course-category">{{category.name}}</div>
+            <h5 class="course-title">{{truncate title 60}}</h5>
+            <div class="course-teacher">
+              <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
+              {{teacher.full_name}}
+            </div>
+            <div class="course-rating">
+              <span class="rating-stars">⭐ {{rating_avg}}</span>
+              <span class="rating-text">({{formatNumber rating_count}})</span>
+              <span class="rating-text">• {{formatNumber enrollment_count}} học viên</span>
+            </div>
+            <div class="course-footer">
+              <div class="course-price">
+                <span class="price-current">{{formatCurrency discount_price}}</span>
+                {{#if (gt price discount_price)}}
+                <span class="price-original">{{formatCurrency price}}</span>
+                {{/if}}
+              </div>
+              {{#if (gt price discount_price)}}
+              <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</section>
 
-{{> recommend-course-section
-    title="Khóa học mới nhất"
-    subTitle="Khám phá những khóa học vừa được ra mắt"
-    courses=newestCourses
-}}
-
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Khóa học mới nhất</h2>
+      <p class="section-subtitle">Khám phá những khóa học vừa được ra mắt</p>
+    </div>
+    <div class="row g-4">
+      {{#each newestCourses}}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <div class="card course-card">
+          <div class="position-relative">
+            <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
+            {{#if (isNew created_at)}}
+            <span class="course-badge">Mới</span>
+            {{/if}}
+          </div>
+          <div class="course-body">
+            <div class="course-category">{{category.name}}</div>
+            <h5 class="course-title">{{truncate title 60}}</h5>
+            <div class="course-teacher">
+              <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
+              {{teacher.full_name}}
+            </div>
+            <div class="course-rating">
+              <span class="rating-stars">⭐ {{rating_avg}}</span>
+              <span class="rating-text">({{formatNumber rating_count}})</span>
+              <span class="rating-text">• {{formatNumber view_count}} lượt xem</span>
+            </div>
+            <div class="course-footer">
+              <div class="course-price">
+                <span class="price-current">{{formatCurrency discount_price}}</span>
+                {{#if (gt price discount_price)}}
+                <span class="price-original">{{formatCurrency price}}</span>
+                {{/if}}
+              </div>
+              {{#if (gt price discount_price)}}
+              <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</section>
 
 {{#fill_section 'js'}}
 {{/fill_section}}

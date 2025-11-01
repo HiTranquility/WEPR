@@ -1,5 +1,5 @@
 import database from "../utils/database.js";
-import { getCategoriesWithChildren } from './course-category.model.js';
+import { getCategoryWithChildren } from './course-category.model.js';
 // 🔹 Tạo course mới
 export async function createCourse(course) {
   const [id] = await database("courses").insert(course).returning("id");
@@ -51,6 +51,7 @@ export async function searchCourses(opts = {}) {
     q,
     categoryId,
     subCategoryId,
+    categoryIds: explicitCategoryIds,
     teacherId,
     minPrice,
     maxPrice,
@@ -67,11 +68,14 @@ export async function searchCourses(opts = {}) {
   const offset = (p - 1) * l;
 
   // Chuẩn bị danh sách categoryIds (cha + con)
-  let categoryIds = [];
-  if (subCategoryId) {
+  let categoryIds = Array.isArray(explicitCategoryIds) ? explicitCategoryIds.filter(Boolean) : [];
+  if (categoryIds.length === 0 && subCategoryId) {
     categoryIds = [subCategoryId];
-  } else if (categoryId) {
-    categoryIds = await getCategoryWithChildrenIds(categoryId);
+  } else if (categoryIds.length === 0 && categoryId) {
+    categoryIds = await getCategoryWithChildren(categoryId);
+    if (!categoryIds || categoryIds.length === 0) {
+      categoryIds = [categoryId];
+    }
   }
 
   // Base query: join sẵn

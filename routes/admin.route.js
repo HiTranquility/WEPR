@@ -129,7 +129,7 @@ router.delete('/admin/courses/:id', async function(req, res, next) {
 
 router.post('/admin/users', async function(req, res, next) {
     try {
-        const { full_name, email, password, role } = req.body;
+        const { full_name, email, password, role, status } = req.body;
         const bcrypt = (await import('bcrypt')).default;
         const password_hash = await bcrypt.hash(password, 10);
 
@@ -138,6 +138,7 @@ router.post('/admin/users', async function(req, res, next) {
             email,
             password_hash,
             role: role || 'student',
+            status: status === undefined ? true : convertStatusToBoolean(status),
             created_at: new Date()
         }).returning('*');
 
@@ -146,6 +147,14 @@ router.post('/admin/users', async function(req, res, next) {
         next(err);
     }
 });
+
+function convertStatusToBoolean(rawStatus) {
+    if (typeof rawStatus === 'boolean') return rawStatus;
+    if (rawStatus === null || rawStatus === undefined || rawStatus === '') return true;
+    const lowered = String(rawStatus).toLowerCase();
+    if (lowered === 'blocked' || lowered === 'inactive' || lowered === 'false' || lowered === '0') return false;
+    return true;
+}
 
 router.post('/admin/users/:id', async function(req, res, next) {
     try {
@@ -156,7 +165,7 @@ router.post('/admin/users/:id', async function(req, res, next) {
             updated_at: new Date()
         };
         if (role) updatePayload.role = role;
-        if (status) updatePayload.status = status;
+        if (status !== undefined) updatePayload.status = convertStatusToBoolean(status);
 
         try {
             await database('users').where({ id: req.params.id }).update(updatePayload);
@@ -206,10 +215,11 @@ router.post('/admin/users/:id/toggle-status', async function(req, res, next) {
       return res.json({ success: false, message: 'Không tìm thấy người dùng!' });
     }
     
-    const newStatus = user.status === 'active' ? 'blocked' : 'active';
+    const isActive = convertStatusToBoolean(user.status);
+    const newStatus = !isActive;
     await database('users').where({ id: req.params.id }).update({ status: newStatus });
     
-    res.json({ success: true, message: `Đã ${newStatus === 'blocked' ? 'khóa' : 'mở khóa'} tài khoản!` });
+    res.json({ success: true, message: `Đã ${newStatus ? 'mở khóa' : 'khóa'} tài khoản!` });
   } catch (err) {
     res.json({ success: false, message: 'Có lỗi xảy ra!' });
   }
