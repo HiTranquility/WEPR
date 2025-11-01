@@ -3,6 +3,8 @@ import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseL
 import { getAllCategories } from '../models/course-category.model.js';
 import { ensureAuthenticated } from '../middlewares/student.middleware.js';
 import { requireRole } from '../middlewares/student.middleware.js';
+import database from '../utils/database.js';
+import * as studentModel from '../models/student.model.js';
 const router = express.Router();
 
 router.use('/student', ensureAuthenticated, requireRole('student'));
@@ -140,8 +142,6 @@ router.delete('/student/learn/:courseId/notes/:noteId', function (req, res) {
     res.json({ success: true, message: 'Đã xóa ghi chú!' });
 });
 
-export default router;
-
 router.post('/student/watchlist/:courseId', async function(req, res, next) {
   try {
     const studentId = req.user.id;
@@ -243,3 +243,5 @@ router.post('/student/review/:courseId', async function(req, res, next) {
     res.json({ success: false, message: 'Có lỗi xảy ra!' });
   }
 });
+
+export default router;

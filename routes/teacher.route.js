@@ -4,6 +4,7 @@ import { getAllCategories } from '../models/course-category.model.js';
 import { ensureAuthenticated } from '../middlewares/teacher.middleware.js';
 import { requireRole } from '../middlewares/teacher.middleware.js';
 import database from '../utils/database.js';
+import * as teacherModel from '../models/teacher.model.js';
 const router = express.Router();
 
 router.use('/teacher', ensureAuthenticated, requireRole('teacher'));

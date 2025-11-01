@@ -68,5 +68,21 @@ export const hbsHelpers = {
     for (let i = 0; i < n; i++) out += block.fn(i);
     return out;
   },
+  getBadgeClass(badge) {
+    if (!badge) return '';
+    return 'badge-' + badge;
+  },
+  getBadgeText(badge) {
+    const badges = {
+      'featured': 'Nổi bật',
+      'new': 'Mới',
+      'discount': 'Giảm giá',
+      'bestseller': 'Bán chạy'
+    };
+    return badges[badge] || '';
+  },
+  hasBadge(badge) {
+    return badge && badge.length > 0;
+  }
 };
 export default hbsHelpers;
