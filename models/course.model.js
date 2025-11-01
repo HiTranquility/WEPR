@@ -457,3 +457,75 @@ export const getLecturePreview = async (courseId, sectionId, lectureId) => {
 
   return result || null;
 };
+export async function getTop3FeaturedCoursesThisWeek() {
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  
+  return await database('courses')
+    .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
+    .leftJoin('categories as category', 'courses.category_id', 'category.id')
+    .where('courses.status', 'completed')
+    .where('courses.is_featured', true)
+    .where('courses.created_at', '>=', oneWeekAgo)
+    .select(
+      'courses.*',
+      'teacher.full_name as teacher_name',
+      'teacher.avatar_url as teacher_avatar',
+      'category.name as category_name'
+    )
+    .orderBy('courses.enrollment_count', 'desc')
+    .orderBy('courses.rating_avg', 'desc')
+    .limit(3);
+}
+
+export async function getTop10MostViewedCourses() {
+  return await database('courses')
+    .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
+    .leftJoin('categories as category', 'courses.category_id', 'category.id')
+    .where('courses.status', 'completed')
+    .select(
+      'courses.*',
+      'teacher.full_name as teacher_name',
+      'teacher.avatar_url as teacher_avatar',
+      'category.name as category_name'
+    )
+    .orderBy('courses.view_count', 'desc')
+    .orderBy('courses.rating_avg', 'desc')
+    .limit(10);
+}
+
+export async function getTop10NewestCourses() {
+  return await database('courses')
+    .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
+    .leftJoin('categories as category', 'courses.category_id', 'category.id')
+    .where('courses.status', 'completed')
+    .select(
+      'courses.*',
+      'teacher.full_name as teacher_name',
+      'teacher.avatar_url as teacher_avatar',
+      'category.name as category_name'
+    )
+    .orderBy('courses.created_at', 'desc')
+    .limit(10);
+}
+
+export async function getTop5CategoriesByEnrollmentsThisWeek() {
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  
+  return await database('categories')
+    .leftJoin('courses', 'categories.id', 'courses.category_id')
+    .leftJoin('enrollments', function() {
+      this.on('courses.id', '=', 'enrollments.course_id')
+        .andOn('enrollments.enrolled_at', '>=', database.raw('?', [oneWeekAgo]));
+    })
+    .where('categories.parent_id', null)
+    .groupBy('categories.id', 'categories.name')
+    .select(
+      'categories.id',
+      'categories.name',
+      database.raw('COUNT(DISTINCT enrollments.id) as enrollment_count')
+    )
+    .orderBy('enrollment_count', 'desc')
+    .limit(5);
+}

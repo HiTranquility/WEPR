@@ -1,16 +1,36 @@
 import express from 'express';
-import { getLandingData } from "../models/course.model.js";
+import {
+  getLandingData,
+  getTop3FeaturedCoursesThisWeek,
+  getTop10MostViewedCourses,
+  getTop10NewestCourses,
+  getTop5CategoriesByEnrollmentsThisWeek
+} from "../models/course.model.js";
 import { getAllCategories } from '../models/course-category.model.js';
 
 const router = express.Router();
 
 router.get("/", async (req, res, next) => {
   try {
-    const data = await getLandingData();
     const allCategories = await getAllCategories({ includeCounts: false });
 
+    const [
+      top3Featured,
+      top10Viewed,
+      top10Newest,
+      top5Categories
+    ] = await Promise.all([
+      getTop3FeaturedCoursesThisWeek(),
+      getTop10MostViewedCourses(),
+      getTop10NewestCourses(),
+      getTop5CategoriesByEnrollmentsThisWeek()
+    ]);
+
     res.render("vwCommon/landing", {
-      ...data,
+      featuredCoursesWeek: top3Featured,
+      mostViewedCourses: top10Viewed,
+      newestCourses: top10Newest,
+      topCategories: top5Categories,
       allCategories,
       searchQuery: null,
       title: "Online Academy - Learn Anytime, Anywhere",
