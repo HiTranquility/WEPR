@@ -1,0 +1,136 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/teacher/teacher-profile.css">
+{{/fill_section}}
+
+<section class="teacher-profile-hero">
+  <div class="container">
+    <div class="teacher-profile-card">
+      <img src="{{user.avatar_url}}" alt="{{user.full_name}}" class="teacher-avatar">
+      <div class="teacher-summary">
+        <span class="role-badge">Giảng viên</span>
+        <h1>{{user.full_name}}</h1>
+        <p class="text-opacity-75"><i class="bi bi-envelope"></i> {{user.email}}</p>
+        {{#if user.bio}}
+        <p class="teacher-bio">{{user.bio}}</p>
+        {{else}}
+        <p class="teacher-bio text-muted">Chia sẻ kinh nghiệm giảng dạy của bạn để học viên hiểu hơn về bạn.</p>
+        {{/if}}
+        <div class="teacher-actions">
+          <a href="/teacher/settings" class="btn btn-light"><i class="bi bi-gear"></i> Cập nhật hồ sơ</a>
+          <a href="/teacher/courses" class="btn btn-outline-light"><i class="bi bi-layout-text-window"></i> Quản lý khóa học</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="teacher-profile-content py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h4 class="card-title mb-4">Thống kê giảng dạy</h4>
+            <div class="row g-3">
+              {{#each statsList}}
+              <div class="col-sm-6">
+                <div class="stat-panel">
+                  <span class="stat-label">{{label}}</span>
+                  <span class="stat-number">{{value}}</span>
+                </div>
+              </div>
+              {{/each}}
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="card-title mb-0">Khóa học mới nhất</h4>
+              <a href="/teacher/courses" class="text-decoration-none">Xem tất cả</a>
+            </div>
+            {{#if recentCourses.length}}
+            <div class="recent-course-list">
+              {{#each recentCourses}}
+              <div class="recent-course-item">
+                <img src="{{thumbnail_url}}" alt="{{title}}">
+                <div class="recent-course-body">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-light text-dark text-uppercase">{{status}}</span>
+                    <span class="text-muted small">Cập nhật {{formatDate last_updated}}</span>
+                  </div>
+                  <h5 class="mb-1">{{title}}</h5>
+                  <div class="recent-meta">
+                    <span><i class="bi bi-people"></i> {{formatNumber enrollment_count}} HV</span>
+                    <span><i class="bi bi-star"></i> {{rating_avg}}</span>
+                    <span><i class="bi bi-cash"></i> {{formatCurrency revenue}}</span>
+                  </div>
+                </div>
+                <a href="/teacher/course/{{id}}" class="btn btn-outline-primary btn-sm">
+                  Quản lý
+                </a>
+              </div>
+              {{/each}}
+            </div>
+            {{else}}
+            <div class="empty-state text-center">
+              <i class="bi bi-easel"></i>
+              <h5>Bạn chưa tạo khóa học nào</h5>
+              <p class="text-muted">Tạo khóa học đầu tiên để chia sẻ kiến thức với học viên.</p>
+              <a href="/teacher/create-course" class="btn btn-primary">Tạo khóa học mới</a>
+            </div>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Thông tin thanh toán</h5>
+            {{#if payment.account_number}}
+            <ul class="list-unstyled payment-info mb-0">
+              <li><strong>Ngân hàng:</strong> {{payment.bank_name}}</li>
+              <li><strong>Số tài khoản:</strong> {{payment.account_number}}</li>
+              <li><strong>Chủ tài khoản:</strong> {{payment.account_name}}</li>
+            </ul>
+            {{else}}
+            <p class="text-muted mb-0">Bạn chưa cập nhật thông tin thanh toán. Cập nhật ngay trong phần cài đặt để nhận doanh thu.</p>
+            {{/if}}
+          </div>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Liên kết nhanh</h5>
+            <div class="quick-links">
+              <a href="/teacher/dashboard" class="quick-link">
+                <i class="bi bi-speedometer2"></i>
+                <div>
+                  <strong>Bảng điều khiển</strong>
+                  <span>Xem tổng quan hiệu suất giảng dạy</span>
+                </div>
+              </a>
+              <a href="/teacher/courses" class="quick-link">
+                <i class="bi bi-kanban"></i>
+                <div>
+                  <strong>Quản lý nội dung</strong>
+                  <span>Tổ chức chương và bài giảng</span>
+                </div>
+              </a>
+              <a href="/teacher/settings" class="quick-link">
+                <i class="bi bi-person-gear"></i>
+                <div>
+                  <strong>Cài đặt tài khoản</strong>
+                  <span>Cập nhật bảo mật và thanh toán</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

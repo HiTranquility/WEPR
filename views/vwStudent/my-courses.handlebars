@@ -59,8 +59,17 @@
               <img src="{{course.thumbnail_url}}" class="course-card-thumbnail" alt="{{course.title}}">
               <div class="course-card-content">
                 <span class="badge bg-primary mb-2">{{course.category.name}}</span>
-                <h5>{{course.title}}</h5>
-                <p class="text-muted mb-2">{{course.teacher.full_name}}</p>
+                <h5 class="mb-1">{{course.title}}</h5>
+                <div class="d-flex align-items-center gap-2 text-muted mb-2">
+                  <img src="{{course.teacher.avatar_url}}" class="teacher-mini" alt="{{course.teacher.full_name}}">
+                  <span>{{course.teacher.full_name}}</span>
+                </div>
+
+                <div class="course-meta mb-3">
+                  <span class="me-3">⭐ {{course.rating_avg}} ({{formatNumber course.rating_count}})</span>
+                  <span class="me-3"><i class="bi bi-people"></i> {{formatNumber course.view_count}} lượt xem</span>
+                  <span><i class="bi bi-cash"></i> {{formatCurrency course.discount_price}}</span>
+                </div>
 
                 <div class="course-progress">
                   <div class="d-flex justify-content-between mb-2">
@@ -82,7 +91,7 @@
                     Xem lại
                     {{/if}}
                   </a>
-                  {{#if (eq completed_lectures total_lectures)}}
+                  {{#if (and total_lectures (eq completed_lectures total_lectures) (gt total_lectures 0))}}
                   <button class="btn btn-outline-primary ms-2" onclick="rateCourse('{{course.id}}')">
                     <i class="bi bi-star"></i> Đánh giá
                   </button>
@@ -97,7 +106,7 @@
             <i class="bi bi-book"></i>
             <h5>Chưa có khóa học nào</h5>
             <p>Bạn chưa đăng ký khóa học nào. Hãy khám phá và tìm khóa học phù hợp!</p>
-            <a href="/" class="btn btn-primary">Khám phá khóa học</a>
+            <a href="/courses" class="btn btn-primary">Khám phá khóa học</a>
           </div>
           {{/if}}
         </div>

@@ -1,10 +1,9 @@
 import express from 'express';
-import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseLearningData } from '../models/user.model.js';
+import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseLearningData, getStudentProfileInfo } from '../models/user.model.js';
 import { getAllCategories } from '../models/course-category.model.js';
 import { ensureAuthenticated } from '../middlewares/student.middleware.js';
 import { requireRole } from '../middlewares/student.middleware.js';
 import database from '../utils/database.js';
-import * as studentModel from '../models/student.model.js';
 const router = express.Router();
 
 router.use('/student', ensureAuthenticated, requireRole('student'));
@@ -28,6 +27,31 @@ router.get("/student/dashboard", async (req, res, next) => {
     } catch (err) {
         next(err);
     }
+});
+
+router.get('/student/profile', async function(req, res, next) {
+  try {
+    const studentId = req.user && req.user.id ? req.user.id : null;
+    if (!studentId) return res.redirect('/signin');
+
+    const data = await getStudentProfileInfo(studentId);
+    if (!data) {
+      return res.status(404).render('404', {
+        title: 'Không tìm thấy học viên',
+        message: 'Tài khoản không tồn tại.',
+        layout: 'main'
+      });
+    }
+
+    res.render('vwStudent/profile', {
+      title: 'Thông tin cá nhân',
+      ...data,
+      searchQuery: null,
+      layout: 'main'
+    });
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get("/student/my-courses", async (req, res, next) => {

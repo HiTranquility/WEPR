@@ -176,6 +176,16 @@ export const getTeacherDashboard = async (teacherId) => {
 
   if (!teacher) return null;
 
+  const teacherUser = {
+    id: teacher.id,
+    full_name: teacher.full_name,
+    email: teacher.email,
+    avatar_url: teacher.avatar_url || "https://ui-avatars.com/api/?name=" + encodeURIComponent(teacher.full_name || "Teacher"),
+    bio: teacher.bio || "",
+    created_at: teacher.created_at,
+    role: "teacher",
+  };
+
   // 🔹 Lấy thống kê khóa học
   const [stats] = await database("courses")
     .where("teacher_id", teacherId)
@@ -200,28 +210,77 @@ export const getTeacherDashboard = async (teacherId) => {
       "status",
       "enrollment_count",
       "rating_avg",
+      "view_count",
+      "discount_price",
+      "price",
+      "last_updated",
       database.raw("COALESCE(enrollment_count * COALESCE(discount_price, price), 0) AS revenue")
     );
 
+  const allCourses = await database("courses as c")
+    .leftJoin("categories as cat", "c.category_id", "cat.id")
+    .where("c.teacher_id", teacherId)
+    .select(
+      "c.id",
+      "c.title",
+      "c.thumbnail_url",
+      "c.status",
+      "c.enrollment_count",
+      "c.rating_avg",
+      "c.discount_price",
+      "c.price",
+      database.ref("cat.name").as("category_name"),
+      database.raw("COALESCE(c.enrollment_count * COALESCE(c.discount_price, c.price), 0) AS revenue")
+    );
+
+  const normalizedStats = {
+    total_courses: Number(stats.total_courses || 0),
+    published_courses: Number(stats.published_courses || 0),
+    draft_courses: Number(stats.draft_courses || 0),
+    total_students: Number(stats.total_students || 0),
+    total_revenue: Number(stats.total_revenue || 0),
+    avg_rating: Number(stats.avg_rating || 0),
+  };
+
+  const statsList = [
+    { label: "Tổng khóa học", value: normalizedStats.total_courses },
+    { label: "Đã xuất bản", value: normalizedStats.published_courses },
+    { label: "Học viên", value: normalizedStats.total_students },
+    { label: "Doanh thu", value: normalizedStats.total_revenue.toLocaleString("vi-VN") + " ₫" },
+  ];
+
   // 🔹 Trả về object tổng hợp cho view
   return {
-    teacher,
-    stats: {
-      total_courses: Number(stats.total_courses || 0),
-      published_courses: Number(stats.published_courses || 0),
-      draft_courses: Number(stats.draft_courses || 0),
-      total_students: Number(stats.total_students || 0),
-      total_revenue: Number(stats.total_revenue || 0),
-      avg_rating: Number(stats.avg_rating || 0),
-    },
-    recentCourses: recentCourses.map((c) => ({
+    user: teacherUser,
+    teacher: teacherUser,
+    stats: normalizedStats,
+    statsList,
+    recentCourses: recentCourses.map((c) => {
+      const status = c.status === "completed" ? "published" : (c.status || "draft");
+      return {
+        id: c.id,
+        title: c.title,
+        thumbnail_url: c.thumbnail_url,
+        status,
+        enrollment_count: Number(c.enrollment_count || 0),
+        rating_avg: Number(c.rating_avg || 0),
+        view_count: Number(c.view_count || 0),
+        revenue: Number(c.revenue || 0),
+        discount_price: Number(c.discount_price || c.price || 0),
+        price: Number(c.price || 0),
+        last_updated: c.last_updated,
+      };
+    }),
+    allCourses: allCourses.map((c) => ({
       id: c.id,
       title: c.title,
       thumbnail_url: c.thumbnail_url,
-      status: c.status === "completed" ? "published" : c.status,
-      enrollment_count: c.enrollment_count,
-      rating_avg: c.rating_avg,
+      status: c.status === "completed" ? "published" : (c.status || "draft"),
+      enrollment_count: Number(c.enrollment_count || 0),
+      rating_avg: Number(c.rating_avg || 0),
       revenue: Number(c.revenue || 0),
+      discount_price: Number(c.discount_price || c.price || 0),
+      category: { name: c.category_name },
     })),
   };
 };
@@ -539,8 +598,20 @@ export const getStudentDashboard = async (studentId) => {
       "c.id",
       "c.title",
       "c.thumbnail_url",
+      "c.created_at",
+      "c.discount_price",
+      "c.price",
+      "c.view_count",
       "e.enrolled_at",
-      database.ref("t.full_name").as("teacher_full_name")
+      "e.completed_at",
+      database.ref("t.full_name").as("teacher_full_name"),
+      database.ref("t.avatar_url").as("teacher_avatar"),
+      database.raw(`(
+        SELECT COUNT(l2.id)
+        FROM sections s2
+        LEFT JOIN lectures l2 ON l2.section_id = s2.id
+        WHERE s2.course_id = c.id
+      ) AS total_lectures`)
     );
 
   // 🔹 Khóa học gợi ý (featured)
@@ -555,28 +626,80 @@ export const getStudentDashboard = async (studentId) => {
       "c.title",
       "c.thumbnail_url",
       "c.discount_price",
+      "c.price",
       "c.rating_avg",
       "c.rating_count",
+      "c.view_count",
+      "c.created_at",
       database.ref("t.full_name").as("teacher_full_name"),
+      database.ref("t.avatar_url").as("teacher_avatar"),
       database.ref("cat.name").as("category_name")
     );
     console.log("recommendedCourses:", recommendedCourses);
   // 🔹 Trả dữ liệu về đúng shape cho view dashboard
+  const normalizedStats = {
+    enrolled_courses: Number(stats.enrolled_courses || 0),
+    completed_courses: Number(stats.completed_courses || 0),
+    in_progress_courses: Number(stats.in_progress_courses || 0),
+    certificates: 0,
+  };
+
+  const statsList = [
+    { label: "Khóa học đã đăng ký", value: normalizedStats.enrolled_courses },
+    { label: "Đang học", value: normalizedStats.in_progress_courses },
+    { label: "Đã hoàn thành", value: normalizedStats.completed_courses },
+    { label: "Chứng chỉ", value: normalizedStats.certificates },
+  ];
+
+  const watchlistRows = await database("watchlist AS w")
+    .leftJoin("courses AS c", "w.course_id", "c.id")
+    .leftJoin("users AS t", "c.teacher_id", "t.id")
+    .leftJoin("categories AS cat", "c.category_id", "cat.id")
+    .where("w.student_id", studentId)
+    .orderBy("w.added_at", "desc")
+    .limit(6)
+    .select(
+      "w.id AS watch_id",
+      "w.added_at",
+      "c.id AS course_id",
+      "c.title",
+      "c.thumbnail_url",
+      "c.rating_avg",
+      "c.rating_count",
+      "c.discount_price",
+      database.ref("t.full_name").as("teacher_full_name"),
+      database.ref("cat.name").as("category_name")
+    );
+
   return {
-    user,
-    stats: {
-      enrolled_courses: Number(stats.enrolled_courses || 0),
-      completed_courses: Number(stats.completed_courses || 0),
-      in_progress_courses: Number(stats.in_progress_courses || 0),
-      certificates: 0, // ⚠️ Chưa có bảng certificates trong schema thật
+    user: {
+      ...user,
+      role: "student",
     },
-    recentCourses: recentCourses.map((r) => ({
-      id: r.id,
-      title: r.title,
-      thumbnail_url: r.thumbnail_url,
-      enrolled_at: r.enrolled_at,
-      teacher: { full_name: r.teacher_full_name },
-    })),
+    stats: normalizedStats,
+    statsList,
+    recentCourses: recentCourses.map((r) => {
+      const totalLectures = Number(r.total_lectures || 0);
+      const isCompleted = !!r.completed_at;
+      const progress = isCompleted ? 100 : 0;
+      return {
+        id: r.id,
+        title: r.title,
+        thumbnail_url: r.thumbnail_url,
+        enrolled_at: r.enrolled_at,
+        discount_price: r.discount_price,
+        price: r.price,
+        view_count: r.view_count,
+        created_at: r.created_at,
+        progress,
+        total_lectures: totalLectures,
+        completed_lectures: isCompleted ? totalLectures : 0,
+        teacher: {
+          full_name: r.teacher_full_name,
+          avatar_url: r.teacher_avatar,
+        },
+      };
+    }),
     recommendedCourses: recommendedCourses.map((r) => ({
       id: r.id,
       title: r.title,
@@ -584,8 +707,28 @@ export const getStudentDashboard = async (studentId) => {
       rating_avg: r.rating_avg,
       rating_count: r.rating_count,
       discount_price: r.discount_price,
+      price: r.price,
+      view_count: r.view_count,
+      created_at: r.created_at,
       category: { name: r.category_name },
-      teacher: { full_name: r.teacher_full_name },
+      teacher: {
+        full_name: r.teacher_full_name,
+        avatar_url: r.teacher_avatar,
+      },
+    })),
+    watchlist: watchlistRows.map((r) => ({
+      id: r.watch_id,
+      added_at: r.added_at,
+      course: {
+        id: r.course_id,
+        title: r.title,
+        thumbnail_url: r.thumbnail_url,
+        rating_avg: r.rating_avg,
+        rating_count: r.rating_count,
+        discount_price: r.discount_price,
+        teacher: { full_name: r.teacher_full_name },
+        category: { name: r.category_name },
+      },
     })),
   };
 };
@@ -619,26 +762,56 @@ export const getStudentCourses = async (studentId) => {
       "c.title",
       "c.thumbnail_url",
       "c.status",
+      "c.discount_price",
+      "c.price",
+      "c.rating_avg",
+      "c.rating_count",
+      "c.view_count",
       database.ref("t.full_name").as("teacher_full_name"),
-      database.ref("cat.name").as("category_name")
+      database.ref("t.avatar_url").as("teacher_avatar"),
+      database.ref("cat.name").as("category_name"),
+      database.raw(`(
+        SELECT COUNT(l2.id)
+        FROM sections s2
+        LEFT JOIN lectures l2 ON l2.section_id = s2.id
+        WHERE s2.course_id = c.id
+      ) AS total_lectures`)
     );  
 
-  const enrolledCourses = rows.map(r => ({
+  const enrolledCourses = rows.map(r => {
+    const totalLectures = Number(r.total_lectures || 0);
+    const isCompleted = !!r.completed_at;
+    const completedLectures = isCompleted ? totalLectures : 0;
+    const progress = isCompleted ? 100 : (totalLectures > 0 ? Math.min(99, Math.round((completedLectures / totalLectures) * 100)) : 0);
+
+    return {
       enrollment_id: r.enrollment_id,
       enrolled_at: r.enrolled_at,
       completed_at: r.completed_at,
+      progress,
+      completed_lectures: completedLectures,
+      total_lectures: totalLectures,
       course: {
         id: r.course_id,
         title: r.title,
         thumbnail_url: r.thumbnail_url,
         status: r.status,
+        discount_price: r.discount_price,
+        price: r.price,
+        rating_avg: r.rating_avg,
+        rating_count: r.rating_count,
+        view_count: r.view_count,
         category: { name: r.category_name },
-        teacher: { full_name: r.teacher_full_name },
+        teacher: {
+          full_name: r.teacher_full_name,
+          avatar_url: r.teacher_avatar,
+        },
       },
-    }));
+    };
+  });
 
-    return { user: student, enrolledCourses };
-  };
+  return { user: { ...student, role: "student" }, enrolledCourses };
+};
 
 //=================
 // STUDENT WATCHLIST
@@ -671,6 +844,9 @@ export const getStudentWatchlist = async (studentId) => {
       "c.rating_count",
       "c.enrollment_count",
       "c.discount_price",
+      "c.price",
+      "c.view_count",
+      "c.created_at",
       database.ref("cat.name").as("category_name"),
       database.ref("t.full_name").as("teacher_full_name"),
       database.ref("t.avatar_url").as("teacher_avatar_url")
@@ -688,6 +864,9 @@ export const getStudentWatchlist = async (studentId) => {
       rating_count: r.rating_count,
       enrollment_count: r.enrollment_count,
       discount_price: r.discount_price,
+      price: r.price,
+      view_count: r.view_count,
+      created_at: r.created_at,
       category: { name: r.category_name },
       teacher: {
         full_name: r.teacher_full_name,
@@ -696,7 +875,7 @@ export const getStudentWatchlist = async (studentId) => {
     },
   }));
 
-  return { user: student, watchlist };
+  return { user: { ...student, role: "student" }, watchlist };
 };
 
 //=================
@@ -778,6 +957,186 @@ export const getCourseLearningData = async (studentId, courseId) => {
     currentLecture: firstLecture,
     currentLectureIndex: firstLecture ? 1 : 0,
     notes: [],
+  };
+};
+
+//=================
+// TEACHER SETTINGS & PROFILE
+//=================
+
+async function ensureTeacherProfileRow(teacherId) {
+  const existing = await database("teacher_profiles")
+    .where({ teacher_id: teacherId })
+    .first();
+
+  if (existing) return existing;
+
+  const [created] = await database("teacher_profiles")
+    .insert({ teacher_id: teacherId })
+    .onConflict("teacher_id")
+    .ignore()
+    .returning("*");
+
+  if (created) return created;
+
+  return await database("teacher_profiles")
+    .where({ teacher_id: teacherId })
+    .first();
+}
+
+export const getTeacherSettings = async (teacherId) => {
+  const user = await database("users")
+    .where({ id: teacherId, role: "teacher" })
+    .first("id", "full_name", "email", "avatar_url", "bio");
+
+  if (!user) return null;
+
+  const profile = await ensureTeacherProfileRow(teacherId);
+
+  return {
+    user: {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      avatar_url: user.avatar_url || "",
+      bio: user.bio || "",
+      role: "teacher",
+    },
+    preferences: {
+      email_notifications: profile?.email_notifications ?? true,
+      course_reviews: profile?.course_reviews ?? true,
+    },
+    payment: {
+      bank_name: profile?.bank_name || "",
+      account_number: profile?.account_number || "",
+      account_name: profile?.account_name || "",
+    },
+  };
+};
+
+export const updateTeacherProfileInfo = async (teacherId, { full_name, avatar_url, bio }) => {
+  const now = new Date();
+  const [updated] = await database("users")
+    .where({ id: teacherId, role: "teacher" })
+    .update(
+      {
+        ...(full_name !== undefined ? { full_name } : {}),
+        ...(avatar_url !== undefined ? { avatar_url } : {}),
+        ...(bio !== undefined ? { bio } : {}),
+        updated_at: now,
+      },
+      "*"
+    );
+
+  return updated
+    ? {
+        id: updated.id,
+        full_name: updated.full_name,
+        email: updated.email,
+        avatar_url: updated.avatar_url,
+        bio: updated.bio,
+        role: "teacher",
+      }
+    : null;
+};
+
+export const updateTeacherPassword = async (teacherId, currentPassword, newPassword) => {
+  const teacher = await database("users")
+    .where({ id: teacherId, role: "teacher" })
+    .first("password_hash");
+
+  if (!teacher) {
+    return { ok: false, code: "NOT_FOUND" };
+  }
+
+  if (!teacher.password_hash) {
+    return { ok: false, code: "NO_PASSWORD_SET" };
+  }
+
+  const bcrypt = (await import("bcrypt")).default;
+
+  const isValid = await bcrypt.compare(currentPassword, teacher.password_hash);
+  if (!isValid) {
+    return { ok: false, code: "INVALID_PASSWORD" };
+  }
+
+  const newHash = await bcrypt.hash(newPassword, 10);
+  await database("users")
+    .where({ id: teacherId, role: "teacher" })
+    .update({ password_hash: newHash, updated_at: new Date() });
+
+  return { ok: true };
+};
+
+export const upsertTeacherPaymentInfo = async (teacherId, { bank_name, account_number, account_name }) => {
+  const now = new Date();
+  await database("teacher_profiles")
+    .insert({
+      teacher_id: teacherId,
+      bank_name: bank_name || null,
+      account_number: account_number || null,
+      account_name: account_name || null,
+      updated_at: now,
+    })
+    .onConflict("teacher_id")
+    .merge({
+      bank_name: bank_name || null,
+      account_number: account_number || null,
+      account_name: account_name || null,
+      updated_at: now,
+    });
+};
+
+export const updateTeacherPreferences = async (teacherId, { email_notifications, course_reviews }) => {
+  const now = new Date();
+  await database("teacher_profiles")
+    .insert({
+      teacher_id: teacherId,
+      email_notifications: email_notifications ?? true,
+      course_reviews: course_reviews ?? true,
+      updated_at: now,
+    })
+    .onConflict("teacher_id")
+    .merge({
+      email_notifications: email_notifications ?? true,
+      course_reviews: course_reviews ?? true,
+      updated_at: now,
+    });
+};
+
+export const getStudentProfileInfo = async (studentId) => {
+  const dashboard = await getStudentDashboard(studentId);
+  if (!dashboard) return null;
+
+  const enrolledCount = dashboard.stats?.enrolled_courses || 0;
+  const wishlistCount = await database("watchlist")
+    .where({ student_id: studentId })
+    .count("* as count")
+    .first();
+
+  return {
+    user: dashboard.user,
+    stats: dashboard.stats,
+    statsList: dashboard.statsList,
+    enrolledCourses: dashboard.recentCourses,
+    wishlist_count: Number(wishlistCount?.count || 0),
+  };
+};
+
+export const getTeacherProfileInfo = async (teacherId) => {
+  const dashboard = await getTeacherDashboard(teacherId);
+  if (!dashboard) return null;
+
+  const payout = await database("teacher_profiles")
+    .where({ teacher_id: teacherId })
+    .first("bank_name", "account_number", "account_name");
+
+  return {
+    user: dashboard.user,
+    stats: dashboard.stats,
+    statsList: dashboard.statsList,
+    recentCourses: dashboard.recentCourses,
+    payment: payout || {},
   };
 };
 

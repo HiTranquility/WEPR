@@ -60,6 +60,13 @@
   object-fit: cover;
 }
 
+.teacher-dashboard-page .mini-thumb {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 .teacher-dashboard-page .card-title {
   font-weight: 600;
 }

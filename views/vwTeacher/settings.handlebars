@@ -15,20 +15,20 @@
                     <form id="profileForm">
                         <div class="mb-3">
                             <label for="fullName" class="form-label">Họ và tên</label>
-                            <input type="text" class="form-control" id="fullName" value="Jose Portilla" required>
+                            <input type="text" class="form-control" id="fullName" value="{{user.full_name}}" required>
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" value="teacher@example.com" disabled>
+                            <input type="email" class="form-control" id="email" value="{{user.email}}" disabled>
                             <small class="form-text text-muted">Email không thể thay đổi</small>
                         </div>
                         <div class="mb-3">
                             <label for="avatarUrl" class="form-label">Avatar URL</label>
-                            <input type="url" class="form-control" id="avatarUrl" placeholder="https://example.com/avatar.jpg">
+                            <input type="url" class="form-control" id="avatarUrl" value="{{user.avatar_url}}" placeholder="https://example.com/avatar.jpg">
                         </div>
                         <div class="mb-3">
                             <label for="bio" class="form-label">Tiểu sử</label>
-                            <textarea class="form-control" id="bio" rows="4" placeholder="Viết về kinh nghiệm giảng dạy..."></textarea>
+                            <textarea class="form-control" id="bio" rows="4" placeholder="Viết về kinh nghiệm giảng dạy...">{{user.bio}}</textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-save"></i> Lưu thay đổi
@@ -70,15 +70,15 @@
                     <form id="paymentForm">
                         <div class="mb-3">
                             <label for="bankName" class="form-label">Tên ngân hàng</label>
-                            <input type="text" class="form-control" id="bankName" placeholder="VD: Vietcombank">
+                            <input type="text" class="form-control" id="bankName" value="{{payment.bank_name}}" placeholder="VD: Vietcombank">
                         </div>
                         <div class="mb-3">
                             <label for="accountNumber" class="form-label">Số tài khoản</label>
-                            <input type="text" class="form-control" id="accountNumber" placeholder="0123456789">
+                            <input type="text" class="form-control" id="accountNumber" value="{{payment.account_number}}" placeholder="0123456789">
                         </div>
                         <div class="mb-3">
                             <label for="accountName" class="form-label">Tên chủ tài khoản</label>
-                            <input type="text" class="form-control" id="accountName" placeholder="NGUYEN VAN A">
+                            <input type="text" class="form-control" id="accountName" value="{{payment.account_name}}" placeholder="NGUYEN VAN A">
                         </div>
                         <button type="submit" class="btn btn-success">
                             <i class="bi bi-save"></i> Lưu thông tin
@@ -93,18 +93,18 @@
                 </div>
                 <div class="card-body">
                     <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" {{#if preferences.email_notifications}}checked{{/if}}>
                         <label class="form-check-label" for="emailNotifications">
                             Nhận thông báo học viên mới qua email
                         </label>
                     </div>
                     <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" id="courseReviews" checked>
+                        <input class="form-check-input" type="checkbox" id="courseReviews" {{#if preferences.course_reviews}}checked{{/if}}>
                         <label class="form-check-label" for="courseReviews">
                             Cho phép học viên đánh giá khóa học
                         </label>
                     </div>
-                    <button type="button" class="btn btn-info">
+                    <button type="button" class="btn btn-info" id="preferenceSaveBtn">
                         <i class="bi bi-save"></i> Lưu tùy chọn
                     </button>
                 </div>
@@ -142,3 +142,85 @@
         </div>
     </div>
 </div>
+
+{{#fill_section 'js'}}
+<script>
+  function showToast(message) {
+    alert(message);
+  }
+
+  async function submitJson(url, payload) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.message || 'Có lỗi xảy ra.');
+    }
+    return data;
+  }
+
+  document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const full_name = document.getElementById('fullName').value.trim();
+    const avatar_url = document.getElementById('avatarUrl').value.trim();
+    const bio = document.getElementById('bio').value.trim();
+
+    try {
+      const result = await submitJson('/teacher/settings/profile', { full_name, avatar_url, bio });
+      showToast(result.message || 'Đã lưu thông tin.');
+    } catch (err) {
+      showToast(err.message);
+    }
+  });
+
+  document.getElementById('passwordForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const current_password = document.getElementById('currentPassword').value;
+    const new_password = document.getElementById('newPassword').value;
+    const confirm_password = document.getElementById('confirmPassword').value;
+
+    if (new_password !== confirm_password) {
+      showToast('Mật khẩu mới không khớp.');
+      return;
+    }
+
+    try {
+      const result = await submitJson('/teacher/settings/password', { current_password, new_password });
+      showToast(result.message || 'Đổi mật khẩu thành công!');
+      e.target.reset();
+    } catch (err) {
+      showToast(err.message);
+    }
+  });
+
+  document.getElementById('paymentForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const bank_name = document.getElementById('bankName').value.trim();
+    const account_number = document.getElementById('accountNumber').value.trim();
+    const account_name = document.getElementById('accountName').value.trim();
+
+    try {
+      const result = await submitJson('/teacher/settings/payment', { bank_name, account_number, account_name });
+      showToast(result.message || 'Đã lưu thông tin thanh toán.');
+    } catch (err) {
+      showToast(err.message);
+    }
+  });
+
+  document.getElementById('preferenceSaveBtn')?.addEventListener('click', async () => {
+    const email_notifications = document.getElementById('emailNotifications').checked;
+    const course_reviews = document.getElementById('courseReviews').checked;
+
+    try {
+      const result = await submitJson('/teacher/settings/preferences', { email_notifications, course_reviews });
+      showToast(result.message || 'Đã lưu tùy chọn giảng dạy.');
+    } catch (err) {
+      showToast(err.message);
+    }
+  });
+</script>
+{{/fill_section}}

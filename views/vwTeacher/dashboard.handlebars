@@ -10,20 +10,92 @@
 
   <div class="mt-5">
     <h3>Khóa học gần đây</h3>
+    {{#if recentCourses.length}}
     <div class="row g-4">
       {{#each recentCourses}}
       <div class="col-md-4">
-        <div class="card">
+        <div class="card teacher-course-card">
           <img src="{{thumbnail_url}}" class="card-img-top" alt="{{title}}">
           <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="badge bg-light text-dark text-uppercase">{{status}}</span>
+              <span class="text-muted small">Cập nhật {{formatDate last_updated}}</span>
+            </div>
             <h5 class="card-title">{{title}}</h5>
-            <p>Học viên: {{formatNumber enrollment_count}}</p>
-            <p>Đánh giá: {{rating_avg}} ⭐</p>
-            <a href="/teacher/course/{{id}}" class="btn btn-primary btn-sm">Xem chi tiết</a>
+            <div class="d-flex flex-column gap-1 text-muted small">
+              <span><i class="bi bi-people"></i> {{formatNumber enrollment_count}} học viên</span>
+              <span><i class="bi bi-star"></i> {{rating_avg}} ⭐ • {{formatNumber view_count}} lượt xem</span>
+              <span><i class="bi bi-cash"></i> Doanh thu tạm tính {{formatCurrency revenue}}</span>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+              <a href="/teacher/course/{{id}}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-speedometer"></i> Quản lý
+              </a>
+              <a href="/courses/{{id}}" class="btn btn-outline-secondary btn-sm" target="_blank">
+                <i class="bi bi-eye"></i> Xem trang học viên
+              </a>
+            </div>
           </div>
         </div>
       </div>
       {{/each}}
     </div>
+    {{else}}
+    <div class="text-center py-5 bg-light rounded">
+      <i class="bi bi-easel text-muted display-6"></i>
+      <h5 class="mt-3">Bạn chưa có khóa học nào được xuất bản</h5>
+      <p class="text-muted">Bắt đầu tạo khóa học mới để tiếp cận học viên.</p>
+      <a href="/teacher/courses" class="btn btn-primary">Quản lý khóa học</a>
+    </div>
+    {{/if}}
+  </div>
+
+  <div class="mt-5">
+    <h3 class="mb-4">Tổng quan khóa học của tôi</h3>
+    {{#if allCourses.length}}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Khóa học</th>
+            <th>Trạng thái</th>
+            <th>Học viên</th>
+            <th>Đánh giá</th>
+            <th>Doanh thu</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each allCourses}}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <img src="{{thumbnail_url}}" alt="{{title}}" class="mini-thumb">
+                <div>
+                  <div class="fw-semibold">{{title}}</div>
+                  <div class="text-muted small">{{category.name}}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge bg-light text-dark text-uppercase">{{status}}</span></td>
+            <td>{{formatNumber enrollment_count}}</td>
+            <td>⭐ {{rating_avg}}</td>
+            <td>{{formatCurrency revenue}}</td>
+            <td class="text-end">
+              <a href="/teacher/course/{{id}}" class="btn btn-sm btn-outline-primary">Quản lý</a>
+            </td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+    {{else}}
+    <div class="text-center py-4 bg-light rounded">
+      <i class="bi bi-collection-play text-muted fs-1"></i>
+      <h5 class="mt-2">Chưa có khóa học nào</h5>
+      <p class="text-muted">Bắt đầu bằng việc tạo khóa học đầu tiên của bạn.</p>
+      <a href="/teacher/courses" class="btn btn-outline-primary">Tạo khóa học</a>
+    </div>
+    {{/if}}
   </div>
 </div>

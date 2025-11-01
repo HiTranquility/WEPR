@@ -1,0 +1,128 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/student/student-profile.css">
+{{/fill_section}}
+
+<section class="profile-hero">
+  <div class="container">
+    <div class="profile-card">
+      <div class="profile-avatar-wrapper">
+        <img src="{{user.avatar_url}}" alt="{{user.full_name}}" class="profile-avatar">
+      </div>
+      <div class="profile-info">
+        <h1 class="profile-name">{{user.full_name}}</h1>
+        <p class="profile-email"><i class="bi bi-envelope"></i> {{user.email}}</p>
+        {{#if user.bio}}
+        <p class="profile-bio">{{user.bio}}</p>
+        {{else}}
+        <p class="profile-bio text-muted">Bạn chưa cập nhật tiểu sử cá nhân.</p>
+        {{/if}}
+        <div class="profile-actions">
+          <a href="/student/settings" class="btn btn-outline-light">
+            <i class="bi bi-gear"></i> Cập nhật thông tin
+          </a>
+          <a href="/student/my-courses" class="btn btn-primary">
+            <i class="bi bi-book"></i> Khóa học của tôi
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="profile-content py-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h4 class="card-title mb-4">Thống kê học tập</h4>
+            <div class="row g-3">
+              {{#each statsList}}
+              <div class="col-sm-6">
+                <div class="stat-tile">
+                  <span class="stat-label">{{label}}</span>
+                  <span class="stat-value">{{value}}</span>
+                </div>
+              </div>
+              {{/each}}
+              <div class="col-sm-6">
+                <div class="stat-tile">
+                  <span class="stat-label">Khoá học yêu thích</span>
+                  <span class="stat-value">{{wishlist_count}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h4 class="card-title mb-0">Khóa học gần đây</h4>
+              <a href="/student/my-courses" class="text-decoration-none">Xem tất cả</a>
+            </div>
+            {{#if enrolledCourses.length}}
+            <div class="recent-course-list">
+              {{#each enrolledCourses}}
+              <div class="recent-course-item">
+                <img src="{{thumbnail_url}}" alt="{{title}}">
+                <div class="recent-course-info">
+                  <h5>{{title}}</h5>
+                  <p class="text-muted mb-1">{{teacher.full_name}}</p>
+                  <div class="recent-meta">
+                    <span><i class="bi bi-calendar3"></i> {{formatDate enrolled_at}}</span>
+                    <span><i class="bi bi-bar-chart"></i> {{progress}}% tiến độ</span>
+                  </div>
+                </div>
+                <a href="/student/learn/{{id}}" class="btn btn-outline-primary btn-sm">
+                  {{#if (eq progress 0)}}Bắt đầu{{else}}Tiếp tục{{/if}}
+                </a>
+              </div>
+              {{/each}}
+            </div>
+            {{else}}
+            <div class="empty-state text-center">
+              <i class="bi bi-book"></i>
+              <h5>Bạn chưa tham gia khóa học nào</h5>
+              <p class="text-muted">Khám phá các khóa học nổi bật và bắt đầu hành trình học tập của bạn.</p>
+              <a href="/courses" class="btn btn-primary">Khám phá ngay</a>
+            </div>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title mb-3">Truy cập nhanh</h5>
+            <div class="quick-links">
+              <a href="/student/watchlist" class="quick-link">
+                <i class="bi bi-heart"></i>
+                <div>
+                  <strong>Danh sách yêu thích</strong>
+                  <span>Quản lý các khóa học bạn quan tâm</span>
+                </div>
+              </a>
+              <a href="/student/dashboard" class="quick-link">
+                <i class="bi bi-speedometer2"></i>
+                <div>
+                  <strong>Bảng điều khiển</strong>
+                  <span>Theo dõi tiến độ học tập tổng quan</span>
+                </div>
+              </a>
+              <a href="/student/settings" class="quick-link">
+                <i class="bi bi-person-gear"></i>
+                <div>
+                  <strong>Cài đặt tài khoản</strong>
+                  <span>Cập nhật thông tin và bảo mật</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+

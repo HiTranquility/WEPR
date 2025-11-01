@@ -1,5 +1,20 @@
 import express from 'express';
-import { getTeacherDashboard, getTeacherCourses, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
+import {
+  getTeacherDashboard,
+  getTeacherCourses,
+  getTeacherCourseDetail,
+  getTeacherManageCourse,
+  getTeacherCourseContent,
+  getCourseSectionInfo,
+  getCourseInfoForSection,
+  getCourseDetailForEdit,
+  getTeacherSettings,
+  updateTeacherProfileInfo,
+  updateTeacherPassword,
+  upsertTeacherPaymentInfo,
+  updateTeacherPreferences,
+  getTeacherProfileInfo
+} from '../models/user.model.js';
 import { getAllCategories } from '../models/course-category.model.js';
 import { ensureAuthenticated } from '../middlewares/teacher.middleware.js';
 import { requireRole } from '../middlewares/teacher.middleware.js';
@@ -15,7 +30,6 @@ router.get("/teacher/dashboard", async (req, res, next) => {
     if (!teacherId) return res.redirect('/signin');
 
     const data = await getTeacherDashboard(teacherId);
-    const allCategories = await getAllCategories({ includeCounts: false });
 
     if (!data) {
       return res.status(404).render("404", {
@@ -27,8 +41,7 @@ router.get("/teacher/dashboard", async (req, res, next) => {
 
     res.render("vwTeacher/dashboard", {
       title: "Trang chủ giảng viên",
-      ...data, // teacher, stats, recentCourses
-      allCategories,
+      ...data,
       searchQuery: null,
       layout: "main",
     });
@@ -43,7 +56,6 @@ router.get('/teacher/courses', async function(req, res, next) {
     if (!teacherId) return res.redirect('/signin');
 
     const data = await getTeacherCourses(teacherId);
-    const allCategories = await getAllCategories({ includeCounts: false });
 
     if (!data) {
       return res.status(404).render("404", {
@@ -56,9 +68,34 @@ router.get('/teacher/courses', async function(req, res, next) {
     res.render('vwTeacher/course-list', {
       title: 'Khóa học của tôi - Giảng viên',
       courses: data,
-      allCategories,
       searchQuery: null,
       layout: "main",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/teacher/profile', async function(req, res, next) {
+  try {
+    const teacherId = req.user && req.user.id ? req.user.id : null;
+    if (!teacherId) return res.redirect('/signin');
+
+    const data = await getTeacherProfileInfo(teacherId);
+
+    if (!data) {
+      return res.status(404).render('404', {
+        title: 'Không tìm thấy giảng viên',
+        message: 'Tài khoản giảng viên không tồn tại.',
+        layout: 'main'
+      });
+    }
+
+    res.render('vwTeacher/profile', {
+      title: 'Thông tin giảng viên',
+      ...data,
+      searchQuery: null,
+      layout: 'main'
     });
   } catch (err) {
     next(err);
@@ -246,15 +283,108 @@ router.get('/teacher/course/:courseId/content/:contentId/edit', async function(r
 
 router.get('/teacher/settings', async function(req, res, next) {
   try {
-      const allCategories = await getAllCategories({ includeCounts: false });
-      res.render('vwTeacher/settings', {
-          title: 'Cài đặt tài khoản',
-          allCategories,
-          searchQuery: null,
-          layout: 'main'
+    const teacherId = req.user && req.user.id ? req.user.id : null;
+    if (!teacherId) return res.redirect('/signin');
+
+    const settings = await getTeacherSettings(teacherId);
+
+    if (!settings) {
+      return res.status(404).render('404', {
+        title: 'Không tìm thấy giảng viên',
+        message: 'Tài khoản giảng viên không tồn tại.',
+        layout: 'main'
       });
+    }
+
+    res.render('vwTeacher/settings', {
+      title: 'Cài đặt tài khoản',
+      ...settings,
+      searchQuery: null,
+      layout: 'main'
+    });
   } catch (err) {
       next(err);
+  }
+});
+
+router.post('/teacher/settings/profile', async function(req, res, next) {
+  try {
+    const teacherId = req.user?.id;
+    if (!teacherId) {
+      return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập.' });
+    }
+
+    const { full_name, avatar_url, bio } = req.body;
+    const updated = await updateTeacherProfileInfo(teacherId, { full_name, avatar_url, bio });
+    if (!updated) {
+      return res.status(400).json({ success: false, message: 'Không thể cập nhật thông tin.' });
+    }
+    res.json({ success: true, message: 'Cập nhật thông tin thành công!', user: updated });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/teacher/settings/password', async function(req, res, next) {
+  try {
+    const teacherId = req.user?.id;
+    if (!teacherId) {
+      return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập.' });
+    }
+
+    const { current_password, new_password } = req.body;
+    if (!current_password || !new_password) {
+      return res.status(400).json({ success: false, message: 'Thiếu mật khẩu.' });
+    }
+
+    const result = await updateTeacherPassword(teacherId, current_password, new_password);
+    if (!result.ok) {
+      const messageMap = {
+        INVALID_PASSWORD: 'Mật khẩu hiện tại không đúng.',
+        NOT_FOUND: 'Không tìm thấy tài khoản giảng viên.',
+        NO_PASSWORD_SET: 'Tài khoản chưa thiết lập mật khẩu.',
+      };
+      return res.status(400).json({ success: false, message: messageMap[result.code] || 'Không thể đổi mật khẩu.' });
+    }
+
+    res.json({ success: true, message: 'Đổi mật khẩu thành công!' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/teacher/settings/payment', async function(req, res, next) {
+  try {
+    const teacherId = req.user?.id;
+    if (!teacherId) {
+      return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập.' });
+    }
+
+    const { bank_name, account_number, account_name } = req.body;
+    await upsertTeacherPaymentInfo(teacherId, { bank_name, account_number, account_name });
+
+    res.json({ success: true, message: 'Đã lưu thông tin thanh toán.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/teacher/settings/preferences', async function(req, res, next) {
+  try {
+    const teacherId = req.user?.id;
+    if (!teacherId) {
+      return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập.' });
+    }
+
+    const { email_notifications, course_reviews } = req.body;
+    await updateTeacherPreferences(teacherId, {
+      email_notifications: email_notifications === true || email_notifications === 'true',
+      course_reviews: course_reviews === true || course_reviews === 'true',
+    });
+
+    res.json({ success: true, message: 'Đã cập nhật tùy chọn giảng dạy.' });
+  } catch (err) {
+    next(err);
   }
 });
 
