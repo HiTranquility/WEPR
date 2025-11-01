@@ -28,6 +28,9 @@ export const hbsHelpers = {
   isBestSeller(enrollmentCount) {
     return enrollmentCount > 1000;
   },
+  hasDiscount(price, discountPrice) {
+    return discountPrice && discountPrice < price;
+  },
   truncate(str, length) {
     if (!str || str.length <= length) return str;
     return str.substring(0, length) + '...';
