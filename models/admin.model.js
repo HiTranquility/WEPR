@@ -102,6 +102,7 @@ export const getAllAdminUsers = async () => {
       "full_name",
       "email",
       "role",
+      "status",
       "avatar_url",
       "created_at"
     )
@@ -112,6 +113,7 @@ export const getAllAdminUsers = async () => {
     full_name: r.full_name,
     email: r.email,
     role: r.role,
+    status: r.status || 'active',
     avatar_url: r.avatar_url || "https://cdn-icons-png.flaticon.com/512/1077/1077114.png",
     created_at: r.created_at,
   }));
