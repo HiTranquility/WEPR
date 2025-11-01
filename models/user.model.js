@@ -1,6 +1,8 @@
 import database from "../utils/database.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { createOtp, verifyOtp, consumeOtp } from "../utils/otp.js";
+import { sendOtpEmail } from "../utils/mailer.js";
 
 export const baseQuery = database("users");
 
@@ -112,6 +114,40 @@ export const findOrCreateGoogleUser = async ({ email, fullName, googleId, defaul
 // models/user.model.js
 export const getUserByEmail = async (email) => {
   return await database("users").where('email', email).first();
+};
+
+export const updatePasswordByEmail = async (email, passwordHash) => {
+  return await database('users')
+    .where({ email })
+    .update({ password_hash: passwordHash })
+    .returning('*');
+};
+
+// =================
+// PASSWORD RESET FLOW (encapsulated)
+// =================
+
+export const requestPasswordReset = async (email) => {
+  const user = await getUserByEmail(String(email).trim());
+  if (!user) return false;
+  const { otp } = createOtp(user.email);
+  await sendOtpEmail(user.email, otp);
+  return true;
+};
+
+export const verifyPasswordResetOtp = async (email, otp) => {
+  return verifyOtp(String(email).trim(), otp);
+};
+
+export const resetPasswordWithOtp = async (email, otp, newPassword) => {
+  const ok = verifyOtp(String(email).trim(), otp);
+  if (!ok) return false;
+  const user = await getUserByEmail(String(email).trim());
+  if (!user) return false;
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await updatePasswordByEmail(user.email, hashed);
+  consumeOtp(user.email);
+  return true;
 };
 
 //=================

@@ -59,6 +59,14 @@ router.get('/admin/users', async function(req, res, next) {
     } catch (err) { next(err); }
 });
 
+router.get('/admin/settings', function(req, res) {
+    res.render('vwAdmin/settings', {
+        layout: 'admin',
+        title: 'Cài đặt hệ thống',
+        activeMenu: 'settings'
+    });
+});
+
 
 router.post('/admin/categories', function(req, res) {
     res.json({ success: true, message: 'Tạo lĩnh vực thành công!' });

@@ -57,27 +57,34 @@ router.get("/student/my-courses", async (req, res, next) => {
     }
 });
 
-router.get('/student/wishlist', async function(req, res, next) {
-    try {
-        const studentId = req.user && req.user.id ? req.user.id : null;
-        if (!studentId) return res.redirect('/signin');
-
-        const data = await getStudentWatchlist(studentId);
-        if (!data) {
-          return res.status(404).render('404', { title: 'Không tìm thấy', message: 'Không tìm thấy danh sách yêu thích', layout: 'main' });
-        }
-
-        const allCategories = await getAllCategories({ includeCounts: false });
-        res.render('vwStudent/wishlist', {
-            title: 'Danh sách yêu thích',
-            user: data.user,
-            watchlist: data.watchlist,
-            allCategories,
-            layout: 'main'
-        });
-    } catch (err) {
-        next(err);
-    }
+router.get('/student/watchlist', function(req, res) {
+    res.render('vwStudent/wishlist', {
+        title: 'Danh sách yêu thích',
+        user: {
+            full_name: 'Nguyễn Văn A',
+            email: 'student@example.com',
+            avatar_url: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg'
+        },
+        watchlist: [
+            {
+                id: 1,
+                course: {
+                    id: 2,
+                    title: 'The Complete JavaScript Course 2024',
+                    thumbnail_url: 'https://images.pexels.com/photos/4164418/pexels-photo-4164418.jpeg',
+                    rating_avg: 4.7,
+                    rating_count: 5234,
+                    enrollment_count: 35000,
+                    discount_price: 399000,
+                    category: { name: 'Lập trình' },
+                    teacher: {
+                        full_name: 'Jonas Schmedtmann',
+                        avatar_url: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg'
+                    }
+                }
+            }
+        ]
+    });
 });
 
 router.get('/student/learn/:courseId', async function(req, res, next) {
@@ -96,6 +103,20 @@ router.get('/student/learn/:courseId', async function(req, res, next) {
     } catch (err) {
         next(err);
     }
+});
+
+router.get('/student/settings', async function(req, res, next) {
+  try {
+      const allCategories = await getAllCategories({ includeCounts: false });
+      res.render('vwStudent/settings', {
+          title: 'Cài đặt tài khoản',
+          allCategories,
+          searchQuery: null,
+          layout: 'main'
+      });
+  } catch (err) {
+      next(err);
+  }
 });
 
 router.post('/student/profile', function(req, res) {
