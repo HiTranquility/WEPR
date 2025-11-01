@@ -19,3 +19,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+  const sortSelect = document.getElementById('sortBy');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      const currentUrl = new URL(window.location);
+      currentUrl.searchParams.set('sort', this.value);
+      window.location.href = currentUrl.toString();
+    });
+  }
+});

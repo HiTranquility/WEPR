@@ -141,3 +141,105 @@ router.delete('/student/learn/:courseId/notes/:noteId', function (req, res) {
 });
 
 export default router;
+
+router.post('/student/watchlist/:courseId', async function(req, res, next) {
+  try {
+    const studentId = req.user.id;
+    const { courseId } = req.params;
+    
+    await database('watchlist').insert({
+      student_id: studentId,
+      course_id: courseId,
+      added_at: new Date()
+    }).onConflict(['student_id', 'course_id']).ignore();
+    
+    res.json({ success: true, message: 'Đã thêm vào danh sách yêu thích!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.delete('/student/watchlist/:courseId', async function(req, res, next) {
+  try {
+    const studentId = req.user.id;
+    const { courseId } = req.params;
+    
+    await database('watchlist')
+      .where({ student_id: studentId, course_id: courseId })
+      .del();
+    
+    res.json({ success: true, message: 'Đã xóa khỏi danh sách yêu thích!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.post('/student/enroll/:courseId', async function(req, res, next) {
+  try {
+    const studentId = req.user.id;
+    const { courseId } = req.params;
+    
+    const existing = await database('enrollments')
+      .where({ student_id: studentId, course_id: courseId })
+      .first();
+    
+    if (existing) {
+      return res.json({ success: false, message: 'Bạn đã đăng ký khóa học này rồi!' });
+    }
+    
+    await database('enrollments').insert({
+      student_id: studentId,
+      course_id: courseId,
+      enrolled_at: new Date()
+    });
+    
+    await database('courses')
+      .where({ id: courseId })
+      .increment('enrollment_count', 1);
+    
+    res.json({ success: true, message: 'Đăng ký khóa học thành công!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.post('/student/review/:courseId', async function(req, res, next) {
+  try {
+    const studentId = req.user.id;
+    const { courseId } = req.params;
+    const { rating, comment } = req.body;
+    
+    const enrolled = await database('enrollments')
+      .where({ student_id: studentId, course_id: courseId })
+      .first();
+    
+    if (!enrolled) {
+      return res.json({ success: false, message: 'Bạn phải đăng ký khóa học trước khi đánh giá!' });
+    }
+    
+    await database('reviews').insert({
+      student_id: studentId,
+      course_id: courseId,
+      rating: rating,
+      comment: comment,
+      created_at: new Date()
+    }).onConflict(['student_id', 'course_id']).merge();
+    
+    const reviews = await database('reviews')
+      .where({ course_id: courseId })
+      .select('rating');
+    
+    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    
+    await database('courses')
+      .where({ id: courseId })
+      .update({
+        rating_avg: avgRating.toFixed(1),
+        rating_count: reviews.length
+      });
+    
+    res.json({ success: true, message: 'Đánh giá thành công!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
