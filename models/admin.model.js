@@ -1,4 +1,72 @@
 import database from '../utils/database.js';
+import bcrypt from 'bcrypt';
+
+const baseQuery = database('users');
+
+export async function getAdminByEmailForAuth(email) {
+  if (!email) return null;
+  const columns = ['id', 'full_name', 'email', 'role', 'status', 'password_hash'];
+  try {
+    return await baseQuery
+      .clone()
+      .where({ email })
+      .first(columns);
+  } catch (err) {
+    if (err?.code === '42703') {
+      const fallbackCols = columns.filter((col) => col !== 'status');
+      const record = await baseQuery
+        .clone()
+        .where({ email })
+        .first(fallbackCols);
+      return record ? { ...record, status: 'active' } : null;
+    }
+    throw err;
+  }
+}
+
+export async function verifyAdminPassword(password, passwordHash) {
+  if (!password || !passwordHash) return false;
+  return await bcrypt.compare(password, passwordHash);
+}
+
+export function buildAdminAuthPayload(admin) {
+  if (!admin) return null;
+  return {
+    id: admin.id,
+    role: admin.role,
+    name: admin.full_name,
+    email: admin.email,
+  };
+}
+
+export async function authenticateAdmin({ email, password }) {
+  if (!email || !password) {
+    return { ok: false, code: 'MISSING_CREDENTIALS' };
+  }
+
+  const adminRecord = await getAdminByEmailForAuth(email);
+  if (!adminRecord) {
+    return { ok: false, code: 'NOT_FOUND' };
+  }
+
+  const role = String(adminRecord.role || '').toLowerCase();
+  if (role !== 'admin') {
+    return { ok: false, code: 'FORBIDDEN' };
+  }
+
+  const status = adminRecord.status || 'active';
+  if (status === 'blocked') {
+    return { ok: false, code: 'BLOCKED' };
+  }
+
+  const passwordValid = await verifyAdminPassword(password, adminRecord.password_hash);
+  if (!passwordValid) {
+    return { ok: false, code: 'INVALID_PASSWORD' };
+  }
+
+  const { password_hash: _ignored, ...admin } = adminRecord;
+  return { ok: true, admin };
+}
 //=================
 // ADMINS - CRUD
 //=================
@@ -96,17 +164,32 @@ export const getAllAdminCourses = async () => {
 //=================
 
 export const getAllAdminUsers = async () => {
-  const rows = await database("users")
-    .select(
-      "id",
-      "full_name",
-      "email",
-      "role",
-      "status",
-      "avatar_url",
-      "created_at"
-    )
-    .orderBy("created_at", "desc");
+  const columns = [
+    "id",
+    "full_name",
+    "email",
+    "role",
+    "status",
+    "avatar_url",
+    "created_at",
+  ];
+
+  const rows = await (async () => {
+    try {
+      return await database("users")
+        .select(columns)
+        .orderBy("created_at", "desc");
+    } catch (err) {
+      if (err?.code === '42703') {
+        const fallbackCols = columns.filter(col => col !== "status");
+        return await database("users")
+          .select(fallbackCols)
+          .orderBy("created_at", "desc")
+          .then(result => result.map(row => ({ ...row, status: 'active' })));
+      }
+      throw err;
+    }
+  })();
 
   return rows.map((r) => ({
     id: r.id,
@@ -146,7 +229,7 @@ export const getAdminDashboardStats = async () => {
 
   // 🔹 Doanh thu tạm tính (giả định = enrollment_count * discount_price)
   const [{ total_revenue }] = await database("courses")
-    .sum(database.raw("COALESCE(enrollment_count, 0) * COALESCE(discount_price, 0) as total_revenue"));
+    .select(database.raw("SUM(COALESCE(enrollment_count, 0) * COALESCE(discount_price, 0)) AS total_revenue"));
 
   // 🔹 5 hoạt động gần đây (giả lập dựa theo thời gian tạo user/course)
   const recentUsers = await database("users")

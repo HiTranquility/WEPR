@@ -13,7 +13,7 @@
   <div class="container-fluid">
     <div class="data-table">
       <div class="table-toolbar">
-        <h5 class="mb-0">Danh sách người dùng ({{users.length}})</h5>
+        <h5 class="mb-0" id="usersCountLabel">Danh sách người dùng (<span id="usersCountNumber">{{users.length}}</span>)</h5>
         <div class="d-flex gap-2">
           <select class="form-select form-select-sm" style="width: 150px;" onchange="filterByRole(this.value)">
             <option value="">Tất cả vai trò</option>
@@ -28,20 +28,21 @@
       </div>
   
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0" id="usersTable">
           <thead class="table-light">
             <tr>
               <th style="width: 60px;">Avatar</th>
               <th>Họ tên</th>
               <th>Email</th>
               <th>Vai trò</th>
+              <th>Trạng thái</th>
               <th>Ngày tham gia</th>
               <th>Thao tác</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="usersTableBody">
             {{#each users}}
-            <tr>
+            <tr data-user-id="{{id}}" data-role="{{role}}" data-status="{{status}}" data-name="{{full_name}}" data-email="{{email}}" data-created="{{formatDate created_at}}">
               <td>
                 <img src="{{avatar_url}}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" alt="{{full_name}}">
               </td>
@@ -55,17 +56,22 @@
                   {{/if}}
                 </span>
               </td>
+              <td>
+                <span class="badge {{#if (eq status 'blocked')}}bg-danger{{else}}bg-primary-subtle text-primary-emphasis{{/if}}">
+                  {{#if (eq status 'blocked')}}Đã khóa{{else}}Đang hoạt động{{/if}}
+                </span>
+              </td>
               <td>{{formatDate created_at}}</td>
               <td>
                 <div class="action-buttons">
                   <button class="btn btn-sm btn-outline-primary" onclick="viewUser('{{id}}')">
                     <i class="bi bi-eye"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-warning" onclick="editUser('{{id}}', '{{full_name}}', '{{email}}', '{{role}}')">
+                  <button class="btn btn-sm btn-outline-warning" onclick="editUser('{{id}}')">
                     <i class="bi bi-pencil"></i>
                   </button>
                   {{#if (ne role 'admin')}}
-                  <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('{{id}}', '{{full_name}}')">
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('{{id}}')">
                     <i class="bi bi-trash"></i>
                   </button>
                   {{/if}}
@@ -147,6 +153,13 @@
           <option value="admin">Quản trị viên</option>
         </select>
       </div>
+      <div class="mb-3">
+        <label class="form-label">Trạng thái *</label>
+        <select class="form-select" id="editStatus" required>
+          <option value="active">Đang hoạt động</option>
+          <option value="blocked">Đã khóa</option>
+        </select>
+      </div>
     </form>
   </div>
   <div class="modal-footer">
@@ -156,35 +169,200 @@
   </div>
   
 </div>
+
+  <div class="modal fade" id="viewUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Thông tin người dùng</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <img id="viewUserAvatar" src="" alt="Avatar" class="rounded-circle" style="width: 64px; height: 64px; object-fit: cover;">
+            <div>
+              <h5 class="mb-1" id="viewUserName"></h5>
+              <span class="badge" id="viewUserRole"></span>
+            </div>
+          </div>
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Email</dt>
+            <dd class="col-sm-8" id="viewUserEmail"></dd>
+            <dt class="col-sm-4">Trạng thái</dt>
+            <dd class="col-sm-8" id="viewUserStatus"></dd>
+            <dt class="col-sm-4">Ngày tham gia</dt>
+            <dd class="col-sm-8" id="viewUserCreated"></dd>
+          </dl>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 {{#fill_section 'js'}}
 <script>
+  const notifications = {
+    show(message, variant = 'success') {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `
+        <div class="alert alert-${variant} alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow" role="alert" style="z-index:1055; min-width:260px;">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+      const alertEl = wrapper.firstElementChild;
+      document.body.appendChild(alertEl);
+      setTimeout(() => {
+        if (alertEl) bootstrap.Alert.getOrCreateInstance(alertEl).close();
+      }, 4000);
+    }
+  };
+
+  const roleLabels = {
+    admin: { text: 'Quản trị viên', badge: 'bg-danger' },
+    teacher: { text: 'Giảng viên', badge: 'bg-success' },
+    student: { text: 'Học viên', badge: 'bg-primary' }
+  };
+
   function filterByRole(role) {
-    alert('Chức năng lọc theo vai trò đang được phát triển');
+    const rows = document.querySelectorAll('#usersTableBody tr');
+    rows.forEach(row => {
+      if (!role || row.dataset.role === role) {
+        row.classList.remove('d-none');
+      } else {
+        row.classList.add('d-none');
+      }
+    });
   }
 
-  function saveUser() {
-    alert('Chức năng thêm người dùng đang được phát triển');
+  async function saveUser() {
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+
+    if (!fullName || !email || !password) {
+      return notifications.show('Vui lòng nhập đầy đủ thông tin bắt buộc.', 'warning');
+    }
+
+    try {
+      const res = await fetch('/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: fullName, email, password, role })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Không thể tạo người dùng.');
+
+      notifications.show('Tạo người dùng mới thành công!');
+      document.getElementById('addUserForm').reset();
+      bootstrap.Modal.getInstance(document.getElementById('addUserModal'))?.hide();
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      notifications.show(err.message || 'Có lỗi xảy ra khi tạo người dùng.', 'danger');
+    }
   }
 
   function viewUser(userId) {
-    alert('Chức năng xem chi tiết người dùng đang được phát triển');
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    if (!row) return;
+
+    const role = row.dataset.role;
+    const status = row.dataset.status || 'active';
+
+    document.getElementById('viewUserAvatar').src = row.querySelector('img')?.src || '';
+    document.getElementById('viewUserName').textContent = row.dataset.name || '';
+    document.getElementById('viewUserEmail').textContent = row.dataset.email || '';
+    document.getElementById('viewUserStatus').textContent = status === 'blocked' ? 'Đã khóa tài khoản' : 'Đang hoạt động';
+    document.getElementById('viewUserCreated').textContent = row.dataset.created || '';
+
+    const roleBadge = roleLabels[role] || roleLabels.student;
+    const badgeEl = document.getElementById('viewUserRole');
+    badgeEl.className = `badge ${roleBadge.badge}`;
+    badgeEl.textContent = roleBadge.text;
+
+    new bootstrap.Modal(document.getElementById('viewUserModal')).show();
   }
 
-  function editUser(id, fullName, email, role) {
+  function editUser(id) {
+    const row = document.querySelector(`tr[data-user-id="${id}"]`);
+    if (!row) return;
+    const status = row?.dataset.status || 'active';
+
     document.getElementById('editUserId').value = id;
-    document.getElementById('editFullName').value = fullName;
-    document.getElementById('editEmail').value = email;
-    document.getElementById('editRole').value = role;
+    document.getElementById('editFullName').value = row.dataset.name || '';
+    document.getElementById('editEmail').value = row.dataset.email || '';
+    document.getElementById('editRole').value = row.dataset.role || 'student';
+    document.getElementById('editStatus').value = status;
+
     new bootstrap.Modal(document.getElementById('editUserModal')).show();
   }
 
-  function updateUser() {
-    alert('Chức năng cập nhật người dùng đang được phát triển');
+  async function updateUser() {
+    const id = document.getElementById('editUserId').value;
+    const full_name = document.getElementById('editFullName').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    const role = document.getElementById('editRole').value;
+    const status = document.getElementById('editStatus').value;
+
+    if (!id || !full_name || !email) {
+      return notifications.show('Vui lòng điền đầy đủ thông tin.', 'warning');
+    }
+
+    try {
+      const res = await fetch(`/admin/users/${id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name, email, role, status })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Không thể cập nhật người dùng.');
+
+      const row = document.querySelector(`tr[data-user-id="${id}"]`);
+      if (row) {
+        row.dataset.name = full_name;
+        row.dataset.email = email;
+        row.dataset.role = role;
+        row.dataset.status = status;
+
+        row.querySelector('td:nth-child(2) strong').textContent = full_name;
+        row.querySelector('td:nth-child(3)').textContent = email;
+
+        const roleBadge = roleLabels[role] || roleLabels.student;
+        const roleSpan = row.querySelector('td:nth-child(4) span');
+        roleSpan.className = `badge ${roleBadge.badge}`;
+        roleSpan.textContent = roleBadge.text;
+
+        const statusSpan = row.querySelector('td:nth-child(5) span');
+        statusSpan.className = `badge ${status === 'blocked' ? 'bg-danger' : 'bg-primary-subtle text-primary-emphasis'}`;
+        statusSpan.textContent = status === 'blocked' ? 'Đã khóa' : 'Đang hoạt động';
+      }
+
+      notifications.show('Cập nhật người dùng thành công!');
+      bootstrap.Modal.getInstance(document.getElementById('editUserModal'))?.hide();
+    } catch (err) {
+      notifications.show(err.message || 'Có lỗi xảy ra khi cập nhật.', 'danger');
+    }
   }
 
-  function deleteUser(userId, fullName) {
-    if (confirm(`Bạn có chắc muốn xóa người dùng "${fullName}"?`)) {
-      alert('Chức năng xóa người dùng đang được phát triển');
+  async function deleteUser(userId) {
+    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+    const fullName = row?.dataset.name || 'người dùng';
+    if (!confirm(`Bạn có chắc muốn xóa người dùng "${fullName}"?`)) return;
+
+    try {
+      const res = await fetch(`/admin/users/${userId}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Không thể xóa người dùng.');
+
+      const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+      row?.remove();
+      const countEl = document.getElementById('usersCountNumber');
+      if (countEl) countEl.textContent = document.querySelectorAll('#usersTableBody tr').length;
+      notifications.show('Đã xóa người dùng thành công!');
+    } catch (err) {
+      notifications.show(err.message || 'Có lỗi xảy ra khi xóa người dùng.', 'danger');
     }
   }
 </script>

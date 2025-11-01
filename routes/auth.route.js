@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import passport from '../utils/passport.js';
 import { findOrCreateGoogleUser, buildAuthPayload, getDashboardRedirectByRole, registerLocalUser, getUserByEmail } from "../models/user.model.js";
+import { authenticateAdmin, buildAdminAuthPayload } from "../models/admin.model.js";
 import {
   signAccessToken,
   signRefreshToken,
@@ -253,30 +254,26 @@ router.post('/admin/login', async function(req, res) {
       return res.redirect('/admin/login?error=Vui lòng nhập đầy đủ thông tin');
     }
 
-    const user = await getUserByEmail(email);
+    const authResult = await authenticateAdmin({ email, password });
 
-    if (!user) {
-      return res.redirect('/admin/login?error=Email không tồn tại');
+    if (!authResult.ok) {
+      const messageMap = {
+        NOT_FOUND: 'Email không tồn tại',
+        FORBIDDEN: 'Bạn không có quyền truy cập',
+        BLOCKED: 'Tài khoản đã bị khóa',
+        INVALID_PASSWORD: 'Mật khẩu không đúng',
+        MISSING_CREDENTIALS: 'Vui lòng nhập đầy đủ thông tin',
+      };
+      const errorMessage = messageMap[authResult.code] || 'Có lỗi xảy ra';
+      return res.redirect(`/admin/login?error=${encodeURIComponent(errorMessage)}`);
     }
 
-    if (user.role !== 'admin') {
-      return res.redirect('/admin/login?error=Bạn không có quyền truy cập');
-    }
-
-    if (user.status === 'blocked') {
-      return res.redirect('/admin/login?error=Tài khoản đã bị khóa');
-    }
-
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) {
-      return res.redirect('/admin/login?error=Mật khẩu không đúng');
-    }
-
-    const payload = buildAuthPayload(user);
+    const admin = authResult.admin;
+    const payload = buildAdminAuthPayload(admin) || buildAuthPayload(admin);
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
 
-    await addRefreshToken(user.id, refreshToken);
+    await addRefreshToken(admin.id, refreshToken);
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,
@@ -286,8 +283,7 @@ router.post('/admin/login', async function(req, res) {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
-
-    res.redirect('/admin/dashboard');
+    return res.redirect('/admin/dashboard');
   } catch (err) {
     console.error('Admin login error:', err);
     res.redirect('/admin/login?error=Có lỗi xảy ra');

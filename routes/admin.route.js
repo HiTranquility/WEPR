@@ -4,9 +4,9 @@ import {getAdminDashboardStats, getAllAdminCategories, getAllAdminCourses, getAl
 import database from '../utils/database.js';
 const router = express.Router();
 
-const adminAuth = [ensureAuthenticated, requireRole('admin')];
+router.use('/admin', ensureAuthenticated, requireRole('admin'));
 
-router.get('/admin/dashboard', ...adminAuth, async function(req, res, next) {
+router.get('/admin/dashboard', async function(req, res, next) {
   try {
     const data = await getAdminDashboardStats();
     res.render('vwAdmin/dashboard', {
@@ -22,7 +22,7 @@ router.get('/admin/dashboard', ...adminAuth, async function(req, res, next) {
   }
 });
 
-router.get('/admin/categories', ...adminAuth, async function(req, res, next) {
+router.get('/admin/categories', async function(req, res, next) {
     try {
         const categories = await getAllAdminCategories();
         res.render('vwAdmin/categories', {
@@ -34,7 +34,7 @@ router.get('/admin/categories', ...adminAuth, async function(req, res, next) {
     } catch (err) { next(err); }
 });
 
-router.get('/admin/courses', ...adminAuth, async function(req, res, next) {
+router.get('/admin/courses', async function(req, res, next) {
     try {
         const courses = await getAllAdminCourses();
         const categories = await getAllAdminCategories();
@@ -48,7 +48,7 @@ router.get('/admin/courses', ...adminAuth, async function(req, res, next) {
     } catch (err) { next(err); }
 });
 
-router.get('/admin/users', ...adminAuth, async function(req, res, next) {
+router.get('/admin/users', async function(req, res, next) {
     try {
         const users = await getAllAdminUsers();
         res.render('vwAdmin/users', {
@@ -60,7 +60,7 @@ router.get('/admin/users', ...adminAuth, async function(req, res, next) {
     } catch (err) { next(err); }
 });
 
-router.get('/admin/settings', ...adminAuth, function(req, res) {
+router.get('/admin/settings', function(req, res) {
     res.render('vwAdmin/settings', {
         layout: 'admin',
         title: 'Cài đặt hệ thống',
@@ -69,7 +69,7 @@ router.get('/admin/settings', ...adminAuth, function(req, res) {
 });
 
 
-router.post('/admin/categories', ...adminAuth, async function(req, res, next) {
+router.post('/admin/categories', async function(req, res, next) {
     try {
         const { name, parent_id } = req.body;
         const [category] = await database('categories').insert({
@@ -83,7 +83,7 @@ router.post('/admin/categories', ...adminAuth, async function(req, res, next) {
     }
 });
 
-router.post('/admin/categories/:id', ...adminAuth, async function(req, res, next) {
+router.post('/admin/categories/:id', async function(req, res, next) {
     try {
         const { name, parent_id } = req.body;
         await database('categories').where({ id: req.params.id }).update({
@@ -96,7 +96,7 @@ router.post('/admin/categories/:id', ...adminAuth, async function(req, res, next
     }
 });
 
-router.delete('/admin/categories/:id', ...adminAuth, async function(req, res, next) {
+router.delete('/admin/categories/:id', async function(req, res, next) {
     try {
         await database('categories').where({ id: req.params.id }).del();
         res.json({ success: true, message: 'Đã xóa lĩnh vực!' });
@@ -105,7 +105,7 @@ router.delete('/admin/categories/:id', ...adminAuth, async function(req, res, ne
     }
 });
 
-router.post('/admin/courses/:id', ...adminAuth, async function(req, res, next) {
+router.post('/admin/courses/:id', async function(req, res, next) {
     try {
         const { status } = req.body;
         await database('courses').where({ id: req.params.id }).update({
@@ -118,7 +118,7 @@ router.post('/admin/courses/:id', ...adminAuth, async function(req, res, next) {
     }
 });
 
-router.delete('/admin/courses/:id', ...adminAuth, async function(req, res, next) {
+router.delete('/admin/courses/:id', async function(req, res, next) {
     try {
         await database('courses').where({ id: req.params.id }).del();
         res.json({ success: true, message: 'Đã gỡ bỏ khóa học!' });
@@ -127,7 +127,7 @@ router.delete('/admin/courses/:id', ...adminAuth, async function(req, res, next)
     }
 });
 
-router.post('/admin/users', ...adminAuth, async function(req, res, next) {
+router.post('/admin/users', async function(req, res, next) {
     try {
         const { full_name, email, password, role } = req.body;
         const bcrypt = (await import('bcrypt')).default;
@@ -147,22 +147,35 @@ router.post('/admin/users', ...adminAuth, async function(req, res, next) {
     }
 });
 
-router.post('/admin/users/:id', ...adminAuth, async function(req, res, next) {
+router.post('/admin/users/:id', async function(req, res, next) {
     try {
-        const { full_name, email, status } = req.body;
-        await database('users').where({ id: req.params.id }).update({
+        const { full_name, email, role, status } = req.body;
+        const updatePayload = {
             full_name,
             email,
-            status: status || 'active',
             updated_at: new Date()
-        });
+        };
+        if (role) updatePayload.role = role;
+        if (status) updatePayload.status = status;
+
+        try {
+            await database('users').where({ id: req.params.id }).update(updatePayload);
+        } catch (err) {
+            if (err?.code === '42703') {
+                delete updatePayload.status;
+                await database('users').where({ id: req.params.id }).update(updatePayload);
+            } else {
+                throw err;
+            }
+        }
+
         res.json({ success: true, message: 'Cập nhật người dùng thành công!' });
     } catch (err) {
         next(err);
     }
 });
 
-router.delete('/admin/users/:id', ...adminAuth, async function(req, res, next) {
+router.delete('/admin/users/:id', async function(req, res, next) {
     try {
         await database('users').where({ id: req.params.id }).del();
         res.json({ success: true, message: 'Đã xóa người dùng!' });
@@ -171,7 +184,7 @@ router.delete('/admin/users/:id', ...adminAuth, async function(req, res, next) {
     }
 });
 
-router.post('/admin/users/:id/role', ...adminAuth, async function(req, res, next) {
+router.post('/admin/users/:id/role', async function(req, res, next) {
     try {
         const { role } = req.body;
         await database('users').where({ id: req.params.id }).update({
@@ -184,24 +197,25 @@ router.post('/admin/users/:id/role', ...adminAuth, async function(req, res, next
     }
 });
 
+export default router;
 
-router.post('/admin/users/:id/toggle-status', ...adminAuth, async function(req, res, next) {
+router.post('/admin/users/:id/toggle-status', async function(req, res, next) {
   try {
     const user = await database('users').where({ id: req.params.id }).first();
     if (!user) {
       return res.json({ success: false, message: 'Không tìm thấy người dùng!' });
     }
     
-    const newStatus = user.status === 'active' ? 'suspended' : 'active';
+    const newStatus = user.status === 'active' ? 'blocked' : 'active';
     await database('users').where({ id: req.params.id }).update({ status: newStatus });
     
-    res.json({ success: true, message: `Đã ${newStatus === 'suspended' ? 'khóa' : 'mở khóa'} tài khoản!` });
+    res.json({ success: true, message: `Đã ${newStatus === 'blocked' ? 'khóa' : 'mở khóa'} tài khoản!` });
   } catch (err) {
     res.json({ success: false, message: 'Có lỗi xảy ra!' });
   }
 });
 
-router.post('/admin/users/:id/promote', ...adminAuth, async function(req, res, next) {
+router.post('/admin/users/:id/promote', async function(req, res, next) {
   try {
     await database('users').where({ id: req.params.id }).update({ role: 'teacher' });
     res.json({ success: true, message: 'Đã cấp quyền giảng viên!' });
@@ -210,20 +224,119 @@ router.post('/admin/users/:id/promote', ...adminAuth, async function(req, res, n
   }
 });
 
-router.post('/admin/courses/:id/toggle-status', ...adminAuth, async function(req, res, next) {
+router.post('/admin/courses/:id/toggle-status', async function(req, res, next) {
   try {
     const course = await database('courses').where({ id: req.params.id }).first();
     if (!course) {
       return res.json({ success: false, message: 'Không tìm thấy khóa học!' });
     }
     
-    const newStatus = course.status === 'completed' ? 'disabled' : 'completed';
+    const newStatus = course.status === 'completed' ? 'suspended' : 'completed';
     await database('courses').where({ id: req.params.id }).update({ status: newStatus });
     
-    res.json({ success: true, message: `Đã ${newStatus === 'disabled' ? 'đình chỉ' : 'kích hoạt'} khóa học!` });
+    res.json({ success: true, message: `Đã ${newStatus === 'suspended' ? 'đình chỉ' : 'kích hoạt'} khóa học!` });
   } catch (err) {
     res.json({ success: false, message: 'Có lỗi xảy ra!' });
   }
 });
 
-export default router;
+router.post('/admin/categories', async function(req, res, next) {
+  try {
+    const { name, parent_id } = req.body;
+    await database('categories').insert({ name, parent_id: parent_id || null });
+    res.json({ success: true, message: 'Đã tạo lĩnh vực mới!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.post('/admin/categories/:id', async function(req, res, next) {
+  try {
+    const { name } = req.body;
+    await database('categories').where({ id: req.params.id }).update({ name });
+    res.json({ success: true, message: 'Đã cập nhật lĩnh vực!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.delete('/admin/categories/:id', async function(req, res, next) {
+  try {
+    await database('categories').where({ id: req.params.id }).del();
+    res.json({ success: true, message: 'Đã xóa lĩnh vực!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.post('/admin/users/:id/toggle-status', async function(req, res, next) {
+  try {
+    const user = await database('users').where({ id: req.params.id }).first();
+    if (!user) {
+      return res.json({ success: false, message: 'Không tìm thấy người dùng!' });
+    }
+    
+    const newStatus = user.status === 'active' ? 'blocked' : 'active';
+    await database('users').where({ id: req.params.id }).update({ status: newStatus });
+    
+    const msg = newStatus === 'blocked' ? 'khóa' : 'mở khóa';
+    res.json({ success: true, message: 'Đã ' + msg + ' tài khoản!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.post('/admin/users/:id/promote', async function(req, res, next) {
+  try {
+    await database('users').where({ id: req.params.id }).update({ role: 'teacher' });
+    res.json({ success: true, message: 'Đã cấp quyền giảng viên!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.post('/admin/courses/:id/toggle-status', async function(req, res, next) {
+  try {
+    const course = await database('courses').where({ id: req.params.id }).first();
+    if (!course) {
+      return res.json({ success: false, message: 'Không tìm thấy khóa học!' });
+    }
+    
+    const newStatus = course.status === 'completed' ? 'suspended' : 'completed';
+    await database('courses').where({ id: req.params.id }).update({ status: newStatus });
+    
+    const msg = newStatus === 'suspended' ? 'đình chỉ' : 'kích hoạt';
+    res.json({ success: true, message: 'Đã ' + msg + ' khóa học!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.post('/admin/categories', async function(req, res, next) {
+  try {
+    const { name, parent_id } = req.body;
+    await database('categories').insert({ name, parent_id: parent_id || null });
+    res.json({ success: true, message: 'Đã tạo lĩnh vực mới!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.post('/admin/categories/:id', async function(req, res, next) {
+  try {
+    const { name } = req.body;
+    await database('categories').where({ id: req.params.id }).update({ name });
+    res.json({ success: true, message: 'Đã cập nhật lĩnh vực!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
+
+router.delete('/admin/categories/:id', async function(req, res, next) {
+  try {
+    await database('categories').where({ id: req.params.id }).del();
+    res.json({ success: true, message: 'Đã xóa lĩnh vực!' });
+  } catch (err) {
+    res.json({ success: false, message: 'Có lỗi xảy ra!' });
+  }
+});
