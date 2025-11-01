@@ -114,11 +114,17 @@ router.get(
 
 // ==== [GET] /signin ====
 router.get("/signin", (req, res) => {
+  if (req.user) {
+    return res.redirect('/');
+  }
   res.render("vwAuth/signin", { layout: "auth", title: "Đăng nhập" });
 });
 
 // ==== [GET] /signup ====
 router.get("/signup", (req, res) => {
+  if (req.user) {
+    return res.redirect('/');
+  }
   res.render("vwAuth/signup", { layout: "auth", title: "Tạo tài khoản" });
 });
 
