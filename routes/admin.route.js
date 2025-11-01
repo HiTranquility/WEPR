@@ -1,6 +1,7 @@
 import express from 'express';
 import { ensureAuthenticated, requireRole } from '../middlewares/admin.middleware.js';
 import {getAdminDashboardStats, getAllAdminCategories, getAllAdminCourses, getAllAdminUsers } from '../models/admin.model.js';
+import database from '../utils/database.js';
 const router = express.Router();
 
 router.use('/admin', ensureAuthenticated, requireRole('admin'));
@@ -68,40 +69,119 @@ router.get('/admin/settings', function(req, res) {
 });
 
 
-router.post('/admin/categories', function(req, res) {
-    res.json({ success: true, message: 'Tạo lĩnh vực thành công!' });
+router.post('/admin/categories', async function(req, res, next) {
+    try {
+        const { name, parent_id } = req.body;
+        const [category] = await database('categories').insert({
+            name,
+            parent_id: parent_id || null,
+            created_at: new Date()
+        }).returning('*');
+        res.json({ success: true, message: 'Tạo lĩnh vực thành công!', categoryId: category.id });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/admin/categories/:id', function(req, res) {
-    res.json({ success: true, message: 'Cập nhật lĩnh vực thành công!' });
+router.post('/admin/categories/:id', async function(req, res, next) {
+    try {
+        const { name, parent_id } = req.body;
+        await database('categories').where({ id: req.params.id }).update({
+            name,
+            parent_id: parent_id || null
+        });
+        res.json({ success: true, message: 'Cập nhật lĩnh vực thành công!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.delete('/admin/categories/:id', function(req, res) {
-    res.json({ success: true, message: 'Đã xóa lĩnh vực!' });
+router.delete('/admin/categories/:id', async function(req, res, next) {
+    try {
+        await database('categories').where({ id: req.params.id }).del();
+        res.json({ success: true, message: 'Đã xóa lĩnh vực!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/admin/courses/:id', function(req, res) {
-    res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
+router.post('/admin/courses/:id', async function(req, res, next) {
+    try {
+        const { status } = req.body;
+        await database('courses').where({ id: req.params.id }).update({
+            status: status || 'disabled',
+            last_updated: new Date()
+        });
+        res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.delete('/admin/courses/:id', function(req, res) {
-    res.json({ success: true, message: 'Đã gỡ bỏ khóa học!' });
+router.delete('/admin/courses/:id', async function(req, res, next) {
+    try {
+        await database('courses').where({ id: req.params.id }).del();
+        res.json({ success: true, message: 'Đã gỡ bỏ khóa học!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/admin/users', function(req, res) {
-    res.json({ success: true, message: 'Tạo người dùng thành công!' });
+router.post('/admin/users', async function(req, res, next) {
+    try {
+        const { full_name, email, password, role } = req.body;
+        const bcrypt = (await import('bcrypt')).default;
+        const password_hash = await bcrypt.hash(password, 10);
+
+        const [user] = await database('users').insert({
+            full_name,
+            email,
+            password_hash,
+            role: role || 'student',
+            created_at: new Date()
+        }).returning('*');
+
+        res.json({ success: true, message: 'Tạo người dùng thành công!', userId: user.id });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/admin/users/:id', function(req, res) {
-    res.json({ success: true, message: 'Cập nhật người dùng thành công!' });
+router.post('/admin/users/:id', async function(req, res, next) {
+    try {
+        const { full_name, email, status } = req.body;
+        await database('users').where({ id: req.params.id }).update({
+            full_name,
+            email,
+            status: status || 'active',
+            updated_at: new Date()
+        });
+        res.json({ success: true, message: 'Cập nhật người dùng thành công!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.delete('/admin/users/:id', function(req, res) {
-    res.json({ success: true, message: 'Đã xóa người dùng!' });
+router.delete('/admin/users/:id', async function(req, res, next) {
+    try {
+        await database('users').where({ id: req.params.id }).del();
+        res.json({ success: true, message: 'Đã xóa người dùng!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/admin/users/:id/role', function(req, res) {
-    res.json({ success: true, message: 'Cập nhật quyền thành công!' });
+router.post('/admin/users/:id/role', async function(req, res, next) {
+    try {
+        const { role } = req.body;
+        await database('users').where({ id: req.params.id }).update({
+            role,
+            updated_at: new Date()
+        });
+        res.json({ success: true, message: 'Cập nhật quyền thành công!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
 export default router;

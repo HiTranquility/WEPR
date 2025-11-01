@@ -1,8 +1,9 @@
 import express from 'express';
 import { getTeacherDashboard, getTeacherCourses, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
-import { getAllCategories } from '../models/course-category.model.js'; 
+import { getAllCategories } from '../models/course-category.model.js';
 import { ensureAuthenticated } from '../middlewares/teacher.middleware.js';
 import { requireRole } from '../middlewares/teacher.middleware.js';
+import database from '../utils/database.js';
 const router = express.Router();
 
 router.use('/teacher', ensureAuthenticated, requireRole('teacher'));
@@ -256,36 +257,149 @@ router.get('/teacher/settings', async function(req, res, next) {
   }
 });
 
-router.post('/teacher/courses', function(req, res) {
-    res.json({ success: true, message: 'Tạo khóa học thành công!' });
+router.post('/teacher/courses', async function(req, res, next) {
+    try {
+        const { title, short_description, detailed_description, thumbnail_url, price, discount_price, category_id } = req.body;
+        const teacherId = req.user.id;
+
+        const [course] = await database('courses').insert({
+            title,
+            short_description: short_description || '',
+            detailed_description: detailed_description || '',
+            thumbnail_url: thumbnail_url || '',
+            price: parseFloat(price) || 0,
+            discount_price: discount_price ? parseFloat(discount_price) : null,
+            category_id,
+            teacher_id: teacherId,
+            status: 'draft',
+            created_at: new Date(),
+            updated_at: new Date()
+        }).returning('*');
+
+        res.json({ success: true, message: 'Tạo khóa học thành công!', courseId: course.id });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/teacher/course/:id', function(req, res) {
-    res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
+router.post('/teacher/course/:id', async function(req, res, next) {
+    try {
+        const { title, short_description, detailed_description, thumbnail_url, price, discount_price, category_id } = req.body;
+        const courseId = req.params.id;
+
+        await database('courses')
+            .where({ id: courseId, teacher_id: req.user.id })
+            .update({
+                title,
+                short_description,
+                detailed_description,
+                thumbnail_url,
+                price: parseFloat(price),
+                discount_price: discount_price ? parseFloat(discount_price) : null,
+                category_id,
+                updated_at: new Date(),
+                last_updated: new Date()
+            });
+
+        res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.delete('/teacher/course/:id', function(req, res) {
-    res.json({ success: true, message: 'Đã xóa khóa học!' });
+router.delete('/teacher/course/:id', async function(req, res, next) {
+    try {
+        await database('courses')
+            .where({ id: req.params.id, teacher_id: req.user.id })
+            .del();
+
+        res.json({ success: true, message: 'Đã xóa khóa học!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/teacher/course/:id/sections', function(req, res) {
-    res.json({ success: true, message: 'Tạo chương thành công!' });
+router.post('/teacher/course/:id/sections', async function(req, res, next) {
+    try {
+        const { title, order_index } = req.body;
+        const courseId = req.params.id;
+
+        const course = await database('courses')
+            .where({ id: courseId, teacher_id: req.user.id })
+            .first();
+
+        if (!course) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy khóa học' });
+        }
+
+        const [section] = await database('sections').insert({
+            course_id: courseId,
+            title,
+            order_index: order_index || 0,
+            created_at: new Date()
+        }).returning('*');
+
+        res.json({ success: true, message: 'Tạo chương thành công!', sectionId: section.id });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/teacher/course/:courseId/section/:sectionId/lectures', function(req, res) {
-    res.json({ success: true, message: 'Tạo bài giảng thành công!' });
+router.post('/teacher/course/:courseId/section/:sectionId/lectures', async function(req, res, next) {
+    try {
+        const { title, video_url, duration, is_preview, order_index } = req.body;
+        const { sectionId } = req.params;
+
+        const [lecture] = await database('lectures').insert({
+            section_id: sectionId,
+            title,
+            video_url: video_url || '',
+            duration: parseInt(duration) || 0,
+            is_preview: is_preview === 'true' || is_preview === true,
+            order_index: order_index || 0,
+            created_at: new Date()
+        }).returning('*');
+
+        res.json({ success: true, message: 'Tạo bài giảng thành công!', lectureId: lecture.id });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.delete('/teacher/course/:courseId/section/:sectionId', function(req, res) {
-    res.json({ success: true, message: 'Đã xóa chương!' });
+router.delete('/teacher/course/:courseId/section/:sectionId', async function(req, res, next) {
+    try {
+        await database('sections')
+            .where({ id: req.params.sectionId })
+            .del();
+
+        res.json({ success: true, message: 'Đã xóa chương!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.delete('/teacher/course/:courseId/lecture/:lectureId', function(req, res) {
-    res.json({ success: true, message: 'Đã xóa bài giảng!' });
+router.delete('/teacher/course/:courseId/lecture/:lectureId', async function(req, res, next) {
+    try {
+        await database('lectures')
+            .where({ id: req.params.lectureId })
+            .del();
+
+        res.json({ success: true, message: 'Đã xóa bài giảng!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.post('/teacher/course/:id/publish', function(req, res) {
-    res.json({ success: true, message: 'Đã xuất bản khóa học!' });
+router.post('/teacher/course/:id/publish', async function(req, res, next) {
+    try {
+        await database('courses')
+            .where({ id: req.params.id, teacher_id: req.user.id })
+            .update({ status: 'completed', last_updated: new Date() });
+
+        res.json({ success: true, message: 'Đã xuất bản khóa học!' });
+    } catch (err) {
+        next(err);
+    }
 });
 
 export default router;
