@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import passport from '../utils/passport.js';
-import { findOrCreateGoogleUser, buildAuthPayload, getDashboardRedirectByRole, registerLocalUser, getUserByEmail } from "../models/user.model.js";
+import { findOrCreateGoogleUser, buildAuthPayload, getDashboardRedirectByRole, registerLocalUser, getUserByEmail, updatePasswordByEmail, requestPasswordReset, verifyPasswordResetOtp, resetPasswordWithOtp } from "../models/user.model.js";
 import {
   signAccessToken,
   signRefreshToken,
@@ -16,6 +16,7 @@ import {
 // Import new middlewares
 import { ensureAuthenticated as ensureTeacher, requireRole as requireTeacherRole } from '../middlewares/teacher.middleware.js';
 import { ensureAuthenticated as ensureStudent, requireRole as requireStudentRole } from '../middlewares/student.middleware.js';
+import { hasActiveOtp } from '../utils/otp.js';
 
 const router = express.Router();
 
@@ -116,6 +117,17 @@ router.get("/signin", (req, res) => {
   res.render("vwAuth/signin", { layout: "auth", title: "Đăng nhập" });
 });
 
+// ==== [GET] /forgot ====
+router.get("/forgot", (req, res) => {
+  res.render("vwAuth/forgot", { layout: "auth", title: "Quên mật khẩu" });
+});
+
+// ==== [GET] /reset ====
+router.get("/reset", (req, res) => {
+  const { email } = req.query;
+  res.render("vwAuth/reset", { layout: "auth", title: "Đặt lại mật khẩu", email });
+});
+
 // ==== [GET] /signup ====
 router.get("/signup", (req, res) => {
   res.render("vwAuth/signup", { layout: "auth", title: "Tạo tài khoản" });
@@ -147,6 +159,100 @@ router.post("/signup", async (req, res) => {
     }
     console.error("/signup error", err);
     return res.status(500).json({ message: "Lỗi tạo tài khoản" });
+  }
+});
+
+// ==== [POST] /send-otp ====
+router.post("/send-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: "Missing email" });
+    const ok = await requestPasswordReset(String(email).trim());
+    if (!ok) {
+      const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+      if (!wantsJson) {
+        return res.status(404).render("vwAuth/forgot", { layout: "auth", title: "Quên mật khẩu", error: "Email không tồn tại" });
+      }
+      return res.status(404).json({ success: false, message: "Email không tồn tại" });
+    }
+    const user = await getUserByEmail(String(email).trim());
+    const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+    if (!wantsJson) {
+      return res.redirect(`/reset?email=${encodeURIComponent(user.email)}`);
+    }
+    return res.json({ success: true, message: "OTP đã được gửi email", email: user?.email || email });
+  } catch (err) {
+    console.error("❌ Error sending OTP:", err);
+    const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+    if (!wantsJson) {
+      return res.status(500).render("vwAuth/forgot", { layout: "auth", title: "Quên mật khẩu", error: "Gửi OTP thất bại" });
+    }
+    return res.status(500).json({ success: false, message: "Gửi OTP thất bại" });
+  }
+});
+
+// ==== [POST] /verify-otp ====
+router.post("/verify-otp", (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ success: false, message: "Thiếu email hoặc otp" });
+    const ok = verifyOtp(String(email).trim(), otp);
+    if (!ok) return res.status(400).json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
+    return res.json({ success: true, message: "OTP hợp lệ" });
+  } catch (err) {
+    console.error("🔥 Error verifying OTP:", err);
+    return res.status(500).json({ success: false, message: "Lỗi máy chủ" });
+  }
+});
+
+// ==== [POST] /reset ====
+router.post("/reset", async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+    if (!email || !otp || !password) {
+      const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+      if (!wantsJson) {
+        return res.status(400).render("vwAuth/reset", { layout: "auth", title: "Đặt lại mật khẩu", email, error: "Thiếu dữ liệu" });
+      }
+      return res.status(400).json({ success: false, message: "Thiếu dữ liệu" });
+    }
+    const verified = await verifyPasswordResetOtp(String(email).trim(), otp);
+    if (!verified) {
+      const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+      if (!wantsJson) {
+        return res.status(400).render("vwAuth/reset", { layout: "auth", title: "Đặt lại mật khẩu", email, error: "OTP không hợp lệ hoặc đã hết hạn" });
+      }
+      return res.status(400).json({ success: false, message: "OTP không hợp lệ hoặc đã hết hạn" });
+    }
+    const user = await getUserByEmail(String(email).trim());
+    if (!user) {
+      const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+      if (!wantsJson) {
+        return res.status(404).render("vwAuth/reset", { layout: "auth", title: "Đặt lại mật khẩu", email, error: "Email không tồn tại" });
+      }
+      return res.status(404).json({ success: false, message: "Email không tồn tại" });
+    }
+    const changed = await resetPasswordWithOtp(user.email, otp, password);
+    if (!changed) {
+      const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+      if (!wantsJson) {
+        return res.status(400).render("vwAuth/reset", { layout: "auth", title: "Đặt lại mật khẩu", email, error: "Không thể cập nhật mật khẩu" });
+      }
+      return res.status(400).json({ success: false, message: "Không thể cập nhật mật khẩu" });
+    }
+    const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+    if (!wantsJson) {
+      return res.redirect('/signin');
+    }
+    return res.json({ success: true, message: "Đặt lại mật khẩu thành công" });
+  } catch (err) {
+    console.error("❌ Error resetting password:", err);
+    const wantsJson = req.xhr || req.headers.accept?.includes('application/json');
+    if (!wantsJson) {
+      const { email } = req.body || {};
+      return res.status(500).render("vwAuth/reset", { layout: "auth", title: "Đặt lại mật khẩu", email, error: "Đặt lại mật khẩu thất bại" });
+    }
+    return res.status(500).json({ success: false, message: "Đặt lại mật khẩu thất bại" });
   }
 });
 
@@ -232,6 +338,40 @@ router.get('/teacher/dashboard', ensureTeacher, requireTeacherRole('teacher'), (
 
 router.get('/student/dashboard', ensureStudent, requireStudentRole('student'), (req, res) => {
   res.render('vwStudent/dashboard', { layout: 'main', user: req.user });
+});
+
+router.post("/send-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: "Missing email" });
+
+    await sendOtpToEmail(email);
+    return res.json({ success: true, message: "OTP sent successfully" });
+  } catch (err) {
+    console.error("❌ Error sending OTP:", err);
+    return res.status(500).json({ success: false, message: "Failed to send OTP" });
+  }
+});
+
+/** Xác minh OTP */
+router.post("/verify", (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: "Missing email or otp" });
+    }
+
+    const valid = verifyOtp(email, otp);
+    if (!valid) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    return res.json({ success: true, message: "OTP verified successfully" });
+  } catch (err) {
+    console.error("🔥 Error verifying OTP:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
 });
 
 export default router;

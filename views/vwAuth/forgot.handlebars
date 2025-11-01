@@ -11,7 +11,7 @@
         Enter your email address and we'll send you a link to reset your password.
       </div>
 
-      <form id="forgotForm" novalidate>
+      <form id="forgotForm" method="POST" action="/send-otp" novalidate>
         <div class="form-group">
           <label class="form-label" for="email">Email Address</label>
           <input type="email" class="form-control" id="email" required placeholder="you@example.com" name="email">
@@ -27,67 +27,4 @@
     </div>
   </div>
 
-  <script type="module">
-    import { supabase } from '/statics/js/supabase-client.js';
-
-    const form = document.getElementById('forgotForm');
-    const emailInput = document.getElementById('email');
-    const submitBtn = document.getElementById('submitBtn');
-    const alertMessage = document.getElementById('alertMessage');
-
-    function showError(input, errorElement) {
-      input.classList.add('error');
-      errorElement.classList.add('show');
-    }
-
-    function hideError(input, errorElement) {
-      input.classList.remove('error');
-      errorElement.classList.remove('show');
-    }
-
-    function validateEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      alertMessage.classList.add('hidden');
-
-      const email = emailInput.value.trim();
-
-      if (!validateEmail(email)) {
-        showError(emailInput, document.getElementById('emailError'));
-        return;
-      } else {
-        hideError(emailInput, document.getElementById('emailError'));
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending reset link...';
-
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`
-        });
-
-        if (error) throw error;
-
-        alertMessage.className = 'alert alert-success';
-        alertMessage.innerHTML = '<strong>Email sent!</strong><br>Check your inbox for a password reset link. It may take a few minutes to arrive.';
-        alertMessage.classList.remove('hidden');
-
-        form.reset();
-        submitBtn.textContent = 'Reset Password';
-        submitBtn.disabled = false;
-
-      } catch (error) {
-        console.error('Forgot password error:', error);
-        alertMessage.className = 'alert alert-danger';
-        alertMessage.textContent = error.message || 'An error occurred. Please try again.';
-        alertMessage.classList.remove('hidden');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Reset Password';
-      }
-    });
-  </script>
+  
