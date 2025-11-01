@@ -274,29 +274,6 @@ export const getAllCategories = async () => {
 };
 
 //=================
-// TEACHER - GET COURSE BY ID
-//=================
-export const getCourseById = async (courseId) => {
-  const course = await database("courses as c")
-    .leftJoin("categories as cat", "c.category_id", "cat.id")
-    .where("c.id", courseId)
-    .first(
-      "c.id",
-      "c.title",
-      "c.short_description",
-      "c.detailed_description",
-      "c.thumbnail_url",
-      "c.price",
-      "c.discount_price",
-      "c.status",
-      "c.category_id",
-      database.ref("cat.name").as("category_name")
-    );
-
-  return course;
-};
-
-//=================
 // TEACHER - GET COURSE DETAIL
 //=================
 export const getTeacherCourseDetail = async (courseId) => {
