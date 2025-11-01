@@ -1,7 +1,5 @@
 import database from "../utils/database.js";
 
-console.log('[course-category.model] module loaded');
-
 export async function createCategory(category) {
   const [id] = await database("categories").insert(category).returning("id");
   return id;

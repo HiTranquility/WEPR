@@ -95,7 +95,7 @@ app.use('/', teacherRoute);
 app.use('/', adminRoute);
 app.use('/', commonRoute);
 app.use('/', courseRoute);
-app.use('/gmail', gmailRoute);
+app.use('/', gmailRoute);
 
 app.use((req, res) => {
   console.log(`[404] Missed: ${req.method} ${req.originalUrl}`);

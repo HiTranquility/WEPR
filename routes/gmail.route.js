@@ -1,20 +1,26 @@
 import express from "express";
-import bcrypt from "bcrypt";
-import { supabase } from "../utils/supabaseClient.js";
 import { sendOtpToEmail, verifyOtp } from "../utils/emailOtp.js";
 import { signAccessToken, signRefreshToken } from "../utils/jwt.js";
 import { addRefreshToken } from "../utils/token-store.js";
+import {
+  checkUserExistsByEmail,
+  createGmailUser,
+  getUserByEmailForAuth,
+  verifyPassword,
+  buildAuthPayload,
+  getDashboardRedirectByRole,
+} from "../models/gmail.model.js";
 
 const router = express.Router();
 
 /** Render trang Gmail continue (OTP + form) theo mode=signup|signin */
-router.get("/", (req, res) => {
+router.get("/gmail", (req, res) => {
   const mode = req.query.mode === "signin" ? "signin" : "signup";
   res.render("vwAuth/gmail-continue", { layout: "auth", mode });
 });
 
 /** Gửi OTP tới email */
-router.post("/send-otp", async (req, res) => {
+router.post("/gmail/send-otp", async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, message: "Missing email" });
@@ -28,7 +34,7 @@ router.post("/send-otp", async (req, res) => {
 });
 
 /** Xác minh OTP */
-router.post("/verify", (req, res) => {
+router.post("/gmail/verify", (req, res) => {
   try {
     const { email, otp } = req.body;
 
@@ -49,7 +55,7 @@ router.post("/verify", (req, res) => {
 });
 
 /** Hoàn tất ĐĂNG KÝ (signup) sau khi verify OTP */
-router.post("/complete", async (req, res) => {
+router.post("/gmail/complete", async (req, res) => {
   try {
     const { username, password, confirmPassword, role } = req.body;
 
@@ -58,49 +64,41 @@ router.post("/complete", async (req, res) => {
     if (password !== confirmPassword)
       return res.status(400).json({ success: false, message: "Passwords do not match" });
 
-    // đã tồn tại?
-    const { data: existing } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", username)
-      .single();
-
+    // Kiểm tra email đã tồn tại
+    const existing = await checkUserExistsByEmail(username);
     if (existing)
       return res.status(400).json({ success: false, message: "Email already exists" });
 
-    const hashed = await bcrypt.hash(password, 10);
-    const { data, error } = await supabase
-      .from("users")
-      .insert([{
-        full_name: username.split("@")[0],
-        email: username,
-        password_hash: hashed,
-        role: role || "student",
-      }])
-      .select()
-      .single();
+    // Tạo user mới
+    const newUser = await createGmailUser({
+      email: username,
+      password: password,
+      role: role || "student",
+    });
 
-    if (error) throw error;
-
-    const payload = { id: data.id, role: data.role, name: data.full_name, email: data.email };
-    const accessToken  = signAccessToken(payload);
+    // Tạo JWT tokens
+    const payload = buildAuthPayload(newUser);
+    const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
-    addRefreshToken(data.id, refreshToken);
+    addRefreshToken(newUser.id, refreshToken);
 
-    res.cookie("access_token", accessToken,  { httpOnly: true, sameSite: "lax" });
-    res.cookie("refresh_token", refreshToken,{ httpOnly: true, sameSite: "lax" });
+    res.cookie("access_token", accessToken, { httpOnly: true, sameSite: "lax" });
+    res.cookie("refresh_token", refreshToken, { httpOnly: true, sameSite: "lax" });
 
     return res.json({
       success: true,
-      redirect: data.role === "teacher" ? "/teacher/dashboard" : "/student/dashboard",
+      redirect: getDashboardRedirectByRole(newUser.role),
     });
   } catch (err) {
     console.error("❌ Error completing Gmail signup:", err);
+    if (err.code === "EMAIL_EXISTS") {
+      return res.status(400).json({ success: false, message: err.message });
+    }
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-router.post("/signup", async (req, res) => {
+router.post("/gmail/signup", async (req, res) => {
   try {
     const { email, password, confirmPassword, role } = req.body;
 
@@ -110,87 +108,60 @@ router.post("/signup", async (req, res) => {
     if (password !== confirmPassword)
       return res.status(400).json({ success: false, message: "Passwords do not match" });
 
-    // kiểm tra đã tồn tại chưa
-    const { data: existing } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", email)
-      .single();
-
+    // Kiểm tra email đã tồn tại
+    const existing = await checkUserExistsByEmail(email);
     if (existing)
       return res.status(400).json({ success: false, message: "Email already exists" });
 
-    // thêm user mới
-    const hashed = await bcrypt.hash(password, 10);
-    const { data, error } = await supabase
-      .from("users")
-      .insert([
-        {
-          full_name: email.split("@")[0],
-          email,
-          password_hash: hashed,
-          role: role || "student",
-        },
-      ])
-      .select()
-      .single();
+    // Tạo user mới
+    const newUser = await createGmailUser({
+      email: email,
+      password: password,
+      role: role || "student",
+    });
 
-    if (error) throw error;
-
-    // tạo JWT cookie
-    const payload = {
-      id: data.id,
-      role: data.role,
-      name: data.full_name,
-      email: data.email,
-    };
+    // Tạo JWT tokens
+    const payload = buildAuthPayload(newUser);
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
-    addRefreshToken(data.id, refreshToken);
+    addRefreshToken(newUser.id, refreshToken);
 
     res.cookie("access_token", accessToken, { httpOnly: true, sameSite: "lax" });
     res.cookie("refresh_token", refreshToken, { httpOnly: true, sameSite: "lax" });
 
     return res.json({
       success: true,
-      redirect:
-        data.role === "teacher"
-          ? "/teacher/dashboard"
-          : "/student/dashboard",
+      redirect: getDashboardRedirectByRole(newUser.role),
     });
   } catch (err) {
     console.error("❌ Error completing Gmail signup:", err);
+    if (err.code === "EMAIL_EXISTS") {
+      return res.status(400).json({ success: false, message: err.message });
+    }
     return res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
 
 /** ĐĂNG NHẬP (signin) sau khi verify OTP */
-router.post("/signin", async (req, res) => {
+router.post("/gmail/signin", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
       return res.status(400).json({ success: false, message: "Missing email or password" });
 
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("id, full_name, email, role, password_hash")
-      .eq("email", email)
-      .single();
-
-    if (error || !user)
+    // Lấy user từ database
+    const user = await getUserByEmailForAuth(email);
+    if (!user)
       return res.status(400).json({ success: false, message: "No account found" });
 
-    const ok = await bcrypt.compare(password, user.password_hash);
-    if (!ok)
+    // Xác thực password
+    const isValid = await verifyPassword(password, user.password_hash);
+    if (!isValid)
       return res.status(400).json({ success: false, message: "Wrong password" });
 
-    const payload = {
-      id: user.id,
-      role: user.role,
-      name: user.full_name,
-      email: user.email,
-    };
+    // Tạo JWT tokens
+    const payload = buildAuthPayload(user);
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
     addRefreshToken(user.id, refreshToken);
@@ -200,10 +171,7 @@ router.post("/signin", async (req, res) => {
 
     return res.json({
       success: true,
-      redirect:
-        user.role === "teacher"
-          ? "/teacher/dashboard"
-          : "/student/dashboard",
+      redirect: getDashboardRedirectByRole(user.role),
     });
   } catch (err) {
     console.error("❌ Error Gmail signin:", err);
