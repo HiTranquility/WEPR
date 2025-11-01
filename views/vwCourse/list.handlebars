@@ -13,14 +13,82 @@
             <h5>Lĩnh vực</h5>
             <div class="filter-options">
               {{#each categories}}
+                <div class="mb-2">
+                  <button class="btn btn-link d-flex align-items-center gap-2 px-0 category-toggle"
+                          type="button"
+                          data-category-id="{{id}}"
+                          data-has-children="{{#if children}}true{{else}}false{{/if}}">
+                    {{#if children}}
+                      <i class="bi bi-caret-right-fill toggle-icon {{#if (eq ../currentCategory id)}}rotated{{/if}}"></i>
+                    {{else}}
+                      <i class="bi bi-dot"></i>
+                    {{/if}}
+                    <span class="fw-semibold">{{name}}</span>
+                    {{#if course_count}}<span class="text-muted small">({{course_count}})</span>{{/if}}
+                  </button>
+
+                  {{#if children}}
+                    <div class="ms-4 mt-1 border-start ps-3 subcategory-list {{#unless (eq ../currentCategory id)}}d-none{{/unless}}"
+                         id="subcats-{{id}}">
+                      {{#each children}}
+                        <button class="btn btn-sm btn-outline-secondary w-100 text-start mb-1 subcategory-btn"
+                                data-sub-id="{{id}}">
+                          {{name}}
+                          {{#if course_count}}<span class="text-muted small"> ({{course_count}})</span>{{/if}}
+                        </button>
+                      {{/each}}
+                    </div>
+                  {{/if}}
+                </div>
+              {{/each}}
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h5>Giá</h5>
+            <div class="filter-options">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="{{id}}" id="cat-{{id}}" {{#if (eq
-                  ../currentCategory id)}}checked{{/if}}>
-                <label class="form-check-label" for="cat-{{id}}">
-                  {{name}} <span class="text-muted">({{course_count}})</span>
+                <input class="form-check-input" type="radio" name="priceFilter" id="price-all" value="all" checked>
+                <label class="form-check-label" for="price-all">
+                  Tất cả
                 </label>
               </div>
-              {{/each}}
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceFilter" id="price-free" value="free">
+                <label class="form-check-label" for="price-free">
+                  Miễn phí
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="priceFilter" id="price-paid" value="paid">
+                <label class="form-check-label" for="price-paid">
+                  Có phí
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <h5>Đánh giá</h5>
+            <div class="filter-options">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating-4.5">
+                <label class="form-check-label" for="rating-4.5">
+                  P 4.5 trở lên
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating-4">
+                <label class="form-check-label" for="rating-4">
+                  P 4.0 trở lên
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="rating-3.5">
+                <label class="form-check-label" for="rating-3.5">
+                  P 3.5 trở lên
+                </label>
+              </div>
             </div>
           </div>
 
@@ -41,11 +109,11 @@
           <div class="sort-options">
             <label>Sắp xếp theo:</label>
             <select class="form-select" id="sortSelect">
-              <option value="popular" {{#if (eq sortBy 'popular' )}}selected{{/if}}>Phổ biến</option>
-              <option value="rating" {{#if (eq sortBy 'rating' )}}selected{{/if}}>Đánh giá cao</option>
-              <option value="newest" {{#if (eq sortBy 'newest' )}}selected{{/if}}>Mới nhất</option>
-              <option value="price-low" {{#if (eq sortBy 'price-low' )}}selected{{/if}}>Giá thấp tới cao</option>
-              <option value="price-high" {{#if (eq sortBy 'price-high' )}}selected{{/if}}>Giá cao tới thấp</option>
+              <option value="popular" {{#if (eq sortBy 'popular')}}selected{{/if}}>Phổ biến</option>
+              <option value="rating" {{#if (eq sortBy 'rating')}}selected{{/if}}>Đánh giá cao</option>
+              <option value="newest" {{#if (eq sortBy 'newest')}}selected{{/if}}>Mới nhất</option>
+              <option value="price-low" {{#if (eq sortBy 'price-low')}}selected{{/if}}>Giá thấp tới cao</option>
+              <option value="price-high" {{#if (eq sortBy 'price-high')}}selected{{/if}}>Giá cao tới thấp</option>
             </select>
           </div>
         </div>
@@ -81,13 +149,9 @@
                     <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
                     {{/if}}
                   </div>
-                  {{#if ../user}}
-                  {{#if (eq ../user.role 'student')}}
                   <button class="btn-wishlist" data-course-id="{{id}}">
                     <i class="bi bi-heart"></i>
                   </button>
-                  {{/if}}
-                  {{/if}}
                 </div>
               </div>
             </a>
@@ -99,22 +163,18 @@
         <nav class="pagination-nav mt-5">
           <ul class="pagination justify-content-center">
             <li class="page-item {{#if (eq currentPage 1)}}disabled{{/if}}">
-              <a class="page-link"
-                href="?page={{math currentPage '-' 1}}{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Trước</a>
+              <a class="page-link" href="?page={{math currentPage '-' 1}}{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Trước</a>
             </li>
             <li class="page-item {{#if (eq currentPage 1)}}active{{/if}}">
-              <a class="page-link"
-                href="?page=1{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">1</a>
+              <a class="page-link" href="?page=1{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">1</a>
             </li>
             {{#if (gt totalPages 1)}}
             <li class="page-item {{#if (eq currentPage 2)}}active{{/if}}">
-              <a class="page-link"
-                href="?page=2{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">2</a>
+              <a class="page-link" href="?page=2{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">2</a>
             </li>
             {{/if}}
             <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
-              <a class="page-link"
-                href="?page={{math currentPage '+' 1}}{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau</a>
+              <a class="page-link" href="?page={{math currentPage '+' 1}}{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau</a>
             </li>
           </ul>
         </nav>
@@ -126,69 +186,92 @@
 
 {{#fill_section 'js'}}
 <script>
-  // Xử lý sort với search parameters
-  document.getElementById('sortSelect')?.addEventListener('change', function (e) {
-    const url = new URL(window.location);
-    url.searchParams.set('sort', e.target.value);
-    window.location.href = url.toString();
-  });
+// Xử lý sort với search parameters
+document.getElementById('sortSelect')?.addEventListener('change', function(e) {
+  const url = new URL(window.location);
+  url.searchParams.set('sort', e.target.value);
+  window.location.href = url.toString();
+});
 
-  // Xử lý clear filters
-  document.getElementById('clearFilters')?.addEventListener('click', function () {
-    const url = new URL(window.location);
-    // Chỉ giữ lại search query nếu có
-    const searchQuery = url.searchParams.get('q');
-    if (searchQuery) {
-      window.location.href = `/courses?q=${encodeURIComponent(searchQuery)}`;
+// Xử lý clear filters
+document.getElementById('clearFilters')?.addEventListener('click', function() {
+  const url = new URL(window.location);
+  // Chỉ giữ lại search query nếu có
+  const searchQuery = url.searchParams.get('q');
+  if (searchQuery) {
+    window.location.href = `/courses?q=${encodeURIComponent(searchQuery)}`;
+  } else {
+    window.location.href = '/courses';
+  }
+});
+
+function navigateWithParams(params = {}) {
+  const url = new URL(window.location.origin + window.location.pathname);
+  const current = new URL(window.location);
+  current.searchParams.forEach((value, key) => {
+    url.searchParams.set(key, value);
+  });
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') {
+      url.searchParams.delete(key);
     } else {
-      window.location.href = '/courses';
+      url.searchParams.set(key, value);
     }
   });
+  window.location.href = url.toString();
+}
 
-  // Xử lý category filters
-  document.querySelectorAll('input[type="checkbox"][id^="cat-"]').forEach(checkbox => {
-    checkbox.addEventListener('change', function () {
-      const url = new URL(window.location);
-      const categoryId = this.value;
+document.querySelectorAll('.category-toggle').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const categoryId = this.dataset.categoryId;
+    const hasChildren = this.dataset.hasChildren === 'true';
+    const subList = document.getElementById(`subcats-${categoryId}`);
 
-      if (this.checked) {
-        url.searchParams.set('category', categoryId);
-      } else {
-        url.searchParams.delete('category');
-      }
-
-      window.location.href = url.toString();
-    });
+    if (hasChildren && subList) {
+      subList.classList.toggle('d-none');
+      this.querySelector('.toggle-icon')?.classList.toggle('rotated');
+      navigateWithParams({ category: categoryId, sub: null, sub_category: null, subcategory: null });
+    } else {
+      navigateWithParams({ category: categoryId, sub: null, sub_category: null, subcategory: null });
+    }
   });
+});
 
-  // Xử lý price filters
-  document.querySelectorAll('input[name="priceFilter"]').forEach(radio => {
-    radio.addEventListener('change', function () {
-      const url = new URL(window.location);
-
-      if (this.value === 'free') {
-        url.searchParams.set('min_price', '0');
-        url.searchParams.set('max_price', '0');
-      } else if (this.value === 'paid') {
-        url.searchParams.set('min_price', '1');
-        url.searchParams.delete('max_price');
-      } else {
-        url.searchParams.delete('min_price');
-        url.searchParams.delete('max_price');
-      }
-
-      window.location.href = url.toString();
-    });
+document.querySelectorAll('.subcategory-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const subId = this.dataset.subId;
+    navigateWithParams({ sub: subId });
   });
+});
 
-  // Xử lý wishlist
-  document.querySelectorAll('.btn-wishlist').forEach(btn => {
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const courseId = this.dataset.courseId;
-      console.log('Add to wishlist:', courseId);
-    });
+// Xử lý price filters
+document.querySelectorAll('input[name="priceFilter"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    const url = new URL(window.location);
+    
+    if (this.value === 'free') {
+      url.searchParams.set('min_price', '0');
+      url.searchParams.set('max_price', '0');
+    } else if (this.value === 'paid') {
+      url.searchParams.set('min_price', '1');
+      url.searchParams.delete('max_price');
+    } else {
+      url.searchParams.delete('min_price');
+      url.searchParams.delete('max_price');
+    }
+    
+    window.location.href = url.toString();
   });
+});
+
+// Xử lý wishlist
+document.querySelectorAll('.btn-wishlist').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const courseId = this.dataset.courseId;
+    console.log('Add to wishlist:', courseId);
+  });
+});
 </script>
 {{/fill_section}}
