@@ -242,6 +242,20 @@ router.get('/teacher/course/:courseId/content/:contentId/edit', async function(r
   }
 });
 
+router.get('/teacher/settings', async function(req, res, next) {
+  try {
+      const allCategories = await getAllCategories({ includeCounts: false });
+      res.render('vwTeacher/settings', {
+          title: 'Cài đặt tài khoản',
+          allCategories,
+          searchQuery: null,
+          layout: 'main'
+      });
+  } catch (err) {
+      next(err);
+  }
+});
+
 router.post('/teacher/courses', function(req, res) {
     res.json({ success: true, message: 'Tạo khóa học thành công!' });
 });

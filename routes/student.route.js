@@ -57,7 +57,7 @@ router.get("/student/my-courses", async (req, res, next) => {
     }
 });
 
-router.get('/student/wishlist', async function(req, res, next) {
+router.get('/student/watchlist', async function(req, res, next) {
     try {
         const studentId = req.user && req.user.id ? req.user.id : null;
         if (!studentId) return res.redirect('/signin');
@@ -96,6 +96,20 @@ router.get('/student/learn/:courseId', async function(req, res, next) {
     } catch (err) {
         next(err);
     }
+});
+
+router.get('/student/settings', async function(req, res, next) {
+  try {
+      const allCategories = await getAllCategories({ includeCounts: false });
+      res.render('vwStudent/settings', {
+          title: 'Cài đặt tài khoản',
+          allCategories,
+          searchQuery: null,
+          layout: 'main'
+      });
+  } catch (err) {
+      next(err);
+  }
 });
 
 router.post('/student/profile', function(req, res) {
