@@ -1,6 +1,5 @@
 import express from 'express';
-import database from '../utils/database.js';
-import { getTeacherDashboard, getTeacherCourses, getCourseById, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
+import { getTeacherDashboard, getTeacherCourses, getTeacherCourseDetail, getTeacherManageCourse, getTeacherCourseContent, getCourseSectionInfo, getCourseInfoForSection, getCourseDetailForEdit } from '../models/user.model.js';
 import { getAllCategories } from '../models/course-category.model.js'; 
 import { ensureAuthenticated } from '../middlewares/teacher.middleware.js';
 import { requireRole } from '../middlewares/teacher.middleware.js';
@@ -10,7 +9,8 @@ router.use('/teacher', ensureAuthenticated, requireRole('teacher'));
 
 router.get("/teacher/dashboard", async (req, res, next) => {
   try {
-    const teacherId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    const teacherId = req.user && req.user.id ? req.user.id : null;
+    if (!teacherId) return res.redirect('/signin');
 
     const data = await getTeacherDashboard(teacherId);
     const allCategories = await getAllCategories({ includeCounts: false });
@@ -37,7 +37,9 @@ router.get("/teacher/dashboard", async (req, res, next) => {
 
 router.get('/teacher/courses', async function(req, res, next) {
   try {
-    const teacherId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+    const teacherId = req.user && req.user.id ? req.user.id : null;
+    if (!teacherId) return res.redirect('/signin');
+
     const data = await getTeacherCourses(teacherId);
     const allCategories = await getAllCategories({ includeCounts: false });
 
@@ -61,7 +63,7 @@ router.get('/teacher/courses', async function(req, res, next) {
   }
 });
 
-router.get('/teacher/create-course', async function(req, res, next) {
+router.get('/teacher/course/:id/edit', async function(req, res, next) {
   try {
     const allCategories = await getAllCategories({ includeCounts: false });
 
@@ -79,6 +81,7 @@ router.get('/teacher/create-course', async function(req, res, next) {
 router.get('/teacher/edit-course/:id', async function(req, res, next) {
   try {
     const allCategories = await getAllCategories({ includeCounts: false });
+    const data = await getCourseDetailForEdit(req.params.id);
 
     if (!data) {
       return res.status(404).render("404", {
@@ -103,7 +106,7 @@ router.get('/teacher/edit-course/:id', async function(req, res, next) {
 
 router.get('/teacher/course/:id', async function(req, res, next) {
   try {
-    const data = await getCourseDetailForEdit(req.params.id);
+    const data = await getTeacherCourseDetail(req.params.id);
 
     if (!data) {
       return res.status(404).render("404", {
@@ -195,37 +198,62 @@ router.get('/teacher/course/:courseId/section/:sectionId/lecture/create', async 
   }
 });
 
-router.get('/teacher/course/:courseId/content/:contentId/edit', function(req, res) {
+router.get('/teacher/course/:courseId/content/:contentId/edit', async function(req, res, next) {
+  try {
+    const courseId = req.params.courseId;
+    const contentId = req.params.contentId;
+
+    const courseData = await getTeacherCourseContent(courseId);
+    if (!courseData) {
+      return res.status(404).render('404', { title: 'Không tìm thấy khóa học', message: 'Khóa học không tồn tại.', layout: 'main' });
+    }
+
+    let foundLecture = null;
+    let parentSectionId = null;
+    for (const section of courseData.sections || []) {
+      const lec = (section.lectures || []).find(l => String(l.id) === String(contentId));
+      if (lec) {
+        foundLecture = lec;
+        parentSectionId = section.id || null;
+        break;
+      }
+    }
+
+    if (!foundLecture) {
+      return res.status(404).render('404', { title: 'Không tìm thấy bài giảng', message: 'Bài giảng không tồn tại trong khóa học này.', layout: 'main' });
+    }
+
     res.render('vwTeacher/edit-content', {
-        title: 'Chỉnh sửa nội dung',
-        courseId: req.params.courseId,
-        content: {
-            id: req.params.contentId,
-            title: 'Introduction to Course',
-            video_url: '',
-            description: ''
-        }
+      title: 'Chỉnh sửa nội dung',
+      courseId,
+      sectionId: parentSectionId,
+      content: {
+        id: foundLecture.id,
+        title: foundLecture.title || '',
+        video_url: foundLecture.video_url || '',
+        description: foundLecture.description || '',
+        is_preview: foundLecture.is_preview || false
+      },
+      searchQuery: null,
+      layout: 'main'
     });
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/teacher/course/:id/edit', function(req, res) {
-    res.render('vwTeacher/edit-course', {
-        title: 'Chỉnh sửa khóa học',
-        course: {
-            id: req.params.id,
-            title: 'Complete Python Bootcamp',
-            short_description: 'Learn Python from scratch',
-            full_description: '<h3>About</h3><p>Complete Python course</p>',
-            thumbnail_url: 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg',
-            price: 1999000,
-            discount_price: 499000,
-            category_id: 1
-        },
-        categories: [
-            { id: 1, name: 'Lập trình' },
-            { id: 2, name: 'Kinh doanh' }
-        ]
-    });
+router.get('/teacher/settings', async function(req, res, next) {
+  try {
+      const allCategories = await getAllCategories({ includeCounts: false });
+      res.render('vwTeacher/settings', {
+          title: 'Cài đặt tài khoản',
+          allCategories,
+          searchQuery: null,
+          layout: 'main'
+      });
+  } catch (err) {
+      next(err);
+  }
 });
 
 router.post('/teacher/courses', function(req, res) {

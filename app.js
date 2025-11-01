@@ -14,6 +14,7 @@ import { hbsHelpers } from './utils/hbsHelpers.js';
 import passport from './utils/passport.js';
 import { verifyAccessToken, verifyRefreshToken, signAccessToken } from './utils/jwt.js';
 import { hasRefreshToken } from './utils/token-store.js';
+import globalCategories from './middlewares/globalCategories.js';
 const app = express();
 const rootDir = process.cwd();
 const viewsRoot = path.resolve(rootDir, 'views');
@@ -79,6 +80,9 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Provide category tree for header/menus
+app.use(globalCategories);
 
 // Ensure req.user has role and expose to views
 // Remove global role-filling; handled in per-role middlewares

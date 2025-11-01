@@ -9,14 +9,42 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Category
           </a>
+
+          {{#if global_categories.allCategories}}
+          <div class="dropdown-menu p-2 mega-dropdown" aria-labelledby="categoriesDropdown" style="min-width:560px;">
+            <div class="mega-left">
+              <ul class="list-unstyled mb-0">
+                {{#each global_categories.allCategories}}
+                <li class="dropdown-submenu" data-cat-id="{{id}}">
+                  <a class="dropdown-item d-flex justify-content-between align-items-center" href="/courses?category={{id}}">
+                    <span>{{name}}</span>
+                    {{#if children}}
+                      <i class="bi bi-chevron-right ms-2" aria-hidden="true"></i>
+                    {{/if}}
+                  </a>
+                  {{#if children}}
+                    <ul class="dropdown-sub d-none" data-parent-id="{{id}}">
+                      {{#each children}}
+                        <li><a class="dropdown-item" href="/courses?category={{id}}">{{name}}</a></li>
+                      {{/each}}
+                    </ul>
+                  {{/if}}
+                </li>
+                {{/each}}
+              </ul>
+            </div>
+            <div class="mega-right" aria-hidden="true"></div>
+          </div>
+          {{else}}
           <ul class="dropdown-menu">
             {{#each global_categories.allCategories}}
             <li><a class="dropdown-item" href="/courses?category={{id}}">{{name}}</a></li>
             {{/each}}
           </ul>
+          {{/if}}
         </li>
         <li class="nav-item">
           <a class="nav-link" href="/courses">Courses</a>
@@ -24,13 +52,18 @@
       </ul>
 
       <div class="d-flex me-3">
-        <form class="input-group" method="get" action="/courses/search">
+        <form id="searchForm" class="input-group" method="get" action="/courses/search">
         <div class="input-group">
-          <input type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search" name="q" required>
+          <input id="searchInput" type="search" class="form-control" placeholder="Tìm kiếm khóa học..." aria-label="Search" name="q" required>
           <button class="btn btn-outline-primary" type="submit">
             <i class="bi bi-search"></i>
           </button>
         </div>
+          <!-- Preserve current category / sub-category when searching from header -->
+          <input type="hidden" name="category" value="{{currentCategory}}">
+          <input type="hidden" name="sub" value="{{currentSub}}">
+          <input type="hidden" name="sub_category" value="{{currentSubCategory}}">
+          <input type="hidden" name="subcategory" value="{{subCategory}}">
         </form>
       </div>
 
@@ -48,12 +81,14 @@
               {{/if}}
               {{#if (eq user.role 'teacher')}}
               <li><a class="dropdown-item" href="/teacher/dashboard"><i class="bi bi-person me-2"></i>Teacher Dashboard</a></li>
-              <li><a class="dropdown-item" href="/teacher/courses"><i class="bi bi-book me-2"></i>Courses</a></li>
+              <li><a class="dropdown-item" href="/teacher/my-courses"><i class="bi bi-book me-2"></i>Courses</a></li>
+              <li><a class="dropdown-item" href="/teacher/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
               {{/if}}
               {{#if (eq user.role 'student')}}
               <li><a class="dropdown-item" href="/student/dashboard"><i class="bi bi-person me-2"></i>Student Dashboard</a></li>
-              <li><a class="dropdown-item" href="/student/courses"><i class="bi bi-book me-2"></i>Courses</a></li>
-              <li><a class="dropdown-item" href="/student/wishlist"><i class="bi bi-book me-2"></i>Wishlist</a></li>
+              <li><a class="dropdown-item" href="/student/my-courses"><i class="bi bi-book me-2"></i>Courses</a></li>
+              <li><a class="dropdown-item" href="/student/watchlist"><i class="bi bi-book me-2"></i>Wishlist</a></li>
+              <li><a class="dropdown-item" href="/student/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
               {{/if}}
               <li><hr class="dropdown-divider"></li>
               <li>
@@ -79,26 +114,104 @@
 </nav>
 
 <script>
-// Xử lý search form
-document.getElementById('searchForm')?.addEventListener('submit', function(e) {
-  e.preventDefault();
-  const searchInput = document.getElementById('searchInput');
-  const searchQuery = searchInput.value.trim();
-  
-  if (searchQuery) {
-    // Chuyển hướng đến trang courses với query parameter
-    window.location.href = `/courses?q=${encodeURIComponent(searchQuery)}`;
-  } else {
-    // Nếu không có query, chuyển đến trang courses
-    window.location.href = '/courses';
+  document.getElementById('searchInput')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      this.value = '';
+      this.blur();
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const submenuParents = document.querySelectorAll(".dropdown-submenu");
+    let hideTimeout;
+
+    submenuParents.forEach(parent => {
+      const subMenu = parent.querySelector(".dropdown-sub");
+      if (!subMenu) return;
+
+      subMenu.style.position = "absolute";
+      subMenu.style.top = "0";
+      subMenu.style.left = "98.7%";  
+      subMenu.style.marginLeft = "0";  
+      subMenu.style.minWidth = "220px";
+      subMenu.style.zIndex = "1050";
+
+      parent.addEventListener("mouseover", () => {
+        clearTimeout(hideTimeout);
+        document.querySelectorAll(".dropdown-sub").forEach(ul => ul.classList.add("d-none"));
+        subMenu.classList.remove("d-none");
+      });
+
+      parent.addEventListener("mouseout", () => {
+        hideTimeout = setTimeout(() => {
+          subMenu.classList.add("d-none");
+        }, 200);
+      });
+
+      subMenu.addEventListener("mouseenter", () => clearTimeout(hideTimeout));
+      subMenu.addEventListener("mouseleave", () => subMenu.classList.add("d-none"));
+    });
+  });
+ 
+document.addEventListener("DOMContentLoaded", () => {
+  const dropdown = document.querySelector("#categoriesDropdown");
+  const menu = document.querySelector(".mega-dropdown");
+
+  if (dropdown && menu) {
+    dropdown.addEventListener("mouseenter", () => {
+      dropdown.classList.add("show");
+      menu.classList.add("show");
+    });
+
+    dropdown.parentElement.addEventListener("mouseleave", () => {
+      dropdown.classList.remove("show");
+      menu.classList.remove("show");
+    });
   }
 });
 
-// Xử lý clear search
-document.getElementById('searchInput')?.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    this.value = '';
-    this.blur();
-  }
-});
 </script>
+
+<style>
+  /* ===== KHUNG CATEGORY CHÍNH ===== */
+  .dropdown-menu.mega-dropdown {
+    width: 420px !important;
+    min-width: 420px !important;
+    padding: 0.5rem 0.75rem !important;
+    position: relative;
+  }
+
+  /* ===== KHUNG SUB-CATEGORY ===== */
+  .dropdown-sub {
+  position: absolute;
+  top: 0;
+  left: 99.9%; 
+  background-color: #fff;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-left: none; 
+  border-radius: 0 .5rem .5rem 0;
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+  padding: 0.5rem 0;
+  width: 420px; 
+  height: 100%; 
+  z-index: 1050;
+  overflow-y: auto; 
+  }
+
+  .dropdown-sub .dropdown-item:hover {
+    background-color: #f8f9fa;
+  }
+
+  .dropdown-sub {
+    margin-left: 0.25rem !important;
+  }
+
+  .dropdown-submenu > a:hover {
+    background-color: #f8f9fa;
+    border-radius: 0.3rem;
+  }
+</style>
+
+
+
+

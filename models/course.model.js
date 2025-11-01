@@ -1,5 +1,5 @@
 import database from "../utils/database.js";
-
+import { getCategoriesWithChildren } from './course-category.model.js';
 // 🔹 Tạo course mới
 export async function createCourse(course) {
   const [id] = await database("courses").insert(course).returning("id");
@@ -50,6 +50,7 @@ export async function searchCourses(opts = {}) {
   const {
     q,
     categoryId,
+    subCategoryId,
     teacherId,
     minPrice,
     maxPrice,
@@ -65,6 +66,14 @@ export async function searchCourses(opts = {}) {
   const l = Math.min(50, Math.max(1, +limit || 12));
   const offset = (p - 1) * l;
 
+  // Chuẩn bị danh sách categoryIds (cha + con)
+  let categoryIds = [];
+  if (subCategoryId) {
+    categoryIds = [subCategoryId];
+  } else if (categoryId) {
+    categoryIds = await getCategoryWithChildrenIds(categoryId);
+  }
+
   // Base query: join sẵn
   const query = database('courses')
     .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
@@ -72,7 +81,11 @@ export async function searchCourses(opts = {}) {
     .where(builder => {
       if (status) builder.where('courses.status', status);
       if (isFeatured != null) builder.andWhere('courses.is_featured', !!isFeatured);
-      if (categoryId) builder.andWhere('courses.category_id', categoryId);
+      // Sub-category has priority: if provided, filter exactly by it.
+      if (categoryIds.length > 0) {
+        builder.whereIn('courses.category_id', categoryIds);
+      }
+      
       if (teacherId) builder.andWhere('courses.teacher_id', teacherId);
       if (onlyDiscounted) builder.andWhereNotNull('courses.discount_price');
       if (minPrice != null) builder.andWhere('courses.price', '>=', minPrice);
