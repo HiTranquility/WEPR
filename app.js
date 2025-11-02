@@ -20,11 +20,11 @@ const app = express();
 const rootDir = process.cwd();
 const viewsRoot = path.resolve(rootDir, 'views');
 const staticsRoot = path.resolve(rootDir, 'statics');
-const __dirname = import.meta.dirname;
+const partialsRoot = path.resolve(viewsRoot, 'partials');
 
 //App Configuration
 app.engine('handlebars', engine({
-  partialsDir: __dirname + '/views/partials',
+  partialsDir: partialsRoot,
   helpers: {
     ...hbsHelpers,
     fill_section: function (name, options) {

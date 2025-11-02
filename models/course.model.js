@@ -230,24 +230,6 @@ export async function searchCourses(opts = {}) {
     case 'newest':
       query.orderBy('courses.created_at', 'desc');
       break;
-    case 'price_asc':
-      // Sort theo giá thực tế (discount_price nếu có, nếu không thì dùng price)
-      query.orderByRaw('COALESCE(courses.discount_price, courses.price) ASC');
-      break;
-    case 'price_desc':
-      // Sort theo giá thực tế (discount_price nếu có, nếu không thì dùng price)
-      query.orderByRaw('COALESCE(courses.discount_price, courses.price) DESC');
-      break;
-    case 'rating':
-    case 'top-rated':
-      query.orderBy([
-        { column: 'courses.rating_avg', order: 'desc' },
-        { column: 'courses.rating_count', order: 'desc' },
-      ]);
-      break;
-    case 'newest':
-      query.orderBy('courses.created_at', 'desc');
-      break;
     case 'price-low':
     case 'price_asc':
       query.orderByRaw(
@@ -259,6 +241,13 @@ export async function searchCourses(opts = {}) {
       query.orderByRaw(
         `COALESCE(NULLIF(courses.discount_price, 0), courses.price)::numeric DESC`
       );
+      break;
+    case 'rating':
+    case 'top-rated':
+      query.orderBy([
+        { column: 'courses.rating_avg', order: 'desc' },
+        { column: 'courses.rating_count', order: 'desc' },
+      ]);
       break;
     default:
       query.orderBy('courses.enrollment_count', 'desc');
