@@ -280,61 +280,46 @@ function calculateDiscount(price, discountPrice) {
 // ========== BUILD FILTER PARAMS ==========
 function buildFilterParams() {
   const params = new URLSearchParams();
-  
-  // Category/Sub
+
+  // 🟣 CATEGORY + SUB
   const selectedCategories = [];
   const selectedSubs = [];
-  
   document.querySelectorAll('.category-checkbox:checked').forEach(cb => {
-    const categoryId = cb.dataset.categoryId;
+    const id = cb.dataset.categoryId;
     const hasChildren = cb.dataset.hasChildren === 'true';
-    
-    if (!hasChildren) {
-      selectedCategories.push(categoryId);
-    } else {
-      const subList = document.getElementById(`subcats-${categoryId}`);
-      const selectedSubsInCategory = subList ? 
-        Array.from(subList.querySelectorAll('.subcategory-checkbox:checked')).map(cb => cb.value) : [];
-      
-      if (selectedSubsInCategory.length === 0) {
-        selectedCategories.push(categoryId);
-  } else {
-        selectedSubs.push(...selectedSubsInCategory);
-      }
-    }
+    if (hasChildren) {
+      const subList = document.getElementById(`subcats-${id}`);
+      const checkedSubs = subList ? 
+        Array.from(subList.querySelectorAll('.subcategory-checkbox:checked')).map(s => s.value) : [];
+      if (checkedSubs.length === 0) selectedCategories.push(id);
+      else selectedSubs.push(...checkedSubs);
+    } else selectedCategories.push(id);
   });
-  
-  document.querySelectorAll('.subcategory-checkbox:checked').forEach(cb => {
-    if (!selectedSubs.includes(cb.value)) {
-      selectedSubs.push(cb.value);
-    }
-  });
-  
-  if (selectedSubs.length > 0) {
-    params.set('sub', selectedSubs[0]);
-  } else if (selectedCategories.length > 0) {
-    params.set('category', selectedCategories[0]);
-  }
-  
-  // Sort
+
+  if (selectedSubs.length > 0) params.set('sub', selectedSubs.join(','));
+  else if (selectedCategories.length > 0) params.set('category', selectedCategories.join(','));
+
+  // 🟣 SORT
   const sortRadio = document.querySelector('input[name="sortFilter"]:checked');
-  if (sortRadio) {
-    params.set('sort', sortRadio.value);
-  }
-  
-  // Price
-  const priceRadio = document.querySelector('input[name="priceFilter"]:checked');
-  if (priceRadio && priceRadio.value === 'free') {
+  if (sortRadio) params.set('sort', sortRadio.value);
+
+  // 🟣 PRICE
+  const priceFilter = document.querySelector('input[name="priceFilter"]:checked')?.value;
+  if (priceFilter === 'free') {
     params.set('min_price', '0');
     params.set('max_price', '0');
-  } else if (priceRadio && priceRadio.value === 'paid') {
+  } else if (priceFilter === 'paid') {
     params.set('min_price', '1');
   }
-  
-  // Rating (có thể thêm sau)
-  
-  params.set('page', '1'); // Reset về trang 1
-  
+
+  // 🟣 RATING
+  const ratingFilters = [];
+  if (document.getElementById('rating-4.5')?.checked) ratingFilters.push(4.5);
+  if (document.getElementById('rating-4')?.checked) ratingFilters.push(4.0);
+  if (document.getElementById('rating-3.5')?.checked) ratingFilters.push(3.5);
+  if (ratingFilters.length > 0) params.set('min_rating', Math.min(...ratingFilters));
+
+  params.set('page', '1');
   return params;
 }
 
