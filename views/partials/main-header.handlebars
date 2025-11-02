@@ -76,13 +76,13 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
               {{#if (eq user.role 'teacher')}}
-              <li><a class="dropdown-item" href="/teacher/profile"><i class="bi bi-person me-2"></i>Hồ sơ giảng viên</a></li>
-              <li><a class="dropdown-item" href="/teacher/dashboard"><i class="bi bi-person me-2"></i>Teacher Dashboard</a></li>
+              <li><a class="dropdown-item" href="/teacher/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+              <li><a class="dropdown-item" href="/teacher/dashboard"><i class="bi bi-person me-2"></i>Dashboard</a></li>
               <li><a class="dropdown-item" href="/teacher/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
               {{/if}}
               {{#if (eq user.role 'student')}}
-              <li><a class="dropdown-item" href="/student/profile"><i class="bi bi-person me-2"></i>Hồ sơ cá nhân</a></li>
-              <li><a class="dropdown-item" href="/student/dashboard"><i class="bi bi-person me-2"></i>Student Dashboard</a></li>
+              <li><a class="dropdown-item" href="/student/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+              <li><a class="dropdown-item" href="/student/dashboard"><i class="bi bi-person me-2"></i>Dashboard</a></li>
               <li><a class="dropdown-item" href="/student/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
               {{/if}}
               <li><hr class="dropdown-divider"></li>

@@ -40,6 +40,15 @@
   const passwordStrength = document.getElementById('passwordStrength');
   const alertMessage = document.getElementById('alertMessage');
   const submitBtn = document.getElementById('submitBtn');
+  const endpoint = form.getAttribute('action') || '/auth/reset-password';
+
+  const tokenInvalid = {{#if tokenInvalid}}true{{else}}false{{/if}};
+  if (tokenInvalid) {
+    alertMessage.className = 'alert alert-danger';
+    alertMessage.textContent = 'Liên kết đặt lại mật khẩu đã hết hạn hoặc không hợp lệ. Vui lòng yêu cầu lại.';
+    alertMessage.classList.remove('hidden');
+    submitBtn.disabled = true;
+  }
 
   passwordInput.addEventListener('input', (e) => {
     const password = e.target.value;
@@ -64,6 +73,10 @@
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
+    if (tokenInvalid) {
+      return;
+    }
+
     const password = passwordInput.value;
     const confirmPassword = confirmPasswordInput.value;
     alertMessage.classList.add('hidden');
@@ -84,7 +97,7 @@
     submitBtn.textContent = 'Updating...';
 
     try {
-      const res = await fetch('/auth/reset-password', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password })

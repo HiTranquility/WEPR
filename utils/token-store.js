@@ -10,3 +10,8 @@ export function hasRefreshToken(userId, token) {
 export function removeRefreshToken(userId, token) {
   if (store.has(userId)) store.get(userId).delete(token);
 }
+export function clearRefreshTokens(userId) {
+  if (store.has(userId)) {
+    store.delete(userId);
+  }
+}

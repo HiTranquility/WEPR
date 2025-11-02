@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import passport from '../utils/passport.js';
-import { findOrCreateGoogleUser, buildAuthPayload, getDashboardRedirectByRole, registerLocalUser, getUserByEmail } from "../models/user.model.js";
+import { findOrCreateGoogleUser, buildAuthPayload, getDashboardRedirectByRole, registerLocalUser, getUserByEmail, updateUser } from "../models/user.model.js";
 import { authenticateAdmin, buildAdminAuthPayload } from "../models/admin.model.js";
 import {
   signAccessToken,
@@ -12,7 +12,10 @@ import {
 import {
   addRefreshToken,
   removeRefreshToken,
+  clearRefreshTokens,
 } from "../utils/token-store.js";
+import { sendPasswordResetEmail } from "../utils/emailOtp.js";
+import { createPasswordResetToken, getPasswordResetToken, consumePasswordResetToken } from "../utils/password-reset-store.js";
 
 // Import new middlewares
 import { ensureAuthenticated as ensureTeacher, requireRole as requireTeacherRole } from '../middlewares/teacher.middleware.js';
@@ -224,6 +227,114 @@ router.post("/signout", (req, res) => {
 
   console.log("✅ Signed out successfully, clearing cookies.");
   return res.redirect("/signin");
+});
+
+// ==== [GET] /forgot ====
+router.get(["/forgot", "/auth/forgot"], (req, res) => {
+  res.render("vwAuth/forgot", { layout: "auth", title: "Quên mật khẩu" });
+});
+
+// ==== [POST] /forgot ====
+router.post(["/forgot", "/auth/forgot"], async (req, res) => {
+  try {
+    const email = (req.body?.email || "").trim().toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({ message: "Vui lòng nhập email hợp lệ" });
+    }
+
+    const user = await getUserByEmail(email);
+    const successMessage = "Nếu email tồn tại, chúng tôi đã gửi liên kết đặt lại mật khẩu.";
+
+    if (!user) {
+      return res.json({ success: true, message: successMessage });
+    }
+
+    const token = createPasswordResetToken(user.id);
+    const resetLink = `${req.protocol}://${req.get("host")}/auth/reset-password?token=${token}`;
+
+    try {
+      await sendPasswordResetEmail(user.email, resetLink, user.full_name);
+    } catch (emailErr) {
+      console.error("sendPasswordResetEmail error:", emailErr);
+      return res.status(500).json({ message: emailErr.message || "Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại sau." });
+    }
+
+    return res.json({ success: true, message: successMessage });
+  } catch (err) {
+    console.error("/forgot error", err);
+    return res.status(500).json({ message: "Lỗi máy chủ. Vui lòng thử lại sau." });
+  }
+});
+
+// ==== [GET] /reset-password ====
+router.get(["/reset-password", "/auth/reset-password"], (req, res) => {
+  const queryToken = typeof req.query?.token === "string" ? req.query.token.trim() : "";
+
+  let activeToken = queryToken;
+  if (!activeToken && req.session?.passwordReset?.token) {
+    activeToken = req.session.passwordReset.token;
+  }
+
+  if (!activeToken) {
+    return res.redirect("/forgot");
+  }
+
+  const record = getPasswordResetToken(activeToken);
+  if (!record) {
+    if (req.session?.passwordReset) {
+      delete req.session.passwordReset;
+    }
+    return res.render("vwAuth/reset", {
+      layout: "auth",
+      title: "Đặt lại mật khẩu",
+      tokenInvalid: true,
+    });
+  }
+
+  req.session.passwordReset = { token: activeToken };
+
+  return res.render("vwAuth/reset", {
+    layout: "auth",
+    title: "Đặt lại mật khẩu",
+    tokenInvalid: false,
+  });
+});
+
+// ==== [POST] /reset-password ====
+router.post(["/reset-password", "/auth/reset-password"], async (req, res) => {
+  try {
+    const password = req.body?.password;
+    if (!password || password.length < 6) {
+      return res.status(400).json({ message: "Mật khẩu phải có ít nhất 6 ký tự" });
+    }
+
+    const token = req.session?.passwordReset?.token;
+    if (!token) {
+      return res.status(400).json({ message: "Yêu cầu đặt lại mật khẩu không hợp lệ hoặc đã hết hạn." });
+    }
+
+    const record = consumePasswordResetToken(token);
+    if (!record) {
+      if (req.session?.passwordReset) {
+        delete req.session.passwordReset;
+      }
+      return res.status(400).json({ message: "Liên kết đặt lại mật khẩu đã hết hạn. Vui lòng thử lại." });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    await updateUser(record.userId, { password_hash: hashed, updated_at: new Date() });
+    clearRefreshTokens(record.userId);
+
+    if (req.session?.passwordReset) {
+      delete req.session.passwordReset;
+    }
+
+    return res.json({ success: true, message: "Cập nhật mật khẩu thành công! Bạn có thể đăng nhập ngay bây giờ." });
+  } catch (err) {
+    console.error("/reset-password error", err);
+    return res.status(500).json({ message: "Lỗi máy chủ. Vui lòng thử lại sau." });
+  }
 });
 
 // New: Use role middleware for teacher and student dashboard
