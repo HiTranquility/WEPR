@@ -196,10 +196,8 @@
                 <div class="course-footer">
                   <div class="course-price">
                     <span class="price-current">{{formatCurrency discount_price}}</span>
-                    {{#if (gt price discount_price)}}
                     <span class="price-original">{{formatCurrency price}}</span>
                     <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
-                    {{/if}}
                   </div>
                   <button class="btn-wishlist" data-course-id="{{id}}">
                     <i class="bi bi-heart"></i>

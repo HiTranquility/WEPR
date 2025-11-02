@@ -2,39 +2,84 @@
 <link rel="stylesheet" href="/statics/css/student/student-dashboard.css">
 {{/fill_section}}
 
-<div class="container py-5">
-  {{> dashboard
-  title="Student Dashboard"
-  message="Sẵn sàng tiếp tục học tập ngày hôm nay?"
-  }}
+<section class="profile-hero">
+  <div class="container">
+    <div class="profile-card">
+      <div class="profile-avatar-wrapper">
+        <img src="{{user.avatar_url}}"
+          onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png';"
+          class="profile-avatar" alt="User avatar" />
+      </div>
+      <div class="profile-info">
+        <h1 class="profile-name">{{user.name}}</h1>
+        <p class="profile-email"><i class="bi bi-envelope"></i> {{user.email}}</p>
+        {{#if user.bio}}
+        <p class="profile-bio">{{user.bio}}</p>
+        {{else}}
+        <p class="profile-bio text-muted">Bạn chưa cập nhật tiểu sử cá nhân.</p>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</section>
 
+{{!-- <div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h4 class="card-title mb-4">Thống kê học tập</h4>
+    <div class="row g-3">
+      {{#each stats}}
+      <div class="col-sm-6">
+        <div class="stat-tile">
+          <span class="stat-label">{{label}}</span>
+          <span class="stat-value">{{value}}</span>
+        </div>
+      </div>
+      {{/each}}
+      <div class="col-sm-6">
+        <div class="stat-tile">
+          <span class="stat-label">Khoá học yêu thích</span>
+          <span class="stat-value">{{wishlist.length}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> --}}
+
+<div class="container py-5">
   <div class="mb-5">
-    <h3 class="mb-4">Tiếp tục học</h3>
-    {{#if recentCourses.length}}
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-4">Khóa học của tôi</h3>
+      <a href="/student/my-courses" class="text-decoration-none">Xem tất cả</a>
+    </div>
+    <p class="text-muted">Sẵn sàng tiếp tục học tập ngày hôm nay?</p>
+    {{#if enrolledCourses.length}}
     <div class="row g-4">
-      {{#each recentCourses}}
+      {{#each enrolledCourses}}
       <div class="col-md-6">
         <div class="card learning-card">
-          <div class="row g-0">
-            <div class="col-4">
-              <img src="{{thumbnail_url}}" class="img-fluid rounded-start" alt="{{title}}">
-            </div>
-            <div class="col-8">
-              <div class="card-body">
-                <h5 class="card-title">{{title}}</h5>
-                <p class="text-muted small">{{teacher.full_name}}</p>
-                <div class="progress mb-2" style="height: 8px;">
-                  <div class="progress-bar" role="progressbar" style="width: {{progress}}%"></div>
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="text-muted small">{{progress}}% hoàn thành</span>
-                  <a href="/student/learn/{{id}}" class="btn btn-primary btn-sm">
-                    {{#if (eq progress 0)}}Bắt đầu{{else}}Tiếp tục{{/if}}
-                  </a>
+          <a href="/courses/{{id}}" class="text-decoration-none">
+            <div class="row g-0">
+              <div class="col-4">
+                <img src="{{thumbnail_url}}" class="img-fluid rounded-start" alt="{{title}}">
+              </div>
+              <div class="col-8">
+                <div class="card-body">
+                  <h5 class="card-title">{{title}}</h5>
+                  <p class="text-muted small">{{teacher.full_name}}</p>
+                  <div class="progress mb-2" style="height: 8px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{progress}}%"></div>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">{{progress}}% hoàn thành</span>
+                    <a href="/student/learn/{{id}}" class="btn btn-primary btn-sm">
+                      {{#if (eq progress 0)}}Bắt đầu{{else}}Tiếp tục{{/if}}
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </a>
         </div>
       </div>
       {{/each}}
@@ -49,34 +94,36 @@
     {{/if}}
   </div>
 
-  {{> recommend-course-section
-  title="Các khóa học khác cùng lĩnh vực"
-  courses=recommendedCourses
-  }}
-
   <div class="mt-5" id="wishlist-section">
-    <h3 class="mb-4">Danh sách yêu thích</h3>
-    {{#if watchlist.length}}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="mb-4">Danh sách yêu thích</h3>
+      <a href="/student/wishlist" class="text-decoration-none">Xem tất cả</a>
+    </div>
+    <p class="text-muted">Cùng khám phá các khóa học yêu thích của bạn nào</p>
+    {{#if wishlist.length}}
     <div class="row g-4">
-      {{#each watchlist}}
+      {{#each wishlist}}
       <div class="col-lg-4 col-md-6">
         <div class="card wishlist-card">
-          <img src="{{course.thumbnail_url}}" class="card-img-top" alt="{{course.title}}">
-          <div class="card-body">
-            <span class="badge bg-primary mb-2">{{course.category.name}}</span>
-            <h5 class="card-title">{{course.title}}</h5>
-            <p class="text-muted small mb-2">{{course.teacher.full_name}}</p>
-            <div class="d-flex gap-3 text-muted small mb-3">
-              <span>⭐ {{course.rating_avg}}</span>
-              <span>{{formatNumber course.rating_count}} đánh giá</span>
+          <a href="/courses/{{id}}" class="text-decoration-none">
+            <img src="{{course.thumbnail_url}}" class="card-img-top" alt="{{course.title}}">
+            <div class="card-body">
+              <span class="badge bg-primary mb-2">{{course.category.name}}</span>
+              <h5 class="card-title">{{course.title}}</h5>
+              <p class="text-muted small mb-2">{{course.teacher.full_name}}</p>
+              <div class="d-flex gap-3 text-muted small mb-3">
+                <span>⭐ {{course.rating_avg}}</span>
+                <span>{{formatNumber course.rating_count}} đánh giá</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <strong class="text-primary">{{formatCurrency course.discount_price}}</strong>
+                <button class="btn btn-outline-danger btn-sm" data-course-id="{{course.id}}" data-fav-id="{{id}}"
+                  onclick="removeWishlistDashboard('{{course.id}}')">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center">
-              <strong class="text-primary">{{formatCurrency course.discount_price}}</strong>
-              <button class="btn btn-outline-danger btn-sm" data-course-id="{{course.id}}" data-fav-id="{{id}}" onclick="removeWishlistDashboard('{{course.id}}')">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          </div>
+          </a>
         </div>
       </div>
       {{/each}}

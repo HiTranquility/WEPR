@@ -38,7 +38,8 @@
 
         {{#if course.preview_lecture}}
         <div class="mb-4">
-          <a class="btn btn-outline-light" href="/courses/{{course.id}}/preview/lecture/{{course.preview_lecture.id}}" target="_blank">
+          <a class="btn btn-outline-light" href="/courses/{{course.id}}/preview/lecture/{{course.preview_lecture.id}}"
+            target="_blank">
             <i class="bi bi-play-circle"></i> Xem thử bài giảng
           </a>
         </div>
@@ -81,7 +82,8 @@
 
           <div class="tab-pane fade" id="curriculum">
             <h3 class="mb-4">Nội dung khóa học</h3>
-            <p class="text-muted mb-4">{{course.sections.length}} chương • {{course.total_lectures}} bài giảng • {{course.total_duration}}</p>
+            <p class="text-muted mb-4">{{course.sections.length}} chương • {{course.total_lectures}} bài giảng •
+              {{course.total_duration}}</p>
 
             {{#each course.sections}}
             <div class="curriculum-section">
@@ -94,7 +96,8 @@
               </div>
               <div class="collapse section-content" id="section-{{@index}}">
                 {{#each lectures}}
-                <a href="/courses/{{../../course.id}}/preview/lecture/{{id}}" target="_blank" class="lecture-item text-decoration-none">
+                <a href="/courses/{{../../course.id}}/preview/lecture/{{id}}" target="_blank"
+                  class="lecture-item text-decoration-none">
                   <div class="lecture-info">
                     <i class="bi bi-play-circle lecture-icon"></i>
                     <span>{{title}}</span>
@@ -139,10 +142,12 @@
 
             <!-- Summary box -->
             <div class="rating-summary p-3 mb-4 bg-light d-flex align-items-center">
-              <div style="font-size:48px; font-weight:700; color:#f6b300; width:120px; text-align:center;">{{course.rating_avg}}</div>
+              <div style="font-size:48px; font-weight:700; color:#f6b300; width:120px; text-align:center;">
+                {{course.rating_avg}}</div>
               <div>
                 <div class="d-flex align-items-center">
-                  <div class="me-3">{{#loopTimes course.rating_avg}}<i class="bi bi-star-fill text-warning"></i>{{/loopTimes}}</div>
+                  <div class="me-3">{{#loopTimes course.rating_avg}}<i
+                      class="bi bi-star-fill text-warning"></i>{{/loopTimes}}</div>
                   <div class="text-muted">Đánh giá trung bình ({{course.rating_count}} lượt)</div>
                 </div>
               </div>
@@ -150,44 +155,53 @@
 
             <!-- Review form (only for enrolled users who haven't reviewed yet) -->
             {{#if isEnrolled}}
-              {{#unless userReview}}
-              <div class="card mb-4 p-3">
-                <h5>Viết đánh giá của bạn</h5>
-                <form id="reviewForm" data-course-id="{{course.id}}">
-                  <div class="mb-2">
-                    <label class="form-label">Đánh giá</label>
-                    <div id="starPicker" class="mb-2">
-                      <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="1"><i class="bi bi-star-fill"></i></button>
-                      <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="2"><i class="bi bi-star-fill"></i></button>
-                      <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="3"><i class="bi bi-star-fill"></i></button>
-                      <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="4"><i class="bi bi-star-fill"></i></button>
-                      <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="5"><i class="bi bi-star-fill"></i></button>
-                    </div>
-                    <input type="hidden" name="rating" id="reviewRating" value="5">
+            {{#unless userReview}}
+            <div class="card mb-4 p-3">
+              <h5>Viết đánh giá của bạn</h5>
+              <form id="reviewForm" data-course-id="{{course.id}}">
+                <div class="mb-2">
+                  <label class="form-label">Đánh giá</label>
+                  <div id="starPicker" class="mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="1"><i
+                        class="bi bi-star-fill"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="2"><i
+                        class="bi bi-star-fill"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="3"><i
+                        class="bi bi-star-fill"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="4"><i
+                        class="bi bi-star-fill"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary star-btn" data-value="5"><i
+                        class="bi bi-star-fill"></i></button>
                   </div>
-                  <div class="mb-2">
-                    <label class="form-label">Nhận xét</label>
-                    <textarea name="comment" id="reviewComment" class="form-control" rows="3" placeholder="Viết nhận xét..."></textarea>
-                  </div>
-                  <div>
-                    <button class="btn btn-primary" type="submit">Gửi đánh giá</button>
-                  </div>
-                </form>
-              </div>
-              {{/unless}}
+                  <input type="hidden" name="rating" id="reviewRating" value="5">
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Nhận xét</label>
+                  <textarea name="comment" id="reviewComment" class="form-control" rows="3"
+                    placeholder="Viết nhận xét..."></textarea>
+                </div>
+                <div>
+                  <button class="btn btn-primary" type="submit">Gửi đánh giá</button>
+                </div>
+              </form>
+            </div>
+            {{/unless}}
             {{/if}}
 
             <div class="reviews-list" id="reviewsList">
               {{#each reviews}}
               <div class="review-item mb-3">
                 <div class="review-header d-flex align-items-start">
-                  <img src="{{student.avatar_url}}" class="review-avatar rounded-circle me-3" alt="{{student.full_name}}" style="width:48px;height:48px;">
+                  <img src="{{user.avatar_url}}"
+                    onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png';"
+                    class="profile-avatar" alt="{{user.full_name}}" style="width:48px;height:48px;" />
                   <div style="flex:1;">
                     <div class="d-flex align-items-center">
                       <div class="review-author fw-bold">{{student.full_name}}</div>
                       <div class="ms-auto text-muted">{{formatDate created_at}}</div>
                     </div>
-                    <div class="review-rating text-warning mt-1">{{#loopTimes rating}}<i class="bi bi-star-fill"></i>{{/loopTimes}}</div>
+                    <div class="review-rating text-warning mt-1">{{#loopTimes rating}}<i
+                        class="bi bi-star-fill"></i>{{/loopTimes}}</div>
                     <div class="review-content mt-2">{{content}}</div>
                   </div>
                 </div>
@@ -223,7 +237,8 @@
               <h6 class="fw-bold mb-3">Khóa học này bao gồm:</h6>
               <ul class="list-unstyled">
                 <li class="mb-2"><i class="bi bi-play-circle text-primary"></i> {{course.total_duration}} video</li>
-                <li class="mb-2"><i class="bi bi-file-earmark-text text-primary"></i> {{course.total_resources}} tài nguyên</li>
+                <li class="mb-2"><i class="bi bi-file-earmark-text text-primary"></i> {{course.total_resources}} tài
+                  nguyên</li>
                 <li class="mb-2"><i class="bi bi-phone text-primary"></i> Truy cập trên điện thoại và TV</li>
                 <li class="mb-2"><i class="bi bi-infinity text-primary"></i> Truy cập không giới hạn</li>
                 <li class="mb-2"><i class="bi bi-award text-primary"></i> Chứng chỉ hoàn thành</li>
@@ -283,7 +298,7 @@
     let data = null;
     try {
       data = await res.json();
-    } catch (_) {}
+    } catch (_) { }
     if (!res.ok) {
       const message = data?.message || 'Có lỗi xảy ra.';
       alert(message);

@@ -65,7 +65,7 @@ router.get('/teacher/courses', async function(req, res, next) {
       });
     }
 
-    res.render('vwTeacher/course-list', {
+    res.render('vwTeacher/my-courses', {
       title: 'Khóa học của tôi - Giảng viên',
       courses: data,
       searchQuery: null,
@@ -97,6 +97,15 @@ router.get('/teacher/profile', async function(req, res, next) {
       searchQuery: null,
       layout: 'main'
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/teacher/create-course', async function(req, res, next) {
+  try {
+    res.render('vwTeacher/create-course', {});
+      
   } catch (err) {
     next(err);
   }

@@ -8,26 +8,29 @@ const router = express.Router();
 
 router.use('/student', ensureAuthenticated, requireRole('student'));
 
-router.get("/student/dashboard", async (req, res, next) => {
-    try {
-        // ensureAuthenticated sets req.user
-        const studentId = req.user && req.user.id ? req.user.id : null;
-        if (!studentId) return res.redirect('/signin');
+//no use
+// router.get("/student/dashboard", async (req, res, next) => {
+//     try {
+//         // ensureAuthenticated sets req.user
+//         const studentId = req.user && req.user.id ? req.user.id : null;
+//         if (!studentId) return res.redirect('/signin');
 
-        const data = await getStudentDashboard(studentId);
-        const allCategories = await getAllCategories({ includeCounts: false });
-        if (!data) return res.redirect('/404');
-        res.render("vwStudent/dashboard", {
-            title: "Trang chủ học viên",
-            ...data, // user, stats, recentCourses, recommendedCourses
-            allCategories,
-            searchQuery: null,
-            layout: "main",
-        });
-    } catch (err) {
-        next(err);
-    }
-});
+//         const data = await getStudentDashboard(studentId);
+
+//         const allCategories = await getAllCategories({ includeCounts: false });
+//         if (!data) return res.redirect('/404');
+//         res.render("vwStudent/dashboard", {
+//             title: "Trang chủ học viên",
+//             ...data, // user, stats, recentCourses, recommendedCourses
+//             enrolledCourses: profileData.enrolledCourses,
+//             allCategories,
+//             searchQuery: null,
+//             layout: "main",
+//         });
+//     } catch (err) {
+//         next(err);
+//     }
+// });
 
 router.get('/student/profile', async function(req, res, next) {
   try {
@@ -83,7 +86,7 @@ router.get("/student/my-courses", async (req, res, next) => {
     }
 });
 
-router.get('/student/watchlist', async function(req, res, next) {
+router.get('/student/wishlist', async function(req, res, next) {
     try {
         const studentId = req.user && req.user.id ? req.user.id : null;
         if (!studentId) return res.redirect('/signin');
@@ -97,7 +100,7 @@ router.get('/student/watchlist', async function(req, res, next) {
         res.render('vwStudent/wishlist', {
             title: 'Danh sách yêu thích',
             user: data.user,
-            watchlist: data.watchlist,
+            wishlist: data.watchlist,
             allCategories,
             layout: 'main'
         });
