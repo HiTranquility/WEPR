@@ -100,7 +100,7 @@ router.get('/student/wishlist', async function(req, res, next) {
         res.render('vwStudent/wishlist', {
             title: 'Danh sách yêu thích',
             user: data.user,
-            watchlist: data.watchlist,
+            wishlist: data.watchlist,
             allCategories,
             layout: 'main'
         });

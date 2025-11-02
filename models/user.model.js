@@ -1119,7 +1119,7 @@ export const getStudentProfileInfo = async (studentId) => {
     stats: dashboard.stats,
     statsList: dashboard.statsList,
     enrolledCourses: dashboard.recentCourses,
-    watchlist: dashboard.watchlist,
+    wishlist: dashboard.watchlist,
     wishlist_count: dashboard.watchlist.length,
   };
 };

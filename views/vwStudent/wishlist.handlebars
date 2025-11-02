@@ -9,7 +9,7 @@
           onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png';"
           class="profile-avatar" alt="User avatar" />
       <div>
-        <h2 class="mb-1">{{user.name}}</h2>
+        <h2 class="mb-1">{{user.full_name}}</h2>
         <p class="mb-0 opacity-75">{{user.email}}</p>
       </div>
     </div>
@@ -22,11 +22,11 @@
 
       <div class="col-lg-9">
         <div class="profile-content">
-          <h4 class="mb-4">Khóa học của tôi ({{enrolledCourses.length}})</h4>
+          <h4 class="mb-4">Danh sách yêu thích ({{wishlist.length}})</h4>
 
-          {{#if enrolledCourses.length}}
+          {{#if wishlist.length}}
           <div class="enrolled-courses-container">
-            {{#each enrolledCourses}}
+            {{#each wishlist}}
             <div class="course-card-horizontal">
               <img src="{{course.thumbnail_url}}" class="course-card-thumbnail" alt="{{course.title}}">
               <div class="course-card-content">

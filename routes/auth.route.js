@@ -351,8 +351,7 @@ router.get('/teacher/dashboard', ensureTeacher, requireTeacherRole('teacher'), (
 import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseLearningData, getStudentProfileInfo } from '../models/user.model.js';
 router.get('/student/dashboard', ensureStudent, requireStudentRole('student'), async (req, res) => {
   const studentId = req.user.id;
-  const data = await getStudentDashboard(studentId);
-
+  const data = await getStudentProfileInfo(studentId);
   res.render('vwStudent/dashboard', { layout: 'main', user: req.user, data });
 });
 
