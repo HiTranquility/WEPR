@@ -174,32 +174,43 @@ export async function searchCourses(opts = {}) {
   const [{ total = 0 }] = await query.clone().clearSelect().countDistinct({ total: 'courses.id' });
 
   // Sắp xếp
+  // ✅ Sắp xếp theo lựa chọn người dùng
   switch (sortBy) {
-    case 'newest':
-      query.orderBy('courses.created_at', 'desc');
+    case 'popular': // Phổ biến nhất → dựa theo số học viên
+      query.orderBy('courses.enrollment_count', 'desc');
       break;
-    case 'price_asc':
-      query.orderBy('courses.price', 'asc');
-      break;
-    case 'price_desc':
-      query.orderBy('courses.price', 'desc');
-      break;
-    case 'rating':
+
+    case 'rating': // Đánh giá cao nhất
+    case 'top-rated':
       query.orderBy([
         { column: 'courses.rating_avg', order: 'desc' },
         { column: 'courses.rating_count', order: 'desc' },
       ]);
       break;
-    case 'sold':
-      query.orderBy('courses.enrollment_count', 'desc');
+
+    case 'newest': // Mới nhất
+      query.orderBy('courses.created_at', 'desc');
       break;
-    case 'popular':
-    default:
-      query.orderBy([
-        { column: 'courses.view_count', order: 'desc' },
-        { column: 'courses.enrollment_count', order: 'desc' },
-      ]);
+
+    case 'price-low': // Giá thấp → cao
+    case 'price_asc':
+      query.orderByRaw(`
+        COALESCE(NULLIF(courses.discount_price, 0), courses.price)::numeric ASC
+      `);
+      break;
+
+    case 'price-high': // Giá cao → thấp
+    case 'price_desc':
+      query.orderByRaw(`
+        COALESCE(NULLIF(courses.discount_price, 0), courses.price)::numeric DESC
+      `);
+      break;
+
+
+    default: // fallback: phổ biến nhất
+      query.orderBy('courses.enrollment_count', 'desc');
   }
+
 
   // Truy vấn dữ liệu trang hiện tại
   const rows = await query
