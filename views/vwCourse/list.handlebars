@@ -278,18 +278,6 @@
               <a class="page-link" href="/courses/search?q={{searchQuery}}&page={{math currentPage '+' 1}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau ›</a>
             </li>
             {{else}}
-            {{!-- Pagination cho courses list --}}
-            <li class="page-item {{#if (eq currentPage 1)}}disabled{{/if}}">
-              <a class="page-link" href="/courses?page={{math currentPage '-' 1}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Trước</a>
-            </li>
-            {{#each (range 1 totalPages)}}
-            <li class="page-item {{#if (eq ../currentPage this)}}active{{/if}}">
-              <a class="page-link" href="/courses?page={{this}}{{#if ../currentCategory}}&category={{../currentCategory}}{{/if}}{{#if ../currentSub}}&sub={{../currentSub}}{{/if}}{{#if (ne ../sortBy 'popular')}}&sort={{../sortBy}}{{/if}}">{{this}}</a>
-            </li>
-            {{/each}}
-            <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
-              <a class="page-link" href="/courses?page={{math currentPage '+' 1}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau</a>
-            </li>
             {{#if paginationPages}}
               {{#each paginationPages}}
                 <li class="page-item {{#if active}}active{{/if}} {{#if disabled}}disabled{{/if}}">
@@ -303,6 +291,7 @@
             {{else}}
               <!-- pagination rendered by JS -->
             {{/if}}
+          {{/if}}
           </ul>
         </nav>
       </div>
