@@ -200,7 +200,7 @@
     <div class="row g-4">
       {{#each relatedCourses}}
       <div class="col-lg-3 col-md-4 col-sm-6">
-        <div class="card course-card">
+        <a href="/courses/{{id}}" class="card course-card text-decoration-none">
           <div class="position-relative">
             <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
           </div>
@@ -221,7 +221,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </a>
       </div>
       {{/each}}
     </div>

@@ -84,13 +84,13 @@
     <div class="row g-4">
       {{#each topCategories}}
       <div class="col-md-4 col-sm-6">
-        <div class="category-card">
+        <a href="/courses?category={{id}}" class="category-card text-decoration-none">
           <div class="category-icon">
             <i class="bi bi-book"></i>
           </div>
           <div class="category-name">{{name}}</div>
           <div class="category-count">{{enrollment_count}} đăng ký mới | {{course_count}} khóa học</div>
-        </div>
+        </a>
       </div>
       {{/each}}
     </div>
@@ -106,7 +106,7 @@
     <div class="row g-4">
       {{#each mostViewedCourses}}
       <div class="col-lg-3 col-md-4 col-sm-6">
-        <div class="card course-card">
+        <a href="/courses/{{id}}" class="card course-card text-decoration-none">
           <div class="position-relative">
             <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
             {{#if (isBestSeller enrollment_count)}}
@@ -137,7 +137,7 @@
               {{/if}}
             </div>
           </div>
-        </div>
+        </a>
       </div>
       {{/each}}
     </div>
@@ -153,7 +153,7 @@
     <div class="row g-4">
       {{#each newestCourses}}
       <div class="col-lg-3 col-md-4 col-sm-6">
-        <div class="card course-card">
+        <a href="/courses/{{id}}" class="card course-card text-decoration-none">
           <div class="position-relative">
             <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
             {{#if (isNew created_at)}}
@@ -184,7 +184,7 @@
               {{/if}}
             </div>
           </div>
-        </div>
+        </a>
       </div>
       {{/each}}
     </div>

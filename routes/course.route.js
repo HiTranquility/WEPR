@@ -5,6 +5,50 @@ import database from '../utils/database.js';
 
 const router = express.Router();
 
+// API endpoint cho AJAX requests
+router.get('/api/courses', async (req, res, next) => {
+  try {
+    const { category, sub, sub_category, subcategory, sort = 'popular', page = '1', limit = '12', min_price, max_price, only_discounted, featured } = req.query;
+    const subCategory = sub || sub_category || subcategory;
+    const apiSort = sort === 'price-low' ? 'price_asc' : (sort === 'price-high' ? 'price_desc' : sort);
+
+    // 🔥 Nếu người dùng chọn category cha, tự động lấy luôn các sub-category con
+    let categoryIds = [];
+    if (category) {
+      categoryIds = await getCategoryWithChildren(category);
+      if (categoryIds.length === 0) {
+        categoryIds = [category];
+      }
+    } else if (subCategory) {
+      categoryIds = [subCategory];
+    }
+
+    const { data, pagination } = await searchCourses({
+      q: '',
+      categoryIds,
+      sortBy: apiSort,
+      page: Number(page),
+      limit: Number(limit),
+      minPrice: min_price != null ? Number(min_price) : undefined,
+      maxPrice: max_price != null ? Number(max_price) : undefined,
+      onlyDiscounted: only_discounted === 'true',
+      isFeatured: featured ? (featured === 'true') : undefined
+    });
+
+    res.json({
+      success: true,
+      courses: data,
+      pagination,
+      currentCategory: category || null,
+      currentSub: subCategory || null,
+      sortBy: sort
+    });
+  } catch (err) {
+    console.error('API courses error:', err);
+    res.status(500).json({ success: false, message: 'Lỗi tải dữ liệu' });
+  }
+});
+
 router.get('/courses', async (req, res, next) => {
   try {
     const { category, sub, sub_category, subcategory, sort = 'popular', page = '1', limit = '12' } = req.query;
@@ -40,6 +84,8 @@ router.get('/courses', async (req, res, next) => {
       currentSub: subCategory || null,
       currentPage: pagination.page,
       totalPages: pagination.totalPages,
+      sortBy: sort, // Thêm sortBy vào template
+      searchQuery: null,
       layout: 'main',
     });
   } catch (err) {
