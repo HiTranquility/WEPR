@@ -5,6 +5,44 @@ import database from '../utils/database.js';
 
 const router = express.Router();
 
+function buildPaginationPages(currentPage, totalPages, query = {}) {
+  const pages = [];
+  const qp = { ...query };
+  const makeUrl = (p) => {
+    const params = new URLSearchParams({ ...qp, page: String(p) });
+    return '?' + params.toString();
+  };
+
+  // Prev
+  pages.push({ label: '‹', url: makeUrl(Math.max(1, currentPage - 1)), active: false, disabled: currentPage === 1, small: true });
+
+  if (totalPages <= 7) {
+    for (let p = 1; p <= totalPages; p++) {
+      pages.push({ label: String(p), url: makeUrl(p), active: p === currentPage, disabled: false });
+    }
+  } else {
+    pages.push({ label: '1', url: makeUrl(1), active: 1 === currentPage });
+
+    const start = Math.max(2, currentPage - 2);
+    const end = Math.min(totalPages - 1, currentPage + 2);
+
+    if (start > 2) pages.push({ label: '...', url: null, active: false, disabled: true, ellipsis: true });
+
+    for (let p = start; p <= end; p++) {
+      pages.push({ label: String(p), url: makeUrl(p), active: p === currentPage });
+    }
+
+    if (end < totalPages - 1) pages.push({ label: '...', url: null, active: false, disabled: true, ellipsis: true });
+
+    pages.push({ label: String(totalPages), url: makeUrl(totalPages), active: totalPages === currentPage });
+  }
+
+  // Next
+  pages.push({ label: '›', url: makeUrl(Math.min(totalPages, currentPage + 1)), active: false, disabled: currentPage === totalPages, small: true });
+
+  return pages;
+}
+
 // API endpoint cho AJAX requests
 router.get('/api/courses', async (req, res, next) => {
   try {
@@ -66,7 +104,7 @@ router.get('/courses', async (req, res, next) => {
 
     const { data, pagination } = await searchCourses({
       q: '',
-      categoryIds, // 👈 truyền mảng ID thay vì 1 cái
+      categoryIds, 
       sortBy: sort,
       page: Number(page),
       limit: Number(limit),
@@ -74,20 +112,32 @@ router.get('/courses', async (req, res, next) => {
 
     const categories = await getCategoriesWithChildren({ includeCounts: true });
 
-    res.render('vwCourse/list', {
-      title: 'Danh sách khóa học',
-      courses: data,
-      categories,
-      query: req.query,
-      sortBy: sort,
-      currentCategory: category || null,
-      currentSub: subCategory || null,
-      currentPage: pagination.page,
-      totalPages: pagination.totalPages,
-      sortBy: sort, // Thêm sortBy vào template
-      searchQuery: null,
-      layout: 'main',
-    });
+    const totalPages =
+      pagination && pagination.totalPages && pagination.totalPages > 0
+        ? pagination.totalPages
+        : Math.ceil((pagination.total || 0) / (pagination.limit || 12));
+
+    console.log('==== [DEBUG Pagination] ====');
+    console.log('pagination:', pagination);
+    console.log('total:', pagination.total, 'limit:', pagination.limit, 'totalPages:', totalPages);
+    console.log('============================');
+
+  const paginationPages = buildPaginationPages(Number(pagination.page || 1), Number(totalPages), req.query);
+
+  res.render('vwCourse/list', {
+     title: 'Danh sách khóa học',
+    courses: data,
+    categories,
+    query: req.query,
+    sortBy: sort,
+    currentCategory: category || null,
+    currentSub: subCategory || null,
+    currentPage: pagination.page || 1,
+    totalPages,
+    paginationPages,
+    searchQuery: null,
+    layout: 'main',
+  });
   } catch (err) {
     next(err);
   }
@@ -125,6 +175,7 @@ router.get('/courses/search', async function(req, res, next) {
       currentSub: subCategory || null,
       currentPage: pagination.page,
       totalPages: pagination.totalPages,
+      paginationPages: buildPaginationPages(Number(pagination.page || 1), Number(pagination.totalPages || 1), req.query),
       sortBy: sort,
       searchQuery: q,
       q,
