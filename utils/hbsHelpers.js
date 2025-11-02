@@ -68,6 +68,13 @@ export const hbsHelpers = {
     for (let i = 0; i < n; i++) out += block.fn(i);
     return out;
   },
+  range(start, end) {
+    const arr = [];
+    for (let i = Number(start); i <= Number(end); i++) {
+      arr.push(i);
+    }
+    return arr;
+  },
   getBadgeClass(badge) {
     if (!badge) return '';
     return 'badge-' + badge;
@@ -84,20 +91,41 @@ export const hbsHelpers = {
   hasBadge(badge) {
     return badge && badge.length > 0;
   },
+  courseStatusLabel(status) {
+    switch ((status || '').toLowerCase()) {
+      case 'published':
+      case 'completed':
+        return 'Đã xuất bản';
+      case 'draft':
+        return 'Bản nháp';
+      case 'suspended':
+        return 'Đã đình chỉ';
+      case 'incomplete':
+        return 'Chưa hoàn thành';
+      default:
+        return status || 'Không xác định';
+    }
+  },
+  courseStatusClass(status) {
+    switch ((status || '').toLowerCase()) {
+      case 'published':
+      case 'completed':
+        return 'badge bg-success';
+      case 'draft':
+        return 'badge bg-warning text-dark';
+      case 'suspended':
+        return 'badge bg-danger';
+      case 'incomplete':
+      default:
+        return 'badge bg-secondary';
+    }
+  },
   json(value) {
     try {
       return JSON.stringify(value ?? null);
     } catch (err) {
       return 'null';
     }
-  },
-  chunk(arr, size) {
-    const out = [];
-    for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-    return out;
-  },
-  and(a, b) {
-    return a && b;
-  },
+  }
 };
 export default hbsHelpers;

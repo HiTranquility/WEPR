@@ -6,8 +6,18 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>{{course.title}}</h2>
     <div class="btn-group">
-      <a href="/teacher/course/{{course.id}}/edit" class="btn btn-outline-primary">Chỉnh sửa</a>
-      <a href="/teacher/course/{{course.id}}/content" class="btn btn-outline-secondary">Quản lý nội dung</a>
+      <a href="/teacher/course/{{course.id}}/manage" class="btn btn-outline-primary">
+        <i class="bi bi-speedometer"></i> Quản lý
+      </a>
+      <a href="/teacher/course/{{course.id}}/edit" class="btn btn-outline-info">
+        <i class="bi bi-pencil"></i> Chỉnh sửa
+      </a>
+      <a href="/teacher/course/{{course.id}}/content" class="btn btn-outline-success">
+        <i class="bi bi-list-ul"></i> Nội dung
+      </a>
+      <a href="/courses/{{course.id}}" class="btn btn-outline-secondary" target="_blank">
+        <i class="bi bi-eye"></i> Xem
+      </a>
     </div>
   </div>
 

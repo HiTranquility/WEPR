@@ -1,0 +1,64 @@
+{{#fill_section 'css'}}
+<link rel="stylesheet" href="/statics/css/teacher/teacher-course-list.css">
+{{/fill_section}}
+
+<div class="container py-4 teacher-course-list-page">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Khóa học của tôi</h2>
+    <a href="/teacher/course/create" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Tạo khóa học mới
+    </a>
+  </div>
+
+  {{#if courses.length}}
+  <div class="row g-4">
+    {{#each courses}}
+    <div class="col-md-6 col-lg-4">
+      <div class="card teacher-course-card h-100">
+        <img src="{{thumbnail_url}}" class="card-img-top" alt="{{title}}" style="height: 200px; object-fit: cover;">
+        <div class="card-body d-flex flex-column">
+          <div class="mb-2">
+            <span class="badge bg-{{#if (eq status 'completed')}}success{{else if (eq status 'draft')}}warning{{else}}secondary{{/if}} text-uppercase">
+              {{#if (eq status 'completed')}}Đã xuất bản
+              {{else if (eq status 'draft')}}Bản nháp
+              {{else}}Chưa hoàn thành{{/if}}
+            </span>
+            <span class="badge bg-light text-dark ms-2">{{category.name}}</span>
+          </div>
+          <h5 class="card-title">{{title}}</h5>
+          <div class="text-muted small mb-3 flex-grow-1">
+            <div class="mb-1">
+              <i class="bi bi-people"></i> {{formatNumber enrollment_count}} học viên
+            </div>
+            <div class="mb-1">
+              <i class="bi bi-star"></i> {{rating_avg}} ⭐
+            </div>
+            <div>
+              <i class="bi bi-eye"></i> {{formatNumber view_count}} lượt xem
+            </div>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="/teacher/course/{{id}}/manage" class="btn btn-sm btn-primary flex-grow-1">
+              <i class="bi bi-speedometer"></i> Quản lý
+            </a>
+            <a href="/teacher/course/{{id}}/edit" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-pencil"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+  {{else}}
+  <div class="text-center py-5 bg-light rounded">
+    <i class="bi bi-collection-play text-muted display-6"></i>
+    <h5 class="mt-3">Chưa có khóa học nào</h5>
+    <p class="text-muted">Bắt đầu bằng việc tạo khóa học đầu tiên của bạn.</p>
+    <a href="/teacher/course/create" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Tạo khóa học mới
+    </a>
+  </div>
+  {{/if}}
+</div>
+

@@ -3,8 +3,169 @@
 {{/fill_section}}
 
 <div class="container py-4 teacher-manage-course-page">
-  <h2 class="mb-4">Quản lý: {{course.title}}</h2>
-  <div class="alert alert-info">
-    <p>Trang quản lý khóa học đang được phát triển</p>
+  {{#with course}}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Quản lý: {{title}}</h2>
   </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Thông tin khóa học</h5>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-4">Tiêu đề:</dt>
+            <dd class="col-sm-8">{{title}}</dd>
+            
+            <dt class="col-sm-4">Lĩnh vực:</dt>
+            <dd class="col-sm-8">{{category.name}}</dd>
+            
+            <dt class="col-sm-4">Mô tả ngắn:</dt>
+            <dd class="col-sm-8">{{short_description}}</dd>
+            
+            <dt class="col-sm-4">Giá:</dt>
+            <dd class="col-sm-8">
+              {{#if (gt price discount_price)}}
+                <span class="text-decoration-line-through text-muted me-2">{{formatCurrency price}}</span>
+                <span class="fw-bold text-danger">{{formatCurrency discount_price}}</span>
+              {{else}}
+                <span class="fw-bold">{{formatCurrency price}}</span>
+              {{/if}}
+            </dd>
+            
+            <dt class="col-sm-4">Trạng thái:</dt>
+            <dd class="col-sm-8">
+              <span class="badge bg-{{#if (eq status 'completed')}}success{{else if (eq status 'draft')}}warning{{else}}secondary{{/if}}">
+                {{#if (eq status 'completed')}}Đã hoàn thành
+                {{else if (eq status 'draft')}}Bản nháp
+                {{else}}Chưa hoàn thành
+                {{/if}}
+              </span>
+            </dd>
+            
+            <dt class="col-sm-4">Học viên:</dt>
+            <dd class="col-sm-8">{{formatNumber enrollment_count}} người</dd>
+            
+            <dt class="col-sm-4">Đánh giá:</dt>
+            <dd class="col-sm-8">⭐ {{rating_avg}} ({{formatNumber rating_count}} đánh giá)</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Nội dung khóa học</h5>
+          <a href="/teacher/course/{{id}}/section/create" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus"></i> Thêm chương
+          </a>
+        </div>
+        <div class="card-body">
+          {{#if sections}}
+            {{#each sections}}
+            <div class="section-item mb-3 border-bottom pb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">{{title}}</h6>
+                <div class="btn-group btn-group-sm">
+                  <a href="/teacher/course/{{../id}}/section/{{id}}/lecture/create" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-plus"></i> Thêm bài giảng
+                  </a>
+                </div>
+              </div>
+              {{#if lectures}}
+                <ul class="list-unstyled ms-3 mb-0">
+                  {{#each lectures}}
+                  <li class="mb-1">
+                    <i class="bi bi-play-circle text-primary"></i>
+                    <a href="/teacher/course/{{../../id}}/content/{{id}}/edit" class="text-decoration-none">
+                      {{title}}
+                    </a>
+                    {{#if is_preview}}<span class="badge bg-info ms-2">Preview</span>{{/if}}
+                  </li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class="text-muted ms-3 mb-0">Chưa có bài giảng</p>
+              {{/if}}
+            </div>
+            {{/each}}
+          {{else}}
+            <p class="text-muted mb-0">Chưa có chương nào. <a href="/teacher/course/{{id}}/section/create">Thêm chương mới</a></p>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Thống kê</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <strong>Số chương:</strong> {{sections.length}}
+          </div>
+          <div class="mb-3">
+            <strong>Tổng bài giảng:</strong> {{total_lectures}}
+          </div>
+          <div class="mb-3">
+            <strong>Thời lượng:</strong> {{total_duration}}
+          </div>
+          <div class="mb-3">
+            <strong>Lượt xem:</strong> {{formatNumber view_count}}
+          </div>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          <h5 class="mb-0">Thao tác nhanh</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <a href="/teacher/course/{{id}}/edit" class="btn btn-outline-primary">
+              <i class="bi bi-pencil"></i> Chỉnh sửa thông tin
+            </a>
+            <a href="/teacher/course/{{id}}/content" class="btn btn-outline-success">
+              <i class="bi bi-list-ul"></i> Quản lý nội dung
+            </a>
+            <a href="/courses/{{id}}" class="btn btn-outline-info" target="_blank">
+              <i class="bi bi-eye"></i> Xem trước
+            </a>
+            {{#if (ne status 'completed')}}
+            <button class="btn btn-success" onclick="publishCourse('{{id}}')">
+              <i class="bi bi-check-circle"></i> Xuất bản khóa học
+            </button>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {{/with}}
 </div>
+
+{{#fill_section 'js'}}
+<script>
+async function publishCourse(courseId) {
+  if (!confirm('Bạn có chắc muốn xuất bản khóa học này?\nKhóa học sẽ hiển thị công khai sau khi xuất bản.')) return;
+  
+  try {
+    const res = await fetch(`/teacher/course/${courseId}/publish`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Xuất bản khóa học thành công!');
+      window.location.reload();
+    } else {
+      alert(data.message || 'Có lỗi xảy ra!');
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Có lỗi xảy ra khi xuất bản khóa học!');
+  }
+}
+</script>
+{{/fill_section}}

@@ -231,7 +231,8 @@ export const getTeacherDashboard = async (teacherId) => {
       "c.price",
       database.ref("cat.name").as("category_name"),
       database.raw("COALESCE(c.enrollment_count * COALESCE(c.discount_price, c.price), 0) AS revenue")
-    );
+    )
+    .orderBy("c.last_updated", "desc");
 
   const normalizedStats = {
     total_courses: Number(stats.total_courses || 0),
@@ -274,13 +275,13 @@ export const getTeacherDashboard = async (teacherId) => {
     allCourses: allCourses.map((c) => ({
       id: c.id,
       title: c.title,
-      thumbnail_url: c.thumbnail_url,
+      thumbnail_url: c.thumbnail_url || '',
       status: c.status === "completed" ? "published" : (c.status || "draft"),
       enrollment_count: Number(c.enrollment_count || 0),
       rating_avg: Number(c.rating_avg || 0),
       revenue: Number(c.revenue || 0),
       discount_price: Number(c.discount_price || c.price || 0),
-      category: { name: c.category_name },
+      category: { name: c.category_name || 'Chưa có' },
     })),
   };
 };
@@ -385,25 +386,69 @@ export const getTeacherManageCourse = async (courseId) => {
     .first(
       "c.id",
       "c.title",
+      "c.short_description",
       "c.thumbnail_url",
+      "c.price",
+      "c.discount_price",
       "c.status",
       "c.enrollment_count",
       "c.rating_avg",
+      "c.rating_count",
+      "c.view_count",
+      database.ref("cat.id").as("category_id"),
       database.ref("cat.name").as("category_name"),
       database.ref("t.full_name").as("teacher_name")
     );
 
   if (!course) return null;
 
+  // Lấy sections và lectures
+  const sections = await database("sections")
+    .where("course_id", courseId)
+    .orderBy("order_index", "asc")
+    .select("id", "title", "order_index");
+
+  const lectures = sections.length > 0
+    ? await database("lectures")
+        .whereIn("section_id", sections.map(s => s.id))
+        .orderBy("order_index", "asc")
+        .select("id", "section_id", "title", "duration", "is_preview", "order_index")
+    : [];
+
+  // Tính tổng số bài giảng và thời lượng
+  const totalLectures = lectures.length;
+  const totalDurationSeconds = lectures.reduce((sum, l) => sum + (Number(l.duration) || 0), 0);
+  const formatDuration = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours && minutes) return `${hours} giờ ${minutes} phút`;
+    if (hours) return `${hours} giờ`;
+    return `${minutes} phút`;
+  };
+
+  // Gắn lectures vào sections
+  const structuredSections = sections.map(section => ({
+    ...section,
+    lectures: lectures.filter(lec => lec.section_id === section.id)
+  }));
+
   return {
     id: course.id,
     title: course.title,
+    short_description: course.short_description || '',
     thumbnail_url: course.thumbnail_url,
+    price: Number(course.price || 0),
+    discount_price: course.discount_price ? Number(course.discount_price) : null,
     status: course.status || "draft",
     enrollment_count: Number(course.enrollment_count || 0),
     rating_avg: Number(course.rating_avg || 0),
-    category: { name: course.category_name },
+    rating_count: Number(course.rating_count || 0),
+    view_count: Number(course.view_count || 0),
+    category: { id: course.category_id, name: course.category_name || "Chưa có" },
     teacher_name: course.teacher_name,
+    sections: structuredSections,
+    total_lectures: totalLectures,
+    total_duration: formatDuration(totalDurationSeconds)
   };
 };
 
@@ -425,13 +470,14 @@ export const getTeacherCourseContent = async (courseId) => {
     .select("id", "title", "order_index");
 
   // 🔹 Lấy danh sách lecture theo section
-  const lectures = await database("lectures")
-    .whereIn(
-      "section_id",
-      sections.map((s) => s.id)
-    )
-    .orderBy("order_index", "asc")
-    .select("id", "section_id", "title", "duration");
+  const lectureSectionIds = sections.map((s) => s.id);
+
+  const lectures = lectureSectionIds.length
+    ? await database("lectures")
+        .whereIn("section_id", lectureSectionIds)
+        .orderBy("order_index", "asc")
+        .select("id", "section_id", "title", "duration", "video_url", "is_preview", "order_index")
+    : [];
 
   // 🔹 Gắn lectures vào từng section
   const structuredSections = sections.map((section) => ({
@@ -1119,8 +1165,7 @@ export const getStudentProfileInfo = async (studentId) => {
     stats: dashboard.stats,
     statsList: dashboard.statsList,
     enrolledCourses: dashboard.recentCourses,
-    wishlist: dashboard.watchlist,
-    wishlist_count: dashboard.watchlist.length,
+    wishlist_count: Number(wishlistCount?.count || 0),
   };
 };
 

@@ -196,8 +196,10 @@
                 <div class="course-footer">
                   <div class="course-price">
                     <span class="price-current">{{formatCurrency discount_price}}</span>
+                    {{#if (gt price discount_price)}}
                     <span class="price-original">{{formatCurrency price}}</span>
                     <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+                    {{/if}}
                   </div>
                   <button class="btn-wishlist" data-course-id="{{id}}">
                     <i class="bi bi-heart"></i>
@@ -212,20 +214,33 @@
         {{#if (gt totalPages 1)}}
         <nav class="pagination-nav mt-5">
           <ul class="pagination justify-content-center">
+            {{#if searchQuery}}
+            {{!-- Pagination cho search --}}
             <li class="page-item {{#if (eq currentPage 1)}}disabled{{/if}}">
-              <a class="page-link" href="?page={{math currentPage '-' 1}}{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Trước</a>
+              <a class="page-link" href="/courses/search?q={{searchQuery}}&page={{math currentPage '-' 1}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">‹ Trước</a>
             </li>
-            <li class="page-item {{#if (eq currentPage 1)}}active{{/if}}">
-              <a class="page-link" href="?page=1{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">1</a>
+            {{#each (range 1 totalPages)}}
+            <li class="page-item {{#if (eq ../currentPage this)}}active{{/if}}">
+              <a class="page-link" href="/courses/search?q={{../searchQuery}}&page={{this}}{{#if ../currentCategory}}&category={{../currentCategory}}{{/if}}{{#if ../currentSub}}&sub={{../currentSub}}{{/if}}{{#if (ne ../sortBy 'popular')}}&sort={{../sortBy}}{{/if}}">{{this}}</a>
             </li>
-            {{#if (gt totalPages 1)}}
-            <li class="page-item {{#if (eq currentPage 2)}}active{{/if}}">
-              <a class="page-link" href="?page=2{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">2</a>
+            {{/each}}
+            <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
+              <a class="page-link" href="/courses/search?q={{searchQuery}}&page={{math currentPage '+' 1}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau ›</a>
+            </li>
+            {{else}}
+            {{!-- Pagination cho courses list --}}
+            <li class="page-item {{#if (eq currentPage 1)}}disabled{{/if}}">
+              <a class="page-link" href="/courses?page={{math currentPage '-' 1}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Trước</a>
+            </li>
+            {{#each (range 1 totalPages)}}
+            <li class="page-item {{#if (eq ../currentPage this)}}active{{/if}}">
+              <a class="page-link" href="/courses?page={{this}}{{#if ../currentCategory}}&category={{../currentCategory}}{{/if}}{{#if ../currentSub}}&sub={{../currentSub}}{{/if}}{{#if (ne ../sortBy 'popular')}}&sort={{../sortBy}}{{/if}}">{{this}}</a>
+            </li>
+            {{/each}}
+            <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
+              <a class="page-link" href="/courses?page={{math currentPage '+' 1}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau</a>
             </li>
             {{/if}}
-            <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
-              <a class="page-link" href="?page={{math currentPage '+' 1}}{{#if searchQuery}}&q={{searchQuery}}{{/if}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau</a>
-            </li>
           </ul>
         </nav>
         {{/if}}

@@ -8,12 +8,13 @@
     <div class="col-lg-8">
       <form id="sectionForm" class="teacher-form-card">
         <div class="mb-3">
-          <label class="form-label">Tiêu đề chương</label>
-          <input type="text" class="form-control" required>
+          <label class="form-label">Tiêu đề chương *</label>
+          <input type="text" class="form-control" name="title" id="title" required>
         </div>
         <div class="mb-3">
-          <label class="form-label">Mô tả</label>
-          <textarea class="form-control" rows="3"></textarea>
+          <label class="form-label">Thứ tự hiển thị</label>
+          <input type="number" class="form-control" name="order_index" id="order_index" value="0" min="0">
+          <small class="form-text text-muted">Số nhỏ hơn sẽ hiển thị trước</small>
         </div>
         <button type="submit" class="btn btn-primary">Tạo chương</button>
         <a href="/teacher/course/{{courseId}}/content" class="btn btn-secondary">Hủy</a>
@@ -21,3 +22,40 @@
     </div>
   </div>
 </div>
+
+{{#fill_section 'js'}}
+<script>
+document.getElementById('sectionForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const formData = {
+    title: document.getElementById('title').value.trim(),
+    order_index: parseInt(document.getElementById('order_index').value) || 0
+  };
+
+  if (!formData.title) {
+    alert('Vui lòng nhập tiêu đề chương!');
+    return;
+  }
+
+  try {
+    const res = await fetch('/teacher/course/{{courseId}}/sections', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert('Tạo chương thành công!');
+      window.location.href = '/teacher/course/{{courseId}}/content';
+    } else {
+      alert(data.message || 'Có lỗi xảy ra!');
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Có lỗi xảy ra khi tạo chương!');
+  }
+});
+</script>
+{{/fill_section}}

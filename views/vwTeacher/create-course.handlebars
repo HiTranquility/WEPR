@@ -116,20 +116,21 @@
   function addSection() {
     sectionCount++;
     const html = `
-      <div class="section-builder" id="section-${sectionCount}">
-        <div class="section-header-input">
-          <input type="text" class="form-control mb-2" placeholder="Tên chương ${sectionCount}" required>
-          <div class="d-flex gap-2">
+      <div class="section-builder border rounded p-3 mb-3" id="section-${sectionCount}">
+        <div class="section-header-input mb-3">
+          <label class="form-label fw-bold">Tên chương ${sectionCount} *</label>
+          <input type="text" class="form-control section-title" placeholder="Nhập tên chương" required>
+          <div class="d-flex gap-2 mt-2">
             <button type="button" class="btn btn-sm btn-primary" onclick="addLecture(${sectionCount})">
               <i class="bi bi-plus"></i> Thêm bài giảng
             </button>
             <button type="button" class="btn btn-sm btn-danger" onclick="removeSection(${sectionCount})">
-              <i class="bi bi-trash"></i>
+              <i class="bi bi-trash"></i> Xóa chương
             </button>
           </div>
         </div>
         <div class="lecture-list" id="lectures-${sectionCount}">
-          <p class="text-muted text-center">Chưa có bài giảng</p>
+          <p class="text-muted text-center small">Chưa có bài giảng</p>
         </div>
       </div>
     `;
@@ -140,19 +141,26 @@
     const lectureTitle = prompt('Nhập tên bài giảng:');
     if (!lectureTitle) return;
 
-    const videoUrl = prompt('Nhập URL video:');
+    const videoUrl = prompt('Nhập URL video (YouTube, Vimeo, hoặc URL trực tiếp):');
     if (!videoUrl) return;
 
+    const duration = prompt('Nhập thời lượng (giây) - để trống nếu chưa biết:') || '0';
+    const isPreview = confirm('Cho phép xem trước miễn phí?');
+    
     const lectureList = document.getElementById(`lectures-${sectionId}`);
     if (lectureList.querySelector('.text-muted')) {
       lectureList.innerHTML = '';
     }
 
     const html = `
-      <div class="lecture-item-builder">
-        <div>
-          <strong>${lectureTitle}</strong><br>
-          <small class="text-muted">${videoUrl}</small>
+      <div class="lecture-item-builder border rounded p-2 mb-2 d-flex justify-content-between align-items-start" data-title="${lectureTitle}" data-video="${videoUrl}" data-duration="${duration}" data-preview="${isPreview}">
+        <div class="flex-grow-1">
+          <div class="fw-bold">${lectureTitle}</div>
+          <div class="small text-muted">
+            <i class="bi bi-play-circle"></i> ${videoUrl}
+            ${duration && duration !== '0' ? `<br><i class="bi bi-clock"></i> ${duration} giây` : ''}
+            ${isPreview ? '<br><span class="badge bg-info">Preview</span>' : ''}
+          </div>
         </div>
         <button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">
           <i class="bi bi-trash"></i>
@@ -178,9 +186,101 @@
     }
   });
 
-  document.getElementById('createCourseForm').addEventListener('submit', (e) => {
+  document.getElementById('createCourseForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    alert('Chức năng tạo khóa học đang được phát triển. Dữ liệu sẽ được lưu vào database.');
+    
+    const title = document.getElementById('courseTitle').value.trim();
+    const short_description = document.getElementById('shortDescription').value.trim();
+    const category_id = document.getElementById('category').value;
+    const price = parseFloat(document.getElementById('price').value) || 0;
+    const discount_price = document.getElementById('discountPrice').value ? parseFloat(document.getElementById('discountPrice').value) : null;
+    const status = document.getElementById('status').value || 'draft';
+    const thumbnail_url = document.getElementById('thumbnailUrl').value.trim();
+    const detailed_description = quill.root.innerHTML;
+
+    // Collect sections and lectures
+    const sections = [];
+    const sectionElements = document.querySelectorAll('.section-builder');
+    sectionElements.forEach((sectionEl, index) => {
+      const sectionTitle = sectionEl.querySelector('.section-title').value.trim();
+      
+      if (!sectionTitle) return; // Skip empty sections
+      
+      const lectures = [];
+      const lectureElements = sectionEl.querySelectorAll('.lecture-item-builder');
+      lectureElements.forEach(lectureEl => {
+        const lectureTitle = lectureEl.dataset.title;
+        const videoUrl = lectureEl.dataset.video;
+        const duration = parseInt(lectureEl.dataset.duration) || 0;
+        const isPreview = lectureEl.dataset.preview === 'true';
+        
+        if (lectureTitle && videoUrl) {
+          lectures.push({
+            title: lectureTitle.trim(),
+            video_url: videoUrl.trim(),
+            duration: duration,
+            is_preview: isPreview,
+            order_index: lectures.length
+          });
+        }
+      });
+      
+      sections.push({
+        title: sectionTitle,
+        order_index: index,
+        lectures: lectures
+      });
+    });
+
+    // Validation
+    if (!title || !short_description || !category_id) {
+      alert('Vui lòng điền đầy đủ các trường bắt buộc: Tên khóa học, Mô tả ngắn, và Lĩnh vực!');
+      return;
+    }
+
+    if (price < 0 || (discount_price !== null && discount_price < 0)) {
+      alert('Giá không được là số âm!');
+      return;
+    }
+
+    if (discount_price !== null && discount_price >= price) {
+      alert('Giá khuyến mại phải nhỏ hơn giá gốc!');
+      return;
+    }
+
+    try {
+      const formData = {
+        title,
+        short_description,
+        detailed_description,
+        thumbnail_url,
+        price,
+        discount_price,
+        category_id,
+        status,
+        sections: sections
+      };
+
+      const res = await fetch('/teacher/courses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+      
+      if (data.success) {
+        alert('Tạo khóa học thành công!');
+        window.location.href = `/teacher/course/${data.courseId}/manage`;
+      } else {
+        alert(data.message || 'Có lỗi xảy ra khi tạo khóa học!');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Có lỗi xảy ra khi tạo khóa học!');
+    }
   });
 </script>
 {{/fill_section}}
