@@ -6,8 +6,8 @@
   <div class="container">
     <div class="d-flex align-items-center gap-3">
       <img src="{{user.avatar_url}}"
-          onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png';"
-          class="profile-avatar" alt="User avatar" />
+        onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png';"
+        class="profile-avatar" alt="User avatar" />
       <div>
         <h2 class="mb-1">{{user.name}}</h2>
         <p class="mb-0 opacity-75">{{user.email}}</p>
@@ -74,11 +74,11 @@
             {{/each}}
           </div>
           {{else}}
-          <div class="empty-state">
-            <i class="bi bi-book"></i>
-            <h5>Chưa có khóa học nào</h5>
-            <p>Bạn chưa đăng ký khóa học nào. Hãy khám phá và tìm khóa học phù hợp!</p>
-            <a href="/courses" class="btn btn-primary">Khám phá khóa học</a>
+          <div class="empty-state text-center">
+            <i class="bi bi-easel"></i>
+            <h5>Bạn chưa tạo khóa học nào</h5>
+            <p class="text-muted">Tạo khóa học đầu tiên để chia sẻ kiến thức với học viên.</p>
+            <a href="/teacher/create-course" class="btn btn-primary">Tạo khóa học mới</a>
           </div>
           {{/if}}
         </div>

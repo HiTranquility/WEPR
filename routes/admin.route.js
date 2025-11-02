@@ -38,12 +38,14 @@ router.get('/admin/courses', async function(req, res, next) {
     try {
         const courses = await getAllAdminCourses();
         const categories = await getAllAdminCategories();
+        const teachers = await database('users').where({ role: 'teacher' }).select('id', 'full_name').orderBy('full_name', 'asc');
         res.render('vwAdmin/courses', {
             layout: 'admin',
             title: 'Quản lý khóa học',
             activeMenu: 'courses',
             courses,
             categories,
+            teachers,
         });
     } catch (err) { next(err); }
 });
@@ -113,6 +115,19 @@ router.post('/admin/courses/:id', async function(req, res, next) {
             last_updated: new Date()
         });
         res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.post('/admin/courses/:id/status', async function(req, res, next) {
+    try {
+        const { status } = req.body;
+        await database('courses').where({ id: req.params.id }).update({
+            status: status,
+            last_updated: new Date()
+        });
+        res.json({ success: true, message: 'Cập nhật trạng thái khóa học thành công!' });
     } catch (err) {
         next(err);
     }

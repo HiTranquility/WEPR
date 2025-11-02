@@ -21,6 +21,12 @@
             <option value="{{id}}">{{name}}</option>
             {{/each}}
           </select>
+          <select class="form-select form-select-sm" style="width: 200px;" onchange="filterByTeacher(this.value)">
+            <option value="">Tất cả giảng viên</option>
+            {{#each teachers}}
+            <option value="{{id}}">{{full_name}}</option>
+            {{/each}}
+          </select>
           <select class="form-select form-select-sm" style="width: 150px;" onchange="filterByStatus(this.value)">
             <option value="">Tất cả trạng thái</option>
             <option value="published">Đã xuất bản</option>
@@ -46,7 +52,7 @@
           </thead>
           <tbody id="coursesTableBody">
             {{#each courses}}
-            <tr data-course-id="{{id}}" data-category="{{category.id}}" data-status="{{status}}">
+            <tr data-course-id="{{id}}" data-category="{{category.id}}" data-status="{{status}}" data-teacher="{{teacher.id}}">
               <td>
                 <img src="{{thumbnail_url}}" class="rounded" style="width: 50px; height: 30px; object-fit: cover;" alt="{{title}}">
               </td>
@@ -110,26 +116,32 @@
     if (label) label.textContent = rows.length;
   }
 
-  function filterByCategory(categoryId) {
+  function filterCourses() {
+    const selectedCategory = document.querySelector('select[onchange="filterByCategory(this.value)"]').value;
+    const selectedTeacher = document.querySelector('select[onchange="filterByTeacher(this.value)"]').value;
+    const selectedStatus = document.querySelector('select[onchange="filterByStatus(this.value)"]').value;
+
     const rows = document.querySelectorAll('#coursesTableBody tr');
     rows.forEach(row => {
-      const match = !categoryId || row.dataset.category === categoryId;
-      row.dataset.categoryVisible = match ? '1' : '0';
-      const statusVisible = row.dataset.statusVisible !== '0';
-      row.classList.toggle('d-none', !(match && statusVisible));
+      const categoryMatch = !selectedCategory || row.dataset.category === selectedCategory;
+      const teacherMatch = !selectedTeacher || row.dataset.teacher === selectedTeacher;
+      const statusMatch = !selectedStatus || row.dataset.status === selectedStatus;
+
+      row.classList.toggle('d-none', !(categoryMatch && teacherMatch && statusMatch));
     });
     updateCourseCount();
   }
 
+  function filterByCategory(categoryId) {
+    filterCourses();
+  }
+
+  function filterByTeacher(teacherId) {
+    filterCourses();
+  }
+
   function filterByStatus(status) {
-    const rows = document.querySelectorAll('#coursesTableBody tr');
-    rows.forEach(row => {
-      const match = !status || row.dataset.status === status;
-      row.dataset.statusVisible = match ? '1' : '0';
-      const categoryVisible = row.dataset.categoryVisible !== '0';
-      row.classList.toggle('d-none', !(match && categoryVisible));
-    });
-    updateCourseCount();
+    filterCourses();
   }
 
   async function removeCourse(courseId, courseTitle) {

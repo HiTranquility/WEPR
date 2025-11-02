@@ -37,8 +37,12 @@ export async function deleteCourse(id) {
 }
 
 // 🔹 Lấy tất cả courses
-export async function getAllCourses({ includeJoins = false } = {}) {
+export async function getAllCourses({ includeJoins = false, excludeStatus = 'disabled' } = {}) {
   const query = database("courses");
+
+  if (excludeStatus) {
+    query.where('courses.status', '!=', excludeStatus);
+  }
 
   if (includeJoins) {
     query
@@ -64,9 +68,10 @@ export async function searchCourses(opts = {}) {
     teacherId,
     minPrice,
     maxPrice,
+    minRating,
     onlyDiscounted,
     isFeatured,
-    status = 'completed',
+    status = 'published',
     sortBy = 'popular',
     page = 1,
     limit = 12,
@@ -76,91 +81,142 @@ export async function searchCourses(opts = {}) {
   const l = Math.min(50, Math.max(1, +limit || 12));
   const offset = (p - 1) * l;
 
-  // Chuẩn bị danh sách categoryIds (cha + con)
-  let categoryIds = Array.isArray(explicitCategoryIds) ? explicitCategoryIds.filter(Boolean) : [];
+  // 🧭 Chuẩn bị danh sách categoryId (cha + con)
+  let categoryIds = [];
+
+  if (explicitCategoryIds) {
+    let rawValue = explicitCategoryIds;
+
+    // 🪄 Bước 1: Giải mã URL nếu bị encode (%2C → ,)
+    if (typeof rawValue === 'string') {
+      rawValue = decodeURIComponent(rawValue);
+    }
+
+    // 🧩 Bước 2: Chuẩn hóa thành mảng UUID thật
+    if (Array.isArray(rawValue)) {
+      // Nếu là mảng (category[]=id1&category[]=id2)
+      categoryIds = rawValue.flatMap(id =>
+        id.split(',').map(i => i.trim()).filter(Boolean)
+      );
+    } else if (typeof rawValue === 'string') {
+      // Nếu là chuỗi (category=id1,id2)
+      categoryIds = rawValue.split(',').map(id => id.trim()).filter(Boolean);
+    }
+  }
+
+  // 🧩 Bước 3: Nếu chưa có ID con, lấy ID con từ DB
   if (categoryIds.length === 0 && subCategoryId) {
     categoryIds = [subCategoryId];
   } else if (categoryIds.length === 0 && categoryId) {
     categoryIds = await getCategoryWithChildren(categoryId);
-    if (!categoryIds || categoryIds.length === 0) {
-      categoryIds = [categoryId];
-    }
+    if (!categoryIds || categoryIds.length === 0) categoryIds = [categoryId];
   }
 
-  // Base query: join sẵn
+
+
+
+
+  if (categoryIds.length === 0 && subCategoryId) {
+    categoryIds = [subCategoryId];
+  } else if (categoryIds.length === 0 && categoryId) {
+    categoryIds = await getCategoryWithChildren(categoryId);
+    if (!categoryIds || categoryIds.length === 0) categoryIds = [categoryId];
+  }
+
+  // Base query
   const query = database('courses')
     .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
     .leftJoin('categories as category', 'courses.category_id', 'category.id')
-    .where(builder => {
+    .where((builder) => {
+      // 🔹 Trạng thái khóa học
       if (status) builder.where('courses.status', status);
-      if (isFeatured != null) builder.andWhere('courses.is_featured', !!isFeatured);
-      // Sub-category has priority: if provided, filter exactly by it.
-      if (categoryIds.length > 0) {
-        builder.whereIn('courses.category_id', categoryIds);
-      }
-      
-      if (teacherId) builder.andWhere('courses.teacher_id', teacherId);
-      if (onlyDiscounted) builder.andWhereNotNull('courses.discount_price');
-      if (minPrice != null) builder.andWhere('courses.price', '>=', minPrice);
-      if (maxPrice != null) builder.andWhere('courses.price', '<=', maxPrice);
 
-      // ==========================
-      //  FULL-TEXT SEARCH SECTION
-      // ==========================
+      // 🔹 Featured
+      if (isFeatured != null) builder.andWhere('courses.is_featured', !!isFeatured);
+
+      // 🔹 Category filter
+      if (categoryIds && categoryIds.length > 0) {
+        builder.where(function (qb) {
+          qb.whereIn('courses.category_id', categoryIds);
+        });
+      }
+
+      // 🔹 Teacher
+      if (teacherId) builder.andWhere('courses.teacher_id', teacherId);
+
+      // 🔹 Discount filter
+      if (onlyDiscounted)
+        builder.andWhereRaw('courses.discount_price IS NOT NULL AND courses.discount_price < courses.price');
+
+      // 🔹 Price filter (dùng COALESCE để lấy discount nếu có)
+      if (minPrice != null && maxPrice != null) {
+        builder.andWhereRaw(
+          `COALESCE(NULLIF(courses.discount_price, 0), courses.price)::numeric BETWEEN ? AND ?`,
+          [minPrice, maxPrice]
+        );
+      } else if (minPrice != null) {
+        builder.andWhereRaw(
+          `COALESCE(NULLIF(courses.discount_price, 0), courses.price)::numeric >= ?`,
+          [minPrice]
+        );
+      } else if (maxPrice != null) {
+        builder.andWhereRaw(
+          `COALESCE(NULLIF(courses.discount_price, 0), courses.price)::numeric <= ?`,
+          [maxPrice]
+        );
+      }
+
+      // 🔹 Rating filter — loại bỏ khóa chưa có đánh giá
+      if (minRating != null) {
+        builder.andWhere(function (qb) {
+          qb.where('courses.rating_avg', '>=', minRating)
+            .andWhere('courses.rating_count', '>', 0)
+            .whereNotNull('courses.rating_avg'); // ✅ dùng whereNotNull thay vì andWhereNotNull
+        });
+      }
+
+
+
+      // 🔹 FULL-TEXT SEARCH
       if (q?.trim()) {
         const term = q.trim();
-
         try {
           const isPg =
-            database &&
-            database.client &&
-            database.client.config &&
-            database.client.config.client === 'pg';
-
+            database?.client?.config?.client === 'pg';
           if (isPg) {
             const cleaned = term.replace(/[^\w\s]/g, '').trim();
-
             if (cleaned.length < 3) {
-              // Nếu từ quá ngắn, fallback sang ILIKE
               const kw = `%${cleaned}%`;
-              builder.andWhere(sub => {
+              builder.andWhere((sub) => {
                 sub.whereILike('courses.title', kw)
                   .orWhereILike('courses.short_description', kw)
                   .orWhereILike('category.name', kw)
                   .orWhereILike('teacher.full_name', kw);
               });
             } else {
-            // Chuẩn hóa từ khóa cho PostgreSQL to_tsquery
-                const cleaned = term.replace(/[^\w\s]/g, '').trim();
-                const tsquery = cleaned
-                  .split(/\s+/)
-                  .map(w => `${w}:*`)
-                  .join(' & '); // nối bằng AND
-
-                builder.andWhereRaw(
-                  `to_tsvector('english', 
-                    coalesce(courses.title,'') || ' ' || 
-                    coalesce(courses.short_description,'') || ' ' || 
-                    coalesce(category.name,'') || ' ' || 
-                    coalesce(teacher.full_name,'')
-                  ) @@ to_tsquery('english', ?)`,
-                  [tsquery]
+              const tsquery = cleaned.split(/\s+/).map((w) => `${w}:*`).join(' & ');
+              builder.andWhereRaw(
+                `to_tsvector('english', 
+                  coalesce(courses.title,'') || ' ' || 
+                  coalesce(courses.short_description,'') || ' ' || 
+                  coalesce(category.name,'') || ' ' || 
+                  coalesce(teacher.full_name,'')
+                ) @@ to_tsquery('english', ?)`,
+                [tsquery]
               );
             }
           } else {
-            // Non-Postgres fallback: ILIKE
             const kw = `%${term}%`;
-            builder.andWhere(sub => {
+            builder.andWhere((sub) => {
               sub.whereILike('courses.title', kw)
                 .orWhereILike('courses.short_description', kw)
                 .orWhereILike('category.name', kw)
                 .orWhereILike('teacher.full_name', kw);
             });
           }
-        } catch (e) {
-          // On unexpected error: fallback to ILIKE
+        } catch {
           const kw = `%${term}%`;
-          builder.andWhere(sub => {
+          builder.andWhere((sub) => {
             sub.whereILike('courses.title', kw)
               .orWhereILike('courses.short_description', kw)
               .orWhereILike('category.name', kw)
@@ -170,38 +226,41 @@ export async function searchCourses(opts = {}) {
       }
     });
 
-  // Đếm tổng
+  // 🔹 Đếm tổng số khóa học
   const [{ total = 0 }] = await query.clone().clearSelect().countDistinct({ total: 'courses.id' });
 
-  // Sắp xếp
+  // 🔹 Sắp xếp theo lựa chọn người dùng
   switch (sortBy) {
-    case 'newest':
-      query.orderBy('courses.created_at', 'desc');
-      break;
-    case 'price_asc':
-      query.orderBy('courses.price', 'asc');
-      break;
-    case 'price_desc':
-      query.orderBy('courses.price', 'desc');
+    case 'popular':
+      query.orderBy('courses.enrollment_count', 'desc');
       break;
     case 'rating':
+    case 'top-rated':
       query.orderBy([
         { column: 'courses.rating_avg', order: 'desc' },
         { column: 'courses.rating_count', order: 'desc' },
       ]);
       break;
-    case 'sold':
-      query.orderBy('courses.enrollment_count', 'desc');
+    case 'newest':
+      query.orderBy('courses.created_at', 'desc');
       break;
-    case 'popular':
+    case 'price-low':
+    case 'price_asc':
+      query.orderByRaw(
+        `COALESCE(NULLIF(courses.discount_price, 0), courses.price)::numeric ASC`
+      );
+      break;
+    case 'price-high':
+    case 'price_desc':
+      query.orderByRaw(
+        `COALESCE(NULLIF(courses.discount_price, 0), courses.price)::numeric DESC`
+      );
+      break;
     default:
-      query.orderBy([
-        { column: 'courses.view_count', order: 'desc' },
-        { column: 'courses.enrollment_count', order: 'desc' },
-      ]);
+      query.orderBy('courses.enrollment_count', 'desc');
   }
 
-  // Truy vấn dữ liệu trang hiện tại
+  // 🔹 Truy vấn dữ liệu
   const rows = await query
     .select(
       'courses.id',
@@ -225,9 +284,9 @@ export async function searchCourses(opts = {}) {
     .limit(l)
     .offset(offset);
 
-  // Trả kết quả
+  // 🔹 Trả kết quả
   return {
-    data: rows.map(r => ({
+    data: rows.map((r) => ({
       id: r.id,
       title: r.title,
       short_description: r.short_description,
@@ -253,6 +312,7 @@ export async function searchCourses(opts = {}) {
 }
 
 
+
 // 🔹 Chi tiết khoá học (join teacher, category) theo shape của view detail
 export async function getCourseDetail(courseId) {
   const courseRow = await database('courses as c')
@@ -267,6 +327,14 @@ export async function getCourseDetail(courseId) {
       database.ref('cat.name').as('category_name')
     );
   if (!courseRow) return null;
+  if (courseRow.status === 'disabled') {
+    return {
+      id: courseRow.id,
+      title: courseRow.title,
+      status: courseRow.status,
+      is_disabled: true,
+    };
+  }
 
   const [teacherStats] = await database('courses')
     .where('teacher_id', courseRow.teacher_id)
@@ -467,7 +535,7 @@ export const getLandingData = async () => {
     .leftJoin('users as t', 'c.teacher_id', 't.id')
     .leftJoin('categories as cat', 'c.category_id', 'cat.id')
     .select(COURSE_COLUMNS)
-    .where('c.status', 'completed')
+    .where('c.status', 'published')
     .andWhere('c.is_featured', true)
     .andWhere('c.created_at', '>=', oneWeekAgo)
     .orderBy('c.enrollment_count', 'desc')
@@ -479,7 +547,7 @@ export const getLandingData = async () => {
         .leftJoin('users as t', 'c.teacher_id', 't.id')
         .leftJoin('categories as cat', 'c.category_id', 'cat.id')
         .select(COURSE_COLUMNS)
-        .where('c.status', 'completed')
+        .where('c.status', 'published')
         .andWhere('c.is_featured', true)
         .orderBy('c.enrollment_count', 'desc')
         .orderBy('c.rating_avg', 'desc')
@@ -491,7 +559,7 @@ export const getLandingData = async () => {
         .leftJoin('users as t', 'c.teacher_id', 't.id')
         .leftJoin('categories as cat', 'c.category_id', 'cat.id')
         .select(COURSE_COLUMNS)
-        .where('c.status', 'completed')
+        .where('c.status', 'published')
         .orderBy('c.rating_avg', 'desc')
         .orderBy('c.enrollment_count', 'desc')
         .limit(5)
@@ -504,7 +572,7 @@ export const getLandingData = async () => {
     .leftJoin('users as t', 'c.teacher_id', 't.id')
     .leftJoin('categories as cat', 'c.category_id', 'cat.id')
     .select(COURSE_COLUMNS)
-    .where('c.status', 'completed')
+    .where('c.status', 'published')
     .orderBy('c.view_count', 'desc')
     .orderBy('c.rating_avg', 'desc')
     .limit(10);
@@ -514,6 +582,7 @@ export const getLandingData = async () => {
         .leftJoin('users as t', 'c.teacher_id', 't.id')
         .leftJoin('categories as cat', 'c.category_id', 'cat.id')
         .select(COURSE_COLUMNS)
+        .where('c.status', 'published')
         .orderBy('c.view_count', 'desc')
         .orderBy('c.rating_avg', 'desc')
         .limit(12)
@@ -526,7 +595,7 @@ export const getLandingData = async () => {
     .leftJoin('users as t', 'c.teacher_id', 't.id')
     .leftJoin('categories as cat', 'c.category_id', 'cat.id')
     .select(COURSE_COLUMNS)
-    .where('c.status', 'completed')
+    .where('c.status', 'published')
     .orderBy('c.created_at', 'desc')
     .limit(10);
 
@@ -535,6 +604,7 @@ export const getLandingData = async () => {
         .leftJoin('users as t', 'c.teacher_id', 't.id')
         .leftJoin('categories as cat', 'c.category_id', 'cat.id')
         .select(COURSE_COLUMNS)
+        .where('c.status', 'published')
         .orderBy('c.created_at', 'desc')
         .limit(12)
     : [];
@@ -627,7 +697,7 @@ export async function getTop3FeaturedCoursesThisWeek() {
   return await database('courses')
     .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
     .leftJoin('categories as category', 'courses.category_id', 'category.id')
-    .where('courses.status', 'completed')
+    .where('courses.status', 'published')
     .where('courses.is_featured', true)
     .where('courses.created_at', '>=', oneWeekAgo)
     .select(
@@ -645,7 +715,7 @@ export async function getTop10MostViewedCourses() {
   return await database('courses')
     .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
     .leftJoin('categories as category', 'courses.category_id', 'category.id')
-    .where('courses.status', 'completed')
+    .where('courses.status', 'published')
     .select(
       'courses.*',
       'teacher.full_name as teacher_name',
@@ -661,7 +731,7 @@ export async function getTop10NewestCourses() {
   return await database('courses')
     .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
     .leftJoin('categories as category', 'courses.category_id', 'category.id')
-    .where('courses.status', 'completed')
+    .where('courses.status', 'published')
     .select(
       'courses.*',
       'teacher.full_name as teacher_name',
@@ -682,6 +752,7 @@ export async function getTop5CategoriesByEnrollmentsThisWeek() {
       this.on('courses.id', '=', 'enrollments.course_id')
         .andOn('enrollments.enrolled_at', '>=', database.raw('?', [oneWeekAgo]));
     })
+    .where('courses.status', 'published')
     .where('categories.parent_id', null)
     .groupBy('categories.id', 'categories.name')
     .select(
