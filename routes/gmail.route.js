@@ -85,6 +85,12 @@ router.post("/gmail/complete", async (req, res) => {
   }
 });
 
+/** 🟢 Alias cho /gmail/signup (để frontend vẫn hoạt động) */
+router.post("/gmail/signup", async (req, res, next) => {
+  req.url = "/gmail/complete"; // nội bộ chuyển tiếp sang route /gmail/complete
+  router.handle(req, res, next);
+});
+
 /** Đăng nhập */
 router.post("/gmail/signin", async (req, res) => {
   try {
