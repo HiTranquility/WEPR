@@ -77,13 +77,15 @@
             <ul class="dropdown-menu dropdown-menu-end">
               {{#if (eq user.role 'teacher')}}
               <li><a class="dropdown-item" href="/teacher/profile"><i class="bi bi-person me-2"></i>Hồ sơ giảng viên</a></li>
-              <li><a class="dropdown-item" href="/teacher/dashboard"><i class="bi bi-person me-2"></i>Teacher Dashboard</a></li>
-              <li><a class="dropdown-item" href="/teacher/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+              <li><a class="dropdown-item" href="/teacher/dashboard"><i class="bi bi-person me-2"></i>Bảng điều khiển</a></li>
+              <li><a class="dropdown-item" href="/teacher/settings"><i class="bi bi-gear me-2"></i>Cài đặt cá nhân</a></li>
               {{/if}}
               {{#if (eq user.role 'student')}}
               <li><a class="dropdown-item" href="/student/profile"><i class="bi bi-person me-2"></i>Hồ sơ cá nhân</a></li>
-              <li><a class="dropdown-item" href="/student/dashboard"><i class="bi bi-person me-2"></i>Student Dashboard</a></li>
-              <li><a class="dropdown-item" href="/student/settings"><i class="bi bi-gear me-2"></i>Settings</a></li>
+              <li><a class="dropdown-item" href="/student/dashboard"><i class="bi bi-person me-2"></i>Bảng điều khiển</a></li>
+              <li><a class="dropdown-item" href="/student/my-courses"><i class="bi bi-book me-2"></i>Khóa học của tôi</a></li>
+              <li><a class="dropdown-item" href="/student/wishlist"><i class="bi bi-heart me-2"></i>Danh sách yêu thích</a></li>
+              <li><a class="dropdown-item" href="/student/settings"><i class="bi bi-gear me-2"></i>Cài đặt cá nhân</a></li>
               {{/if}}
               <li><hr class="dropdown-divider"></li>
               <li>
@@ -97,10 +99,10 @@
           </li>
         {{else}}
           <li class="nav-item">
-            <a class="btn btn-outline-primary ms-2" href="/signin">Sign in</a>
+            <a class="btn btn-outline-primary ms-2" href="/signin">Đăng nhập</a>
           </li>
           <li class="nav-item">
-            <a class="btn btn-primary ms-2" href="/signup">Sign up</a>
+            <a class="btn btn-primary ms-2" href="/signup">Đăng ký</a>
           </li>
         {{/if}}
       </ul>

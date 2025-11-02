@@ -96,6 +96,8 @@ export const hbsHelpers = {
     for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
     return out;
   },
-
+  and(a, b) {
+    return a && b;
+  },
 };
 export default hbsHelpers;
