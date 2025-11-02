@@ -37,8 +37,12 @@ export async function deleteCourse(id) {
 }
 
 // 🔹 Lấy tất cả courses
-export async function getAllCourses({ includeJoins = false } = {}) {
+export async function getAllCourses({ includeJoins = false, excludeStatus = 'disabled' } = {}) {
   const query = database("courses");
+
+  if (excludeStatus) {
+    query.where('courses.status', '!=', excludeStatus);
+  }
 
   if (includeJoins) {
     query
@@ -66,7 +70,7 @@ export async function searchCourses(opts = {}) {
     maxPrice,
     onlyDiscounted,
     isFeatured,
-    status = 'completed',
+    status = 'published',
     sortBy = 'popular',
     page = 1,
     limit = 12,
@@ -267,6 +271,14 @@ export async function getCourseDetail(courseId) {
       database.ref('cat.name').as('category_name')
     );
   if (!courseRow) return null;
+  if (courseRow.status === 'disabled') {
+    return {
+      id: courseRow.id,
+      title: courseRow.title,
+      status: courseRow.status,
+      is_disabled: true,
+    };
+  }
 
   const [teacherStats] = await database('courses')
     .where('teacher_id', courseRow.teacher_id)
@@ -467,7 +479,7 @@ export const getLandingData = async () => {
     .leftJoin('users as t', 'c.teacher_id', 't.id')
     .leftJoin('categories as cat', 'c.category_id', 'cat.id')
     .select(COURSE_COLUMNS)
-    .where('c.status', 'completed')
+    .where('c.status', 'published')
     .andWhere('c.is_featured', true)
     .andWhere('c.created_at', '>=', oneWeekAgo)
     .orderBy('c.enrollment_count', 'desc')
@@ -479,7 +491,7 @@ export const getLandingData = async () => {
         .leftJoin('users as t', 'c.teacher_id', 't.id')
         .leftJoin('categories as cat', 'c.category_id', 'cat.id')
         .select(COURSE_COLUMNS)
-        .where('c.status', 'completed')
+        .where('c.status', 'published')
         .andWhere('c.is_featured', true)
         .orderBy('c.enrollment_count', 'desc')
         .orderBy('c.rating_avg', 'desc')
@@ -491,7 +503,7 @@ export const getLandingData = async () => {
         .leftJoin('users as t', 'c.teacher_id', 't.id')
         .leftJoin('categories as cat', 'c.category_id', 'cat.id')
         .select(COURSE_COLUMNS)
-        .where('c.status', 'completed')
+        .where('c.status', 'published')
         .orderBy('c.rating_avg', 'desc')
         .orderBy('c.enrollment_count', 'desc')
         .limit(5)
@@ -504,7 +516,7 @@ export const getLandingData = async () => {
     .leftJoin('users as t', 'c.teacher_id', 't.id')
     .leftJoin('categories as cat', 'c.category_id', 'cat.id')
     .select(COURSE_COLUMNS)
-    .where('c.status', 'completed')
+    .where('c.status', 'published')
     .orderBy('c.view_count', 'desc')
     .orderBy('c.rating_avg', 'desc')
     .limit(10);
@@ -514,6 +526,7 @@ export const getLandingData = async () => {
         .leftJoin('users as t', 'c.teacher_id', 't.id')
         .leftJoin('categories as cat', 'c.category_id', 'cat.id')
         .select(COURSE_COLUMNS)
+        .where('c.status', 'published')
         .orderBy('c.view_count', 'desc')
         .orderBy('c.rating_avg', 'desc')
         .limit(12)
@@ -526,7 +539,7 @@ export const getLandingData = async () => {
     .leftJoin('users as t', 'c.teacher_id', 't.id')
     .leftJoin('categories as cat', 'c.category_id', 'cat.id')
     .select(COURSE_COLUMNS)
-    .where('c.status', 'completed')
+    .where('c.status', 'published')
     .orderBy('c.created_at', 'desc')
     .limit(10);
 
@@ -535,6 +548,7 @@ export const getLandingData = async () => {
         .leftJoin('users as t', 'c.teacher_id', 't.id')
         .leftJoin('categories as cat', 'c.category_id', 'cat.id')
         .select(COURSE_COLUMNS)
+        .where('c.status', 'published')
         .orderBy('c.created_at', 'desc')
         .limit(12)
     : [];
@@ -627,7 +641,7 @@ export async function getTop3FeaturedCoursesThisWeek() {
   return await database('courses')
     .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
     .leftJoin('categories as category', 'courses.category_id', 'category.id')
-    .where('courses.status', 'completed')
+    .where('courses.status', 'published')
     .where('courses.is_featured', true)
     .where('courses.created_at', '>=', oneWeekAgo)
     .select(
@@ -645,7 +659,7 @@ export async function getTop10MostViewedCourses() {
   return await database('courses')
     .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
     .leftJoin('categories as category', 'courses.category_id', 'category.id')
-    .where('courses.status', 'completed')
+    .where('courses.status', 'published')
     .select(
       'courses.*',
       'teacher.full_name as teacher_name',
@@ -661,7 +675,7 @@ export async function getTop10NewestCourses() {
   return await database('courses')
     .leftJoin('users as teacher', 'courses.teacher_id', 'teacher.id')
     .leftJoin('categories as category', 'courses.category_id', 'category.id')
-    .where('courses.status', 'completed')
+    .where('courses.status', 'published')
     .select(
       'courses.*',
       'teacher.full_name as teacher_name',
@@ -682,6 +696,7 @@ export async function getTop5CategoriesByEnrollmentsThisWeek() {
       this.on('courses.id', '=', 'enrollments.course_id')
         .andOn('enrollments.enrolled_at', '>=', database.raw('?', [oneWeekAgo]));
     })
+    .where('courses.status', 'published')
     .where('categories.parent_id', null)
     .groupBy('categories.id', 'categories.name')
     .select(
