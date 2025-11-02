@@ -103,6 +103,17 @@
                 <div class="recent-course-info">
                   <h5>{{course.title}}</h5>
                   <p class="text-muted mb-1">{{course.teacher.full_name}}</p>
+                  <div class="d-flex gap-3 text-muted small mb-3">
+                    <span>⭐ {{course.rating_avg}}</span>
+                    <span>{{formatNumber course.rating_count}} đánh giá</span>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <strong class="text-primary">{{formatCurrency course.discount_price}}</strong>
+                    <button class="btn btn-outline-danger btn-sm" data-course-id="{{course.id}}" data-fav-id="{{id}}"
+                      onclick="removeWishlistDashboard('{{course.id}}')">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
                 </div>
                 <a href="/student/learn/{{id}}" class="btn btn-outline-primary btn-sm">
                   {{#if (eq progress 0)}}Bắt đầu{{else}}Tiếp tục{{/if}}
@@ -122,7 +133,7 @@
         </div>
       </div>
 
-      
+
     </div>
   </div>
 </section>

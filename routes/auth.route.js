@@ -350,10 +350,28 @@ router.get('/teacher/dashboard', ensureTeacher, requireTeacherRole('teacher'), (
 
 import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseLearningData, getStudentProfileInfo } from '../models/user.model.js';
 router.get('/student/dashboard', ensureStudent, requireStudentRole('student'), async (req, res) => {
-  const studentId = req.user.id;
-  const data = await getStudentProfileInfo(studentId);
-  res.render('vwStudent/dashboard', { layout: 'main', user: req.user, data });
+  try {
+    const studentId = req.user.id;
+    const dashboardData = await getStudentDashboard(studentId);
+
+    if (!dashboardData) {
+      return res.status(404).render('404', { title: 'Không tìm thấy dữ liệu học viên' });
+    }
+
+    res.render('vwStudent/dashboard', {
+      layout: 'main',
+      user: dashboardData.user,
+      enrolledCourses: dashboardData.recentCourses,
+      wishlist: dashboardData.watchlist,
+      stats: dashboardData.stats,
+      recommendedCourses: dashboardData.recommendedCourses,
+    });
+  } catch (err) {
+    console.error('Error loading student dashboard:', err);
+    res.status(500).render('500', { title: 'Lỗi máy chủ' });
+  }
 });
+
 
 router.get('/admin/login', function(req, res) {
   if (req.user && req.user.role === 'admin') {
