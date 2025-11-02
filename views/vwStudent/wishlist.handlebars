@@ -22,7 +22,7 @@
           <ul class="sidebar-nav">
             <li class="sidebar-nav-item">
               <a href="/student/profile" class="sidebar-nav-link">
-                <i class="bi bi-persxon"></i>
+                <i class="bi bi-person"></i>
                 <span>Thông tin cá nhân</span>
               </a>
             </li>
@@ -70,8 +70,15 @@
                     </div>
                   </div>
                   <div class="text-end">
-                    <div class="fs-4 fw-bold text-primary mb-2">{{formatCurrency course.discount_price}}</div>
-                    <button class="btn btn-sm btn-danger" onclick="removeFromWatchlist('{{id}}')">
+                    <div class="mb-2">
+                      {{#if course.has_discount}}
+                        <div class="fs-4 fw-bold text-primary">{{formatCurrency course.discount_price}}</div>
+                        <div class="text-muted text-decoration-line-through small">{{formatCurrency course.price}}</div>
+                      {{else}}
+                        <div class="fs-4 fw-bold text-primary">{{formatCurrency course.final_price}}</div>
+                      {{/if}}
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="removeFromWatchlist('{{course.id}}')">
                       <i class="bi bi-trash"></i> Xóa
                     </button>
                   </div>
@@ -95,11 +102,43 @@
 </section>
 
 {{#fill_section 'js'}}
-<script>
-  function removeFromWatchlist(id) {
-    if (confirm('Bạn có chắc muốn xóa khóa học này khỏi danh sách yêu thích?')) {
-      alert('Chức năng xóa khỏi wishlist đang được phát triển');
+<script type="module">
+  async function handleResponse(res) {
+    let data = null;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      try {
+        data = await res.json();
+      } catch (err) {
+        console.error('handleResponse json parse error', err);
+      }
     }
+
+    if (!res.ok || data?.success === false) {
+      alert(data?.message || 'Có lỗi xảy ra.');
+      return null;
+    }
+    return data || { success: true };
   }
+
+  window.removeFromWatchlist = async (courseId) => {
+    if (!courseId) return;
+    if (!confirm('Bạn có chắc muốn xóa khóa học này khỏi danh sách yêu thích?')) {
+      return;
+    }
+    try {
+      const res = await fetch(`/courses/${courseId}/wishlist`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await handleResponse(res);
+      if (!data) return;
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Có lỗi xảy ra.');
+    }
+  };
 </script>
 {{/fill_section}}

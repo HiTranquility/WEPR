@@ -191,8 +191,9 @@ export const getTeacherDashboard = async (teacherId) => {
     .where("teacher_id", teacherId)
     .select(
       database.raw("COUNT(*) AS total_courses"),
-      database.raw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS published_courses"),
-      database.raw("SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) AS draft_courses"),
+      database.raw("SUM(CASE WHEN status IN ('completed', 'published') THEN 1 ELSE 0 END) AS published_courses"),
+      database.raw("SUM(CASE WHEN status IN ('draft', 'incomplete', 'pending') THEN 1 ELSE 0 END) AS draft_courses"),
+      database.raw("SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) AS suspended_courses"),
       database.raw("COALESCE(SUM(enrollment_count), 0) AS total_students"),
       database.raw("COALESCE(SUM(enrollment_count * COALESCE(discount_price, price)), 0) AS total_revenue"),
       database.raw("COALESCE(AVG(rating_avg), 0) AS avg_rating")
@@ -238,26 +239,46 @@ export const getTeacherDashboard = async (teacherId) => {
     total_courses: Number(stats.total_courses || 0),
     published_courses: Number(stats.published_courses || 0),
     draft_courses: Number(stats.draft_courses || 0),
+    suspended_courses: Number(stats.suspended_courses || 0),
     total_students: Number(stats.total_students || 0),
     total_revenue: Number(stats.total_revenue || 0),
     avg_rating: Number(stats.avg_rating || 0),
   };
 
+  const currencyFormatter = new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  });
+
   const statsList = [
     { label: "Tổng khóa học", value: normalizedStats.total_courses },
     { label: "Đã xuất bản", value: normalizedStats.published_courses },
+    { label: "Bản nháp", value: normalizedStats.draft_courses },
+    { label: "Đình chỉ", value: normalizedStats.suspended_courses },
     { label: "Học viên", value: normalizedStats.total_students },
-    { label: "Doanh thu", value: normalizedStats.total_revenue.toLocaleString("vi-VN") + " ₫" },
+    { label: "Doanh thu", value: currencyFormatter.format(normalizedStats.total_revenue) },
   ];
 
   // 🔹 Trả về object tổng hợp cho view
+  const normalizeCourseStatus = (status) => {
+    const value = (status || "").toLowerCase();
+    if (["completed", "published"].includes(value)) return "published";
+    if (["suspended"].includes(value)) return "suspended";
+    if (["draft", "incomplete", "pending"].includes(value)) return "draft";
+    return value || "draft";
+  };
+
   return {
     user: teacherUser,
     teacher: teacherUser,
     stats: normalizedStats,
     statsList,
     recentCourses: recentCourses.map((c) => {
-      const status = c.status === "completed" ? "published" : (c.status || "draft");
+      const status = normalizeCourseStatus(c.status);
+      const price = Number(c.price || 0);
+      const discount = Number(c.discount_price || 0);
+      const hasDiscount = discount > 0 && (price === 0 || discount < price);
+      const finalPrice = hasDiscount ? discount : price;
       return {
         id: c.id,
         title: c.title,
@@ -267,8 +288,10 @@ export const getTeacherDashboard = async (teacherId) => {
         rating_avg: Number(c.rating_avg || 0),
         view_count: Number(c.view_count || 0),
         revenue: Number(c.revenue || 0),
-        discount_price: Number(c.discount_price || c.price || 0),
-        price: Number(c.price || 0),
+        price,
+        discount_price: hasDiscount ? discount : null,
+        final_price: finalPrice,
+        has_discount: hasDiscount,
         last_updated: c.last_updated,
       };
     }),
@@ -276,11 +299,12 @@ export const getTeacherDashboard = async (teacherId) => {
       id: c.id,
       title: c.title,
       thumbnail_url: c.thumbnail_url || '',
-      status: c.status === "completed" ? "published" : (c.status || "draft"),
+      status: normalizeCourseStatus(c.status),
       enrollment_count: Number(c.enrollment_count || 0),
       rating_avg: Number(c.rating_avg || 0),
       revenue: Number(c.revenue || 0),
-      discount_price: Number(c.discount_price || c.price || 0),
+      price: Number(c.price || 0),
+      discount_price: Number(c.discount_price || 0),
       category: { name: c.category_name || 'Chưa có' },
     })),
   };
@@ -681,7 +705,6 @@ export const getStudentDashboard = async (studentId) => {
       database.ref("t.avatar_url").as("teacher_avatar"),
       database.ref("cat.name").as("category_name")
     );
-    console.log("recommendedCourses:", recommendedCourses);
   // 🔹 Trả dữ liệu về đúng shape cho view dashboard
   const normalizedStats = {
     enrolled_courses: Number(stats.enrolled_courses || 0),
@@ -690,12 +713,9 @@ export const getStudentDashboard = async (studentId) => {
     certificates: 0,
   };
 
-  const statsList = [
-    { label: "Khóa học đã đăng ký", value: normalizedStats.enrolled_courses },
-    { label: "Đang học", value: normalizedStats.in_progress_courses },
-    { label: "Đã hoàn thành", value: normalizedStats.completed_courses },
-    { label: "Chứng chỉ", value: normalizedStats.certificates },
-  ];
+  const [{ total: watchlistTotal = 0 }] = await database("watchlist AS w")
+    .where("w.student_id", studentId)
+    .count({ total: "w.id" });
 
   const watchlistRows = await database("watchlist AS w")
     .leftJoin("courses AS c", "w.course_id", "c.id")
@@ -712,6 +732,7 @@ export const getStudentDashboard = async (studentId) => {
       "c.thumbnail_url",
       "c.rating_avg",
       "c.rating_count",
+      "c.price",
       "c.discount_price",
       database.ref("t.full_name").as("teacher_full_name"),
       database.ref("cat.name").as("category_name")
@@ -723,7 +744,12 @@ export const getStudentDashboard = async (studentId) => {
       role: "student",
     },
     stats: normalizedStats,
-    statsList,
+    statsList: [
+      { label: "Khóa học đã đăng ký", value: normalizedStats.enrolled_courses },
+      { label: "Đang học", value: normalizedStats.in_progress_courses },
+      { label: "Đã hoàn thành", value: normalizedStats.completed_courses },
+      { label: "Yêu thích", value: Number(watchlistTotal || 0) },
+    ],
     recentCourses: recentCourses.map((r) => {
       const totalLectures = Number(r.total_lectures || 0);
       const isCompleted = !!r.completed_at;
@@ -762,20 +788,29 @@ export const getStudentDashboard = async (studentId) => {
         avatar_url: r.teacher_avatar,
       },
     })),
-    watchlist: watchlistRows.map((r) => ({
-      id: r.watch_id,
-      added_at: r.added_at,
-      course: {
-        id: r.course_id,
-        title: r.title,
-        thumbnail_url: r.thumbnail_url,
-        rating_avg: r.rating_avg,
-        rating_count: r.rating_count,
-        discount_price: r.discount_price,
-        teacher: { full_name: r.teacher_full_name },
-        category: { name: r.category_name },
-      },
-    })),
+    watchlist: watchlistRows.map((r) => {
+      const price = Number(r.price || 0);
+      const discount = Number(r.discount_price || 0);
+      const hasDiscount = discount > 0 && (price === 0 || discount < price);
+      const finalPrice = hasDiscount ? discount : price;
+      return {
+        id: r.watch_id,
+        added_at: r.added_at,
+        course: {
+          id: r.course_id,
+          title: r.title,
+          thumbnail_url: r.thumbnail_url,
+          rating_avg: Number(r.rating_avg || 0),
+          rating_count: Number(r.rating_count || 0),
+          price,
+          discount_price: hasDiscount ? discount : null,
+          final_price: finalPrice,
+          has_discount: hasDiscount,
+          teacher: { full_name: r.teacher_full_name },
+          category: { name: r.category_name },
+        },
+      };
+    }),
   };
 };
 
@@ -899,27 +934,36 @@ export const getStudentWatchlist = async (studentId) => {
     );
 
   // 🔹 Chuẩn hóa dữ liệu cho view
-  const watchlist = rows.map((r) => ({
-    id: r.watch_id,
-    added_at: r.added_at,
-    course: {
-      id: r.course_id,
-      title: r.title,
-      thumbnail_url: r.thumbnail_url,
-      rating_avg: r.rating_avg,
-      rating_count: r.rating_count,
-      enrollment_count: r.enrollment_count,
-      discount_price: r.discount_price,
-      price: r.price,
-      view_count: r.view_count,
-      created_at: r.created_at,
-      category: { name: r.category_name },
-      teacher: {
-        full_name: r.teacher_full_name,
-        avatar_url: r.teacher_avatar_url,
+  const watchlist = rows.map((r) => {
+    const price = Number(r.price || 0);
+    const discount = Number(r.discount_price || 0);
+    const hasDiscount = discount > 0 && (price === 0 || discount < price);
+    const finalPrice = hasDiscount ? discount : price;
+
+    return {
+      id: r.watch_id,
+      added_at: r.added_at,
+      course: {
+        id: r.course_id,
+        title: r.title,
+        thumbnail_url: r.thumbnail_url,
+        rating_avg: Number(r.rating_avg || 0),
+        rating_count: Number(r.rating_count || 0),
+        enrollment_count: Number(r.enrollment_count || 0),
+        price,
+        discount_price: hasDiscount ? discount : null,
+        final_price: finalPrice,
+        has_discount: hasDiscount,
+        view_count: r.view_count,
+        created_at: r.created_at,
+        category: { name: r.category_name },
+        teacher: {
+          full_name: r.teacher_full_name,
+          avatar_url: r.teacher_avatar_url,
+        },
       },
-    },
-  }));
+    };
+  });
 
   return { user: { ...student, role: "student" }, watchlist };
 };
