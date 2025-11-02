@@ -15,11 +15,14 @@ router.get("/student/dashboard", async (req, res, next) => {
         if (!studentId) return res.redirect('/signin');
 
         const data = await getStudentDashboard(studentId);
+    const profileData = await getStudentProfileInfo(studentId);
+
         const allCategories = await getAllCategories({ includeCounts: false });
         if (!data) return res.redirect('/404');
         res.render("vwStudent/dashboard", {
             title: "Trang chủ học viên",
             ...data, // user, stats, recentCourses, recommendedCourses
+            ...profileData, // profile info
             allCategories,
             searchQuery: null,
             layout: "main",
