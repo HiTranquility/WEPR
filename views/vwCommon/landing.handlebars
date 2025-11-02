@@ -6,7 +6,7 @@
   <div class="carousel-indicators">
     {{#each featuredCourses}}
     <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{@index}}"
-      class="{{#if @first}}active{{/if}}"></button>
+            class="{{#if @first}}active{{/if}}"></button>
     {{/each}}
   </div>
 
@@ -97,154 +97,99 @@
   </div>
 </section>
 
-{{!-- {{> recommend-course-section
-title="Khóa học được đề xuất cho bạn"
-subTitle="Những khóa học phù hợp với sở thích của bạn"
-courses=recommendedCourses
-}} --}}
-
-
-<div id="section-Carousel" class="carousel slide" data-bs-ride="false">
-  <div class="text-center mb-5">
-    <h2 class="section-title">Khóa học được xem nhiều nhất</h2>
-    <p class="section-subtitle">Những khóa học đang được quan tâm nhất</p>
-  </div>
-  <!-- Indicators -->
-  <div class="carousel-indicators">
-    {{#each (chunk mostViewedCourses 4)}}
-    <button type="button" data-bs-target="#section-Carousel" data-bs-slide-to="{{@index}}"
-      class="{{#if @first}}active{{/if}}" aria-current="{{#if @first}}true{{/if}}"
-      aria-label="Slide {{@index}}"></button>
-    {{/each}}
-  </div>
-
-  <!-- Carousel inner -->
-  <div class="carousel-inner">
-    {{#each (chunk mostViewedCourses 4)}}
-    <div class="carousel-item {{#if @first}}active{{/if}}">
-      <div class="row g-4 align-items-stretch">
-        {{#each this}}
-        <div class="col-lg-3 col-md-4 col-sm-6">
-          <a href="/courses/{{id}}" class="text-decoration-none">
-          <div class="card course-card h-100">
-            <div class="position-relative">
-              <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
-              {{#if (isBestSeller enrollment_count)}}
-              <span class="course-badge bestseller">Best Seller</span>
-              {{/if}}
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Khóa học được xem nhiều nhất</h2>
+      <p class="section-subtitle">Những khóa học đang được quan tâm nhất</p>
+    </div>
+    <div class="row g-4">
+      {{#each mostViewedCourses}}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <a href="/courses/{{id}}" class="card course-card text-decoration-none">
+          <div class="position-relative">
+            <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
+            {{#if (isBestSeller enrollment_count)}}
+            <span class="course-badge bestseller">Best Seller</span>
+            {{/if}}
+          </div>
+          <div class="course-body">
+            <div class="course-category">{{category.name}}</div>
+            <h5 class="course-title">{{truncate title 60}}</h5>
+            <div class="course-teacher">
+              <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
+              {{teacher.full_name}}
             </div>
-            <div class="course-body">
-              <div class="course-category">{{category.name}}</div>
-              <h5 class="course-title">{{truncate title 60}}</h5>
-              <div class="course-teacher">
-                <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
-                {{teacher.full_name}}
-              </div>
-              <div class="course-rating">
-                <span class="rating-stars">⭐ {{rating_avg}}</span>
-                <span class="rating-text">({{formatNumber rating_count}})</span>
-                <span class="rating-text">• {{formatNumber enrollment_count}} học viên</span>
-              </div>
-              <div class="course-footer">
-                <div class="course-price">
-                  <span class="price-current">{{formatCurrency discount_price}}</span>
-                  {{#if (gt price discount_price)}}
-                  <span class="price-original">{{formatCurrency price}}</span>
-                  {{/if}}
-                </div>
+            <div class="course-rating">
+              <span class="rating-stars">⭐ {{rating_avg}}</span>
+              <span class="rating-text">({{formatNumber rating_count}})</span>
+              <span class="rating-text">• {{formatNumber enrollment_count}} học viên</span>
+            </div>
+            <div class="course-footer">
+              <div class="course-price">
+                <span class="price-current">{{formatCurrency discount_price}}</span>
                 {{#if (gt price discount_price)}}
-                <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+                <span class="price-original">{{formatCurrency price}}</span>
                 {{/if}}
               </div>
-            </div>
-          </div>
-          </a>
-        </div>
-        {{/each}}
-      </div>
-    </div>
-    {{/each}}
-  </div>
-
-  <!-- Controls -->
-  <button class="carousel-control-prev" type="button" data-bs-target="#section-Carousel" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#section-Carousel" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-  </button>
-</div>
-
-<div id="section-Carousel" class="carousel slide" data-bs-ride="false">
-  <div class="text-center mb-5">
-    <h2 class="section-title">Khóa học được xem nhiều nhất</h2>
-    <p class="section-subtitle">Những khóa học đang được quan tâm nhất</p>
-  </div>
-  <!-- Indicators -->
-  <div class="carousel-indicators">
-    {{#each (chunk mostViewedCourses 4)}}
-    <button type="button" data-bs-target="#section-Carousel" data-bs-slide-to="{{@index}}"
-      class="{{#if @first}}active{{/if}}" aria-current="{{#if @first}}true{{/if}}"
-      aria-label="Slide {{@index}}"></button>
-    {{/each}}
-  </div>
-
-  <!-- Carousel inner -->
-  <div class="carousel-inner">
-    {{#each (chunk newestCourses 4)}}
-    <div class="carousel-item {{#if @first}}active{{/if}}">
-      <div class="row g-4 align-items-stretch">
-        {{#each this}}
-        <div class="col-lg-3 col-md-4 col-sm-6">
-          <a href="/courses/{{id}}" class="text-decoration-none">
-          <div class="card course-card h-100">
-            <div class="position-relative">
-              <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
-              {{#if (isBestSeller enrollment_count)}}
-              <span class="course-badge bestseller">Best Seller</span>
+              {{#if (gt price discount_price)}}
+              <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
               {{/if}}
             </div>
-            <div class="course-body">
-              <div class="course-category">{{category.name}}</div>
-              <h5 class="course-title">{{truncate title 60}}</h5>
-              <div class="course-teacher">
-                <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
-                {{teacher.full_name}}
-              </div>
-              <div class="course-rating">
-                <span class="rating-stars">⭐ {{rating_avg}}</span>
-                <span class="rating-text">({{formatNumber rating_count}})</span>
-                <span class="rating-text">• {{formatNumber enrollment_count}} học viên</span>
-              </div>
-              <div class="course-footer">
-                <div class="course-price">
-                  <span class="price-current">{{formatCurrency discount_price}}</span>
-                  {{#if (gt price discount_price)}}
-                  <span class="price-original">{{formatCurrency price}}</span>
-                  {{/if}}
-                </div>
+          </div>
+        </a>
+      </div>
+      {{/each}}
+    </div>
+  </div>
+</section>
+
+<section class="py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Khóa học mới nhất</h2>
+      <p class="section-subtitle">Khám phá những khóa học vừa được ra mắt</p>
+    </div>
+    <div class="row g-4">
+      {{#each newestCourses}}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <a href="/courses/{{id}}" class="card course-card text-decoration-none">
+          <div class="position-relative">
+            <img src="{{thumbnail_url}}" class="course-image" alt="{{title}}">
+            {{#if (isNew created_at)}}
+            <span class="course-badge">Mới</span>
+            {{/if}}
+          </div>
+          <div class="course-body">
+            <div class="course-category">{{category.name}}</div>
+            <h5 class="course-title">{{truncate title 60}}</h5>
+            <div class="course-teacher">
+              <img src="{{teacher.avatar_url}}" class="teacher-avatar" alt="{{teacher.full_name}}">
+              {{teacher.full_name}}
+            </div>
+            <div class="course-rating">
+              <span class="rating-stars">⭐ {{rating_avg}}</span>
+              <span class="rating-text">({{formatNumber rating_count}})</span>
+              <span class="rating-text">• {{formatNumber view_count}} lượt xem</span>
+            </div>
+            <div class="course-footer">
+              <div class="course-price">
+                <span class="price-current">{{formatCurrency discount_price}}</span>
                 {{#if (gt price discount_price)}}
-                <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+                <span class="price-original">{{formatCurrency price}}</span>
                 {{/if}}
               </div>
+              {{#if (gt price discount_price)}}
+              <span class="discount-badge">-{{calculateDiscount price discount_price}}%</span>
+              {{/if}}
             </div>
           </div>
-          </a>
-        </div>
-        {{/each}}
+        </a>
       </div>
+      {{/each}}
     </div>
-    {{/each}}
   </div>
-
-  <!-- Controls -->
-  <button class="carousel-control-prev" type="button" data-bs-target="#section-Carousel" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#section-Carousel" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-  </button>
-</div>
+</section>
 
 {{#fill_section 'js'}}
 {{/fill_section}}

@@ -21,7 +21,7 @@
             <option value="{{id}}">{{name}}</option>
             {{/each}}
           </select>
-          <select class="form-select form-select-sm" style="width: 200px;" onchange="filterByTeacher(this.value)">
+          <select class="form-select form-select-sm" style="width: 200px;" onchange="filterByTeacher(this.value)" id="teacherFilter">
             <option value="">Tất cả giảng viên</option>
             {{#each teachers}}
             <option value="{{id}}">{{full_name}}</option>
@@ -29,9 +29,9 @@
           </select>
           <select class="form-select form-select-sm" style="width: 150px;" onchange="filterByStatus(this.value)">
             <option value="">Tất cả trạng thái</option>
-            <option value="published">Đã xuất bản</option>
+            <option value="completed">Đã hoàn thành</option>
             <option value="draft">Bản nháp</option>
-            <option value="incomplete">Chưa hoàn thành</option>
+            <option value="suspended">Đã đình chỉ</option>
           </select>
         </div>
       </div>
@@ -63,9 +63,10 @@
               <td>{{teacher.full_name}}</td>
               <td><span class="badge bg-primary">{{category.name}}</span></td>
               <td>
-                <span class="badge bg-{{#if (eq status 'published')}}success{{else if (eq status 'draft')}}warning{{else}}danger{{/if}}">
-                  {{#if (eq status 'published')}}Đã xuất bản
+                <span class="badge bg-{{#if (eq status 'completed')}}success{{else if (eq status 'draft')}}warning{{else if (eq status 'suspended')}}danger{{else}}secondary{{/if}}">
+                  {{#if (eq status 'completed')}}Đã hoàn thành
                   {{else if (eq status 'draft')}}Bản nháp
+                  {{else if (eq status 'suspended')}}Đã đình chỉ
                   {{else}}Chưa hoàn thành
                   {{/if}}
                 </span>
@@ -73,11 +74,16 @@
               <td>{{formatNumber enrollment_count}}</td>
               <td>{{formatCurrency discount_price}}</td>
               <td>
-                <div class="action-buttons">
-                  <a href="/courses/{{id}}" class="btn btn-sm btn-outline-primary" target="_blank">
+                <div class="action-buttons d-flex gap-1">
+                  <a href="/courses/{{id}}" class="btn btn-sm btn-outline-primary" target="_blank" title="Xem">
                     <i class="bi bi-eye"></i>
                   </a>
-                  <button class="btn btn-sm btn-outline-danger" onclick="removeCourse('{{id}}', '{{title}}')">
+                  <button class="btn btn-sm {{#if (eq status 'suspended')}}btn-outline-success{{else}}btn-outline-warning{{/if}}" 
+                          onclick="toggleCourseStatus('{{id}}')" 
+                          title="{{#if (eq status 'suspended')}}Kích hoạt{{else}}Đình chỉ{{/if}}">
+                    <i class="bi bi-{{#if (eq status 'suspended')}}check-circle{{else}}x-circle{{/if}}"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="removeCourse('{{id}}', '{{title}}')" title="Xóa">
                     <i class="bi bi-trash"></i>
                   </button>
                 </div>
@@ -116,32 +122,72 @@
     if (label) label.textContent = rows.length;
   }
 
-  function filterCourses() {
-    const selectedCategory = document.querySelector('select[onchange="filterByCategory(this.value)"]').value;
-    const selectedTeacher = document.querySelector('select[onchange="filterByTeacher(this.value)"]').value;
-    const selectedStatus = document.querySelector('select[onchange="filterByStatus(this.value)"]').value;
-
+  function filterByCategory(categoryId) {
     const rows = document.querySelectorAll('#coursesTableBody tr');
     rows.forEach(row => {
-      const categoryMatch = !selectedCategory || row.dataset.category === selectedCategory;
-      const teacherMatch = !selectedTeacher || row.dataset.teacher === selectedTeacher;
-      const statusMatch = !selectedStatus || row.dataset.status === selectedStatus;
-
-      row.classList.toggle('d-none', !(categoryMatch && teacherMatch && statusMatch));
+      const match = !categoryId || row.dataset.category === categoryId;
+      row.dataset.categoryVisible = match ? '1' : '0';
+      applyAllFilters(row);
     });
     updateCourseCount();
   }
 
-  function filterByCategory(categoryId) {
-    filterCourses();
-  }
-
   function filterByTeacher(teacherId) {
-    filterCourses();
+    const rows = document.querySelectorAll('#coursesTableBody tr');
+    rows.forEach(row => {
+      const match = !teacherId || row.dataset.teacher === teacherId;
+      row.dataset.teacherVisible = match ? '1' : '0';
+      applyAllFilters(row);
+    });
+    updateCourseCount();
   }
 
   function filterByStatus(status) {
-    filterCourses();
+    const rows = document.querySelectorAll('#coursesTableBody tr');
+    rows.forEach(row => {
+      const match = !status || row.dataset.status === status;
+      row.dataset.statusVisible = match ? '1' : '0';
+      applyAllFilters(row);
+    });
+    updateCourseCount();
+  }
+
+  function applyAllFilters(row) {
+    const categoryVisible = row.dataset.categoryVisible !== '0';
+    const teacherVisible = row.dataset.teacherVisible !== '0';
+    const statusVisible = row.dataset.statusVisible !== '0';
+    row.classList.toggle('d-none', !(categoryVisible && teacherVisible && statusVisible));
+  }
+
+  async function toggleCourseStatus(courseId) {
+    try {
+      const res = await fetch(`/admin/courses/${courseId}/toggle-status`, { method: 'POST' });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Không thể thay đổi trạng thái.');
+
+      const row = document.querySelector(`tr[data-course-id="${courseId}"]`);
+      if (row) {
+        const currentStatus = row.dataset.status;
+        const newStatus = currentStatus === 'completed' ? 'suspended' : 'completed';
+        row.dataset.status = newStatus;
+
+        const statusSpan = row.querySelector('td:nth-child(5) span');
+        statusSpan.className = `badge bg-${newStatus === 'completed' ? 'success' : 'danger'}`;
+        statusSpan.textContent = newStatus === 'completed' ? 'Đã hoàn thành' : 'Đã đình chỉ';
+
+        const toggleBtn = row.querySelector('button[onclick*="toggleCourseStatus"]');
+        if (toggleBtn) {
+          toggleBtn.className = `btn btn-sm ${newStatus === 'completed' ? 'btn-outline-warning' : 'btn-outline-success'}`;
+          toggleBtn.title = newStatus === 'completed' ? 'Đình chỉ' : 'Kích hoạt';
+          const icon = toggleBtn.querySelector('i');
+          if (icon) icon.className = `bi bi-${newStatus === 'completed' ? 'x-circle' : 'check-circle'}`;
+        }
+      }
+
+      courseNotifications.show(data.message || 'Đã thay đổi trạng thái thành công!');
+    } catch (err) {
+      courseNotifications.show(err.message || 'Có lỗi xảy ra.', 'danger');
+    }
   }
 
   async function removeCourse(courseId, courseTitle) {

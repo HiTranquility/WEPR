@@ -38,7 +38,11 @@ router.get('/admin/courses', async function(req, res, next) {
     try {
         const courses = await getAllAdminCourses();
         const categories = await getAllAdminCategories();
-        const teachers = await database('users').where({ role: 'teacher' }).select('id', 'full_name').orderBy('full_name', 'asc');
+        // Lấy danh sách giảng viên để filter
+        const teachers = await database('users')
+            .where('role', 'teacher')
+            .select('id', 'full_name')
+            .orderBy('full_name', 'asc');
         res.render('vwAdmin/courses', {
             layout: 'admin',
             title: 'Quản lý khóa học',
@@ -115,19 +119,6 @@ router.post('/admin/courses/:id', async function(req, res, next) {
             last_updated: new Date()
         });
         res.json({ success: true, message: 'Cập nhật khóa học thành công!' });
-    } catch (err) {
-        next(err);
-    }
-});
-
-router.post('/admin/courses/:id/status', async function(req, res, next) {
-    try {
-        const { status } = req.body;
-        await database('courses').where({ id: req.params.id }).update({
-            status: status,
-            last_updated: new Date()
-        });
-        res.json({ success: true, message: 'Cập nhật trạng thái khóa học thành công!' });
     } catch (err) {
         next(err);
     }
@@ -221,8 +212,6 @@ router.post('/admin/users/:id/role', async function(req, res, next) {
     }
 });
 
-export default router;
-
 router.post('/admin/users/:id/toggle-status', async function(req, res, next) {
   try {
     const user = await database('users').where({ id: req.params.id }).first();
@@ -230,92 +219,14 @@ router.post('/admin/users/:id/toggle-status', async function(req, res, next) {
       return res.json({ success: false, message: 'Không tìm thấy người dùng!' });
     }
     
-    const isActive = convertStatusToBoolean(user.status);
-    const newStatus = !isActive;
-    await database('users').where({ id: req.params.id }).update({ status: newStatus });
-    
-    res.json({ success: true, message: `Đã ${newStatus ? 'mở khóa' : 'khóa'} tài khoản!` });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.post('/admin/users/:id/promote', async function(req, res, next) {
-  try {
-    await database('users').where({ id: req.params.id }).update({ role: 'teacher' });
-    res.json({ success: true, message: 'Đã cấp quyền giảng viên!' });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.post('/admin/courses/:id/toggle-status', async function(req, res, next) {
-  try {
-    const course = await database('courses').where({ id: req.params.id }).first();
-    if (!course) {
-      return res.json({ success: false, message: 'Không tìm thấy khóa học!' });
-    }
-    
-    const newStatus = course.status === 'completed' ? 'suspended' : 'completed';
-    await database('courses').where({ id: req.params.id }).update({ status: newStatus });
-    
-    res.json({ success: true, message: `Đã ${newStatus === 'suspended' ? 'đình chỉ' : 'kích hoạt'} khóa học!` });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.post('/admin/categories', async function(req, res, next) {
-  try {
-    const { name, parent_id } = req.body;
-    await database('categories').insert({ name, parent_id: parent_id || null });
-    res.json({ success: true, message: 'Đã tạo lĩnh vực mới!' });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.post('/admin/categories/:id', async function(req, res, next) {
-  try {
-    const { name } = req.body;
-    await database('categories').where({ id: req.params.id }).update({ name });
-    res.json({ success: true, message: 'Đã cập nhật lĩnh vực!' });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.delete('/admin/categories/:id', async function(req, res, next) {
-  try {
-    await database('categories').where({ id: req.params.id }).del();
-    res.json({ success: true, message: 'Đã xóa lĩnh vực!' });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.post('/admin/users/:id/toggle-status', async function(req, res, next) {
-  try {
-    const user = await database('users').where({ id: req.params.id }).first();
-    if (!user) {
-      return res.json({ success: false, message: 'Không tìm thấy người dùng!' });
-    }
-    
-    const newStatus = user.status === 'active' ? 'blocked' : 'active';
+    const currentStatus = user.status;
+    const newStatus = (currentStatus === 'blocked' || currentStatus === false || currentStatus === 'false') ? 'active' : 'blocked';
     await database('users').where({ id: req.params.id }).update({ status: newStatus });
     
     const msg = newStatus === 'blocked' ? 'khóa' : 'mở khóa';
-    res.json({ success: true, message: 'Đã ' + msg + ' tài khoản!' });
+    res.json({ success: true, message: `Đã ${msg} tài khoản!` });
   } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.post('/admin/users/:id/promote', async function(req, res, next) {
-  try {
-    await database('users').where({ id: req.params.id }).update({ role: 'teacher' });
-    res.json({ success: true, message: 'Đã cấp quyền giảng viên!' });
-  } catch (err) {
+    console.error('Toggle user status error:', err);
     res.json({ success: false, message: 'Có lỗi xảy ra!' });
   }
 });
@@ -331,37 +242,11 @@ router.post('/admin/courses/:id/toggle-status', async function(req, res, next) {
     await database('courses').where({ id: req.params.id }).update({ status: newStatus });
     
     const msg = newStatus === 'suspended' ? 'đình chỉ' : 'kích hoạt';
-    res.json({ success: true, message: 'Đã ' + msg + ' khóa học!' });
+    res.json({ success: true, message: `Đã ${msg} khóa học!` });
   } catch (err) {
+    console.error('Toggle course status error:', err);
     res.json({ success: false, message: 'Có lỗi xảy ra!' });
   }
 });
 
-router.post('/admin/categories', async function(req, res, next) {
-  try {
-    const { name, parent_id } = req.body;
-    await database('categories').insert({ name, parent_id: parent_id || null });
-    res.json({ success: true, message: 'Đã tạo lĩnh vực mới!' });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.post('/admin/categories/:id', async function(req, res, next) {
-  try {
-    const { name } = req.body;
-    await database('categories').where({ id: req.params.id }).update({ name });
-    res.json({ success: true, message: 'Đã cập nhật lĩnh vực!' });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
-
-router.delete('/admin/categories/:id', async function(req, res, next) {
-  try {
-    await database('categories').where({ id: req.params.id }).del();
-    res.json({ success: true, message: 'Đã xóa lĩnh vực!' });
-  } catch (err) {
-    res.json({ success: false, message: 'Có lỗi xảy ra!' });
-  }
-});
+export default router;

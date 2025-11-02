@@ -265,15 +265,6 @@ router.get('/courses/:id', async function(req, res, next) {
         const course = await getCourseDetail(req.params.id);
         if (!course) return res.redirect('/404');
 
-        if (course.is_disabled) {
-          return res.render('vwCourse/detail', {
-            title: course.title || 'Khóa học đã bị đình chỉ',
-            course: { ...course, is_disabled_message: 'Khóa học này đã bị đình chỉ và không thể truy cập công khai.' },
-            layout: 'main',
-            is_disabled_page: true,
-          });
-        }
-
         const relatedCourses = course.category?.id
             ? await getRelatedCourses(course.id, course.category.id, 6)
             : [];

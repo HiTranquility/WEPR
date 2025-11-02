@@ -8,26 +8,28 @@
     <div class="col-lg-8">
       <form id="lectureForm" class="teacher-form-card">
         <div class="mb-3">
-          <label class="form-label">Tiêu đề bài giảng</label>
-          <input type="text" class="form-control" required>
+          <label class="form-label">Tiêu đề bài giảng *</label>
+          <input type="text" class="form-control" name="title" id="title" required>
         </div>
         <div class="mb-3">
-          <label class="form-label">URL Video</label>
-          <input type="url" class="form-control" required>
+          <label class="form-label">URL Video *</label>
+          <input type="url" class="form-control" name="video_url" id="video_url" placeholder="https://example.com/video.mp4" required>
+          <small class="form-text text-muted">Nhập URL video từ YouTube, Vimeo, hoặc URL trực tiếp</small>
         </div>
         <div class="mb-3">
-          <label class="form-label">Thời lượng (phút:giây)</label>
-          <input type="text" class="form-control" placeholder="10:30">
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Mô tả</label>
-          <textarea class="form-control" rows="4"></textarea>
+          <label class="form-label">Thời lượng (giây)</label>
+          <input type="number" class="form-control" name="duration" id="duration" placeholder="630" min="0">
+          <small class="form-text text-muted">Ví dụ: 630 = 10 phút 30 giây</small>
         </div>
         <div class="mb-3 form-check">
-          <input type="checkbox" class="form-check-input" id="isPreview">
+          <input type="checkbox" class="form-check-input" name="is_preview" id="isPreview" value="true">
           <label class="form-check-label" for="isPreview">
             Cho phép xem trước miễn phí
           </label>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Thứ tự hiển thị</label>
+          <input type="number" class="form-control" name="order_index" id="order_index" value="0" min="0">
         </div>
         <button type="submit" class="btn btn-primary">Tạo bài giảng</button>
         <a href="/teacher/course/{{courseId}}/content" class="btn btn-secondary">Hủy</a>
@@ -35,3 +37,43 @@
     </div>
   </div>
 </div>
+
+{{#fill_section 'js'}}
+<script>
+document.getElementById('lectureForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const formData = {
+    title: document.getElementById('title').value.trim(),
+    video_url: document.getElementById('video_url').value.trim(),
+    duration: parseInt(document.getElementById('duration').value) || 0,
+    is_preview: document.getElementById('isPreview').checked,
+    order_index: parseInt(document.getElementById('order_index').value) || 0
+  };
+
+  if (!formData.title || !formData.video_url) {
+    alert('Vui lòng nhập đầy đủ tiêu đề và URL video!');
+    return;
+  }
+
+  try {
+    const res = await fetch('/teacher/course/{{courseId}}/section/{{sectionId}}/lectures', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      alert('Tạo bài giảng thành công!');
+      window.location.href = '/teacher/course/{{courseId}}/content';
+    } else {
+      alert(data.message || 'Có lỗi xảy ra!');
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Có lỗi xảy ra khi tạo bài giảng!');
+  }
+});
+</script>
+{{/fill_section}}

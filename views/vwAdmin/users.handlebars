@@ -63,15 +63,20 @@
               </td>
               <td>{{formatDate created_at}}</td>
               <td>
-                <div class="action-buttons">
-                  <button class="btn btn-sm btn-outline-primary" onclick="viewUser('{{id}}')">
+                <div class="action-buttons d-flex gap-1">
+                  <button class="btn btn-sm btn-outline-primary" onclick="viewUser('{{id}}')" title="Xem chi tiết">
                     <i class="bi bi-eye"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-warning" onclick="editUser('{{id}}')">
+                  <button class="btn btn-sm btn-outline-warning" onclick="editUser('{{id}}')" title="Sửa">
                     <i class="bi bi-pencil"></i>
                   </button>
+                  <button class="btn btn-sm {{#if (eq status 'blocked')}}btn-outline-success{{else}}btn-outline-danger{{/if}}" 
+                          onclick="toggleUserStatus('{{id}}')" 
+                          title="{{#if (eq status 'blocked')}}Mở khóa{{else}}Khóa{{/if}}">
+                    <i class="bi bi-{{#if (eq status 'blocked')}}unlock{{else}}lock{{/if}}"></i>
+                  </button>
                   {{#if (ne role 'admin')}}
-                  <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('{{id}}')">
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('{{id}}')" title="Xóa">
                     <i class="bi bi-trash"></i>
                   </button>
                   {{/if}}
@@ -343,6 +348,37 @@
       bootstrap.Modal.getInstance(document.getElementById('editUserModal'))?.hide();
     } catch (err) {
       notifications.show(err.message || 'Có lỗi xảy ra khi cập nhật.', 'danger');
+    }
+  }
+
+  async function toggleUserStatus(userId) {
+    try {
+      const res = await fetch(`/admin/users/${userId}/toggle-status`, { method: 'POST' });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Không thể thay đổi trạng thái.');
+
+      const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+      if (row) {
+        const currentStatus = row.dataset.status;
+        const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+        row.dataset.status = newStatus;
+
+        const statusSpan = row.querySelector('td:nth-child(5) span');
+        statusSpan.className = `badge ${newStatus === 'blocked' ? 'bg-danger' : 'bg-primary-subtle text-primary-emphasis'}`;
+        statusSpan.textContent = newStatus === 'blocked' ? 'Đã khóa' : 'Đang hoạt động';
+
+        const toggleBtn = row.querySelector('button[onclick*="toggleUserStatus"]');
+        if (toggleBtn) {
+          toggleBtn.className = `btn btn-sm ${newStatus === 'blocked' ? 'btn-outline-success' : 'btn-outline-danger'}`;
+          toggleBtn.title = newStatus === 'blocked' ? 'Mở khóa' : 'Khóa';
+          const icon = toggleBtn.querySelector('i');
+          if (icon) icon.className = `bi bi-${newStatus === 'blocked' ? 'unlock' : 'lock'}`;
+        }
+      }
+
+      notifications.show(data.message || 'Đã thay đổi trạng thái thành công!');
+    } catch (err) {
+      notifications.show(err.message || 'Có lỗi xảy ra.', 'danger');
     }
   }
 

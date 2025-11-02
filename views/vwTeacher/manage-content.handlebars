@@ -3,24 +3,27 @@
 {{/fill_section}}
 
 <div class="container py-4 teacher-manage-content-page">
+  {{#with course}}
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Quản lý nội dung: {{course.title}}</h2>
-    <a href="/teacher/course/{{course.id}}/section/create" class="btn btn-primary">
+    <h2>Quản lý nội dung: {{title}}</h2>
+    <a href="/teacher/course/{{id}}/section/create" class="btn btn-primary">
       <i class="bi bi-plus"></i> Thêm chương mới
     </a>
   </div>
 
   <div class="content-list">
-    {{#each course.sections}}
+    {{#each sections}}
     <div class="section-item card mb-3">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">{{title}}</h5>
-        <div class="btn-group btn-group-sm">
-          <a href="/teacher/course/{{../course.id}}/section/{{id}}/lecture/create" class="btn btn-outline-primary">
-            Thêm bài giảng
-          </a>
-          <button class="btn btn-outline-danger">Xóa</button>
-        </div>
+          <div class="btn-group btn-group-sm">
+            <a href="/teacher/course/{{../id}}/section/{{id}}/lecture/create" class="btn btn-outline-primary">
+              <i class="bi bi-plus"></i> Thêm bài giảng
+            </a>
+            <button class="btn btn-outline-danger" onclick="deleteSection('{{id}}', '{{title}}')">
+              <i class="bi bi-trash"></i> Xóa
+            </button>
+          </div>
       </div>
       <div class="card-body">
         {{#each lectures}}
@@ -30,8 +33,12 @@
             <span class="text-muted ms-2">({{duration}})</span>
           </div>
           <div class="btn-group btn-group-sm">
-            <a href="/teacher/course/{{../../course.id}}/content/{{id}}/edit" class="btn btn-outline-primary">Sửa</a>
-            <button class="btn btn-outline-danger">Xóa</button>
+            <a href="/teacher/course/{{../../id}}/content/{{id}}/edit" class="btn btn-outline-primary">
+              <i class="bi bi-pencil"></i> Sửa
+            </a>
+            <button class="btn btn-outline-danger" onclick="deleteLecture('{{id}}', '{{title}}')">
+              <i class="bi bi-trash"></i> Xóa
+            </button>
           </div>
         </div>
         {{/each}}
@@ -39,4 +46,51 @@
     </div>
     {{/each}}
   </div>
+  {{/with}}
 </div>
+
+{{#fill_section 'js'}}
+<script>
+const courseId = '{{course.id}}';
+
+async function deleteLecture(lectureId, lectureTitle) {
+  if (!confirm(`Bạn có chắc muốn xóa bài giảng "${lectureTitle}"?`)) return;
+  
+  try {
+    const res = await fetch(`/teacher/course/${courseId}/lecture/${lectureId}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Đã xóa bài giảng thành công!');
+      window.location.reload();
+    } else {
+      alert(data.message || 'Có lỗi xảy ra!');
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Có lỗi xảy ra khi xóa bài giảng!');
+  }
+}
+
+async function deleteSection(sectionId, sectionTitle) {
+  if (!confirm(`Bạn có chắc muốn xóa chương "${sectionTitle}"?\nTất cả bài giảng trong chương này cũng sẽ bị xóa.`)) return;
+  
+  try {
+    const res = await fetch(`/teacher/course/${courseId}/section/${sectionId}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert('Đã xóa chương thành công!');
+      window.location.reload();
+    } else {
+      alert(data.message || 'Có lỗi xảy ra!');
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Có lỗi xảy ra khi xóa chương!');
+  }
+}
+</script>
+{{/fill_section}}

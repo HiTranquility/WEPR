@@ -117,17 +117,11 @@ router.get(
 
 // ==== [GET] /signin ====
 router.get("/signin", (req, res) => {
-  if (req.user) {
-    return res.redirect('/');
-  }
   res.render("vwAuth/signin", { layout: "auth", title: "Đăng nhập" });
 });
 
 // ==== [GET] /signup ====
 router.get("/signup", (req, res) => {
-  if (req.user) {
-    return res.redirect('/');
-  }
   res.render("vwAuth/signup", { layout: "auth", title: "Tạo tài khoản" });
 });
 
@@ -348,30 +342,9 @@ router.get('/teacher/dashboard', ensureTeacher, requireTeacherRole('teacher'), (
   res.render('vwTeacher/dashboard', { layout: 'main', user: req.user });
 });
 
-import { getStudentDashboard, getStudentCourses, getStudentWatchlist, getCourseLearningData, getStudentProfileInfo } from '../models/user.model.js';
-router.get('/student/dashboard', ensureStudent, requireStudentRole('student'), async (req, res) => {
-  try {
-    const studentId = req.user.id;
-    const dashboardData = await getStudentDashboard(studentId);
-
-    if (!dashboardData) {
-      return res.status(404).render('404', { title: 'Không tìm thấy dữ liệu học viên' });
-    }
-
-    res.render('vwStudent/dashboard', {
-      layout: 'main',
-      user: dashboardData.user,
-      enrolledCourses: dashboardData.recentCourses,
-      wishlist: dashboardData.watchlist,
-      stats: dashboardData.stats,
-      recommendedCourses: dashboardData.recommendedCourses,
-    });
-  } catch (err) {
-    console.error('Error loading student dashboard:', err);
-    res.status(500).render('500', { title: 'Lỗi máy chủ' });
-  }
+router.get('/student/dashboard', ensureStudent, requireStudentRole('student'), (req, res) => {
+  res.render('vwStudent/dashboard', { layout: 'main', user: req.user });
 });
-
 
 router.get('/admin/login', function(req, res) {
   if (req.user && req.user.role === 'admin') {
