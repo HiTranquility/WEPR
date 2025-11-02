@@ -87,3 +87,64 @@
   transform: translateY(-4px);
   box-shadow: 0 24px 40px rgba(15, 23, 42, 0.12);
 }
+
+.profile-hero {
+  background: linear-gradient(120deg, #4f46e5 0%, #7c3aed 100%);
+  color: #fff;
+  padding: 3rem 0;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+}
+
+.profile-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+.profile-email {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.profile-bio {
+  margin: 1rem 0;
+  max-width: 680px;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.profile-content .card {
+  border: none;
+  border-radius: 16px;
+}
+
+.profile-content .card-title {
+  font-weight: 700;
+}

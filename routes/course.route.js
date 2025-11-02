@@ -79,6 +79,7 @@ router.get('/courses', async (req, res, next) => {
       courses: data,
       categories,
       query: req.query,
+      sortBy: sort,
       currentCategory: category || null,
       currentSub: subCategory || null,
       currentPage: pagination.page,
