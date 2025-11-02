@@ -10,16 +10,15 @@ router.get('/courses', async (req, res, next) => {
     const { category, sub, sub_category, subcategory, sort = 'popular', page = '1', limit = '12' } = req.query;
     const subCategory = sub || sub_category || subcategory;
 
-    // 🔥 Nếu người dùng chọn category cha, tự động lấy luôn các sub-category con
+    // Nếu người dùng chọn category cha, tự động lấy luôn các sub-category con
     let categoryIds = [];
-    if (category) {
-      categoryIds = await getCategoryWithChildren(category);
-      if (categoryIds.length === 0) {
-        categoryIds = [category];
-      }
-    } else if (subCategory) {
+    if (subCategory) {
       categoryIds = [subCategory];
+    } else if (category) {
+      categoryIds = await getCategoryWithChildren(category);
+      if (categoryIds.length === 0) categoryIds = [category];
     }
+
 
     const { data, pagination } = await searchCourses({
       q: '',
@@ -149,18 +148,45 @@ router.get('/courses/:id', async function(req, res, next) {
             isInWatchlist = !!watchlistItem;
         }
 
-        reviews = await database('reviews as r')
-            .leftJoin('users as u', 'r.student_id', 'u.id')
-            .where('r.course_id', req.params.id)
-            .orderBy('r.created_at', 'desc')
-            .select(
-                'r.id',
-                'r.rating',
-                'r.comment',
-                'r.created_at',
-                'u.full_name as student_name',
-                'u.avatar_url as student_avatar'
-            );
+    const rows = await database('reviews as r')
+      .leftJoin('users as u', 'r.student_id', 'u.id')
+      .where('r.course_id', req.params.id)
+      .orderBy('r.created_at', 'desc')
+      .select(
+        'r.id',
+        'r.rating',
+        'r.comment',
+        'r.created_at',
+        'u.full_name as student_name',
+        'u.avatar_url as student_avatar'
+      );
+
+    // Shape reviews for template (template expects review.student.full_name / avatar_url and content)
+    reviews = rows.map(r => ({
+      id: r.id,
+      rating: Number(r.rating || 0),
+      content: r.comment || '',
+      created_at: r.created_at,
+      student: {
+        full_name: r.student_name || 'Học viên',
+        avatar_url: r.student_avatar || ''
+      }
+    }));
+
+    // If logged in, fetch the current user's review for this course (to hide the form / allow edit)
+    let userReview = null;
+    if (req.user) {
+      const ur = await database('reviews')
+        .where({ course_id: req.params.id, student_id: req.user.id })
+        .first();
+      if (ur) {
+        userReview = {
+          id: ur.id,
+          rating: Number(ur.rating || 0),
+          content: ur.comment || ''
+        };
+      }
+    }
 
         res.render('vwCourse/detail', {
             title: course.title,
@@ -313,14 +339,16 @@ router.post('/courses/:id/reviews', async function(req, res, next) {
       return res.status(400).json({ success: false, message: 'Đánh giá phải từ 1-5 sao' });
     }
 
+    // insert or update review (one per student per course)
     await database('reviews').insert({
       student_id: studentId,
       course_id: courseId,
       rating: parseInt(rating),
       comment: comment || '',
       created_at: new Date()
-    }).onConflict(['student_id', 'course_id']).merge();
+    }).onConflict(['student_id', 'course_id']).merge({ rating: parseInt(rating), comment: comment || '', created_at: new Date() });
 
+    // Recalculate course aggregates
     const avgResult = await database('reviews')
       .where({ course_id: courseId })
       .avg('rating as avg_rating')
@@ -330,11 +358,28 @@ router.post('/courses/:id/reviews', async function(req, res, next) {
     await database('courses')
       .where({ id: courseId })
       .update({
-        rating_avg: avgResult.avg_rating || 0,
-        rating_count: avgResult.count || 0
+        rating_avg: Number(avgResult?.avg_rating || 0),
+        rating_count: Number(avgResult?.count || 0)
       });
 
-    res.json({ success: true, message: 'Đã gửi đánh giá thành công!' });
+    // Return the freshly saved review and updated aggregates
+    const saved = await database('reviews as r')
+      .leftJoin('users as u', 'r.student_id', 'u.id')
+      .where({ 'r.course_id': courseId, 'r.student_id': studentId })
+      .first(
+        'r.id', 'r.rating', 'r.comment', 'r.created_at',
+        'u.full_name as student_name', 'u.avatar_url as student_avatar'
+      );
+
+    const reviewObj = {
+      id: saved.id,
+      rating: Number(saved.rating || 0),
+      content: saved.comment || '',
+      created_at: saved.created_at,
+      student: { full_name: saved.student_name, avatar_url: saved.student_avatar }
+    };
+
+    res.json({ success: true, message: 'Đã gửi đánh giá thành công!', review: reviewObj, rating_avg: Number(avgResult?.avg_rating || 0), rating_count: Number(avgResult?.count || 0) });
   } catch (err) {
     next(err);
   }
