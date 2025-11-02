@@ -1,33 +1,17 @@
+// models/gmail.model.js
 import database from "../utils/database.js";
 import bcrypt from "bcrypt";
 
-//=================
-// GMAIL AUTH MODEL
-//=================
-
-/**
- * Kiểm tra email đã tồn tại trong hệ thống chưa
- * @param {string} email - Email cần kiểm tra
- * @returns {Promise<Object|null>} User object nếu tồn tại, null nếu không
- */
+/** Kiểm tra email tồn tại */
 export async function checkUserExistsByEmail(email) {
   if (!email) return null;
   return await database("users").where("email", email).select("id").first();
 }
 
-/**
- * Tạo user mới thông qua Gmail signup
- * @param {Object} userData - Dữ liệu user: { email, password, role }
- * @returns {Promise<Object>} User object đã tạo
- */
+/** Tạo user mới từ Gmail signup */
 export async function createGmailUser({ email, password, role = "student" }) {
-  if (!email || !password) {
-    const err = new Error("Missing email or password");
-    err.code = "VALIDATION_ERROR";
-    throw err;
-  }
+  if (!email || !password) throw new Error("Missing email or password");
 
-  // Kiểm tra email đã tồn tại
   const existing = await checkUserExistsByEmail(email);
   if (existing) {
     const err = new Error("Email already exists");
@@ -35,26 +19,20 @@ export async function createGmailUser({ email, password, role = "student" }) {
     throw err;
   }
 
-  // Hash password
   const hashed = await bcrypt.hash(password, 10);
 
-  // Tạo user mới
-  const userData = {
+  const newUserData = {
     full_name: email.split("@")[0],
-    email: email,
+    email,
     password_hash: hashed,
-    role: role || "student",
+    role,
   };
 
-  const [newUser] = await database("users").insert(userData).returning("*");
+  const [newUser] = await database("users").insert(newUserData).returning("*");
   return newUser;
 }
 
-/**
- * Lấy user theo email kèm password_hash để xác thực
- * @param {string} email - Email của user
- * @returns {Promise<Object|null>} User object với password_hash
- */
+/** Lấy user để xác thực */
 export async function getUserByEmailForAuth(email) {
   if (!email) return null;
   return await database("users")
@@ -63,22 +41,13 @@ export async function getUserByEmailForAuth(email) {
     .first();
 }
 
-/**
- * Xác thực password
- * @param {string} password - Password gốc
- * @param {string} passwordHash - Password đã hash
- * @returns {Promise<boolean>} true nếu đúng, false nếu sai
- */
+/** Xác thực password */
 export async function verifyPassword(password, passwordHash) {
   if (!password || !passwordHash) return false;
   return await bcrypt.compare(password, passwordHash);
 }
 
-/**
- * Tạo payload cho JWT token
- * @param {Object} user - User object
- * @returns {Object} Payload cho JWT
- */
+/** JWT Payload */
 export function buildAuthPayload(user) {
   if (!user) return null;
   return {
@@ -89,11 +58,7 @@ export function buildAuthPayload(user) {
   };
 }
 
-/**
- * Lấy redirect URL theo role
- * @param {string} role - Role của user (admin, teacher, student)
- * @returns {string} Redirect URL
- */
+/** Lấy dashboard redirect theo role */
 export function getDashboardRedirectByRole(role) {
   const map = {
     admin: "/admin/dashboard",
@@ -102,4 +67,3 @@ export function getDashboardRedirectByRole(role) {
   };
   return map[role] || "/";
 }
-
