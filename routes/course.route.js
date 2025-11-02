@@ -8,17 +8,15 @@ const router = express.Router();
 // API endpoint cho AJAX requests
 router.get('/api/courses', async (req, res, next) => {
   try {
-    const { category, sub, sub_category, subcategory, sort = 'popular', page = '1', limit = '12', min_price, max_price, only_discounted, featured } = req.query;
-    const subCategory = sub || sub_category || subcategory;
+    const { category, sub, sort = 'popular', page = '1', limit = '12', min_price, max_price, min_rating, only_discounted, featured } = req.query;
+
+    const subCategory = sub;
     const apiSort = sort === 'price-low' ? 'price_asc' : (sort === 'price-high' ? 'price_desc' : sort);
 
-    // 🔥 Nếu người dùng chọn category cha, tự động lấy luôn các sub-category con
     let categoryIds = [];
     if (category) {
       categoryIds = await getCategoryWithChildren(category);
-      if (categoryIds.length === 0) {
-        categoryIds = [category];
-      }
+      if (categoryIds.length === 0) categoryIds = [category];
     } else if (subCategory) {
       categoryIds = [subCategory];
     }
@@ -29,11 +27,13 @@ router.get('/api/courses', async (req, res, next) => {
       sortBy: apiSort,
       page: Number(page),
       limit: Number(limit),
-      minPrice: min_price != null ? Number(min_price) : undefined,
-      maxPrice: max_price != null ? Number(max_price) : undefined,
+      minPrice: min_price ? Number(min_price) : undefined,
+      maxPrice: max_price ? Number(max_price) : undefined,
+      minRating: min_rating ? Number(min_rating) : undefined,
       onlyDiscounted: only_discounted === 'true',
-      isFeatured: featured ? (featured === 'true') : undefined
+      isFeatured: featured ? featured === 'true' : undefined,
     });
+
 
     res.json({
       success: true,
