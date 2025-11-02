@@ -2,14 +2,31 @@
 <link rel="stylesheet" href="/statics/css/student/student-dashboard.css">
 {{/fill_section}}
 
-<div class="container py-5">
-  {{> dashboard
-  title="Student Dashboard"
-  message="Sẵn sàng tiếp tục học tập ngày hôm nay?"
-  }}
+<section class="profile-hero">
+  <div class="container">
+    <div class="profile-card">
+      <div class="profile-avatar-wrapper">
+        <img src="{{user.avatar_url}}"
+          onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/847/847969.png';"
+          class="profile-avatar" alt="User avatar" />
+      </div>
+      <div class="profile-info">
+        <h1 class="profile-name">{{user.name}}</h1>
+        <p class="profile-email"><i class="bi bi-envelope"></i> {{user.email}}</p>
+        {{#if user.bio}}
+        <p class="profile-bio">{{user.bio}}</p>
+        {{else}}
+        <p class="profile-bio text-muted">Bạn chưa cập nhật tiểu sử cá nhân.</p>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</section>
 
+<div class="container py-5">
   <div class="mb-5">
-    <h3 class="mb-4">Tiếp tục học</h3>
+    <h3 class="mb-4">Khóa học của tôi</h3>
+    <p class="text-muted">Sẵn sàng tiếp tục học tập ngày hôm nay?</p>
     {{#if recentCourses.length}}
     <div class="row g-4">
       {{#each recentCourses}}
@@ -49,44 +66,9 @@
     {{/if}}
   </div>
 
-  <div class="card shadow-sm">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h4 class="card-title mb-0">Khóa học gần đây</h4>
-              <a href="/student/my-courses" class="text-decoration-none">Xem tất cả</a>
-            </div>
-            {{#if enrolledCourses.length}}
-            <div class="recent-course-list">
-              {{#each enrolledCourses}}
-              <div class="recent-course-item">
-                <img src="{{thumbnail_url}}" alt="{{title}}">
-                <div class="recent-course-info">
-                  <h5>{{title}}</h5>
-                  <p class="text-muted mb-1">{{teacher.full_name}}</p>
-                  <div class="recent-meta">
-                    <span><i class="bi bi-calendar3"></i> {{formatDate enrolled_at}}</span>
-                    <span><i class="bi bi-bar-chart"></i> {{progress}}% tiến độ</span>
-                  </div>
-                </div>
-                <a href="/student/learn/{{id}}" class="btn btn-outline-primary btn-sm">
-                  {{#if (eq progress 0)}}Bắt đầu{{else}}Tiếp tục{{/if}}
-                </a>
-              </div>
-              {{/each}}
-            </div>
-            {{else}}
-            <div class="empty-state text-center">
-              <i class="bi bi-book"></i>
-              <h5>Bạn chưa tham gia khóa học nào</h5>
-              <p class="text-muted">Khám phá các khóa học nổi bật và bắt đầu hành trình học tập của bạn.</p>
-              <a href="/courses" class="btn btn-primary">Khám phá ngay</a>
-            </div>
-            {{/if}}
-          </div>
-        </div>
-
   <div class="mt-5" id="wishlist-section">
     <h3 class="mb-4">Danh sách yêu thích</h3>
+    <p class="text-muted">Cùng khám phá các khóa học yêu thích của bạn nào</p>
     {{#if watchlist.length}}
     <div class="row g-4">
       {{#each watchlist}}
@@ -103,7 +85,8 @@
             </div>
             <div class="d-flex justify-content-between align-items-center">
               <strong class="text-primary">{{formatCurrency course.discount_price}}</strong>
-              <button class="btn btn-outline-danger btn-sm" data-course-id="{{course.id}}" data-fav-id="{{id}}" onclick="removeWishlistDashboard('{{course.id}}')">
+              <button class="btn btn-outline-danger btn-sm" data-course-id="{{course.id}}" data-fav-id="{{id}}"
+                onclick="removeWishlistDashboard('{{course.id}}')">
                 <i class="bi bi-trash"></i>
               </button>
             </div>

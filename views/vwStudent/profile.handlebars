@@ -28,7 +28,7 @@
   <div class="container">
     <div class="row g-4">
       <div class="col-lg-8">
-        <div class="card shadow-sm mb-4">
+        {{!-- <div class="card shadow-sm mb-4">
           <div class="card-body">
             <h4 class="card-title mb-4">Thống kê học tập</h4>
             <div class="row g-3">
@@ -48,7 +48,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> --}}
 
         <div class="card shadow-sm">
           <div class="card-body">
@@ -71,6 +71,9 @@
                 </div>
                 <a href="/student/learn/{{id}}" class="btn btn-outline-primary btn-sm">
                   {{#if (eq progress 0)}}Bắt đầu{{else}}Tiếp tục{{/if}}
+                </a>
+                <a href="/courses/{{id}}" class="btn btn-outline-primary btn-sm">
+                  Chi tiết khóa học
                 </a>
               </div>
               {{/each}}
