@@ -155,9 +155,8 @@ export const getAllAdminCourses = async () => {
       "c.rating_avg",
       "c.rating_count",
       "c.enrollment_count",
-      database.ref("cat.name").as("category_name"),
-      database.ref("t.full_name").as("teacher_full_name"),
       database.ref("cat.id").as("category_id"),
+      database.ref("cat.name").as("category_name"),
       database.ref("t.id").as("teacher_id"),
       database.ref("t.full_name").as("teacher_full_name")
     )

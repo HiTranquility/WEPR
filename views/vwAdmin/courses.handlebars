@@ -9,7 +9,7 @@
       <p class="mb-0 opacity-75">Quản lý tất cả khóa học trên hệ thống</p>
     </div>
   </div>
-  
+
   <div class="container-fluid">
     <div class="data-table">
       <div class="table-toolbar">
@@ -35,7 +35,7 @@
           </select>
         </div>
       </div>
-  
+
       <div class="table-responsive">
         <table class="table table-hover mb-0" id="coursesTable">
           <thead class="table-light">
@@ -52,9 +52,13 @@
           </thead>
           <tbody id="coursesTableBody">
             {{#each courses}}
-            <tr data-course-id="{{id}}" data-category="{{category.id}}" data-status="{{status}}" data-teacher="{{teacher.id}}">
+            {{!-- <tr data-course-id="{{id}}" data-category="{{category.id}}" data-status="{{status}}"
+              data-teacher="{{teacher.id}}"> --}}
+            <tr data-course-id="{{id}}" data-category="{{#if category.id}}{{category.id}}{{/if}}"
+              data-status="{{status}}" data-teacher="{{teacher.id}}">
               <td>
-                <img src="{{thumbnail_url}}" class="rounded" style="width: 50px; height: 30px; object-fit: cover;" alt="{{title}}">
+                <img src="{{thumbnail_url}}" class="rounded" style="width: 50px; height: 30px; object-fit: cover;"
+                  alt="{{title}}">
               </td>
               <td>
                 <strong>{{truncate title 50}}</strong><br>
@@ -63,7 +67,8 @@
               <td>{{teacher.full_name}}</td>
               <td><span class="badge bg-primary">{{category.name}}</span></td>
               <td>
-                <span class="badge bg-{{#if (eq status 'published')}}success{{else if (eq status 'draft')}}warning{{else}}danger{{/if}}">
+                <span
+                  class="badge bg-{{#if (eq status 'published')}}success{{else if (eq status 'draft')}}warning{{else}}danger{{/if}}">
                   {{#if (eq status 'published')}}Đã xuất bản
                   {{else if (eq status 'draft')}}Bản nháp
                   {{else}}Chưa hoàn thành
@@ -88,9 +93,9 @@
         </table>
       </div>
     </div>
-    </div>
   </div>
-  
+</div>
+
 </div>
 {{#fill_section 'js'}}
 <script>
@@ -116,21 +121,35 @@
     if (label) label.textContent = rows.length;
   }
 
-  function filterCourses() {
-    const selectedCategory = document.querySelector('select[onchange="filterByCategory(this.value)"]').value;
-    const selectedTeacher = document.querySelector('select[onchange="filterByTeacher(this.value)"]').value;
-    const selectedStatus = document.querySelector('select[onchange="filterByStatus(this.value)"]').value;
+function filterCourses() {
+    // 1. Lấy giá trị từ các bộ lọc
+    const selectedCategory = document.querySelector('select[onchange="filterByCategory(this.value)"]').value;
+    const selectedTeacher = document.querySelector('select[onchange="filterByTeacher(this.value)"]').value;
+    const selectedStatus = document.querySelector('select[onchange="filterByStatus(this.value)"]').value;
+    const searchTerm = document.getElementById('courseSearch')?.value.toLowerCase().trim() || '';
 
-    const rows = document.querySelectorAll('#coursesTableBody tr');
-    rows.forEach(row => {
-      const categoryMatch = !selectedCategory || row.dataset.category === selectedCategory;
-      const teacherMatch = !selectedTeacher || row.dataset.teacher === selectedTeacher;
-      const statusMatch = !selectedStatus || row.dataset.status === selectedStatus;
+    const rows = document.querySelectorAll('#coursesTableBody tr');
+    rows.forEach(row => {
+      const categoryMatch = !selectedCategory || row.dataset.category === selectedCategory;
+      const teacherMatch = !selectedTeacher || row.dataset.teacher === selectedTeacher;
+      const statusMatch = !selectedStatus || row.dataset.status === selectedStatus;
 
-      row.classList.toggle('d-none', !(categoryMatch && teacherMatch && statusMatch));
-    });
-    updateCourseCount();
-  }
+      // Lấy nội dung của hàng để tìm kiếm
+      const courseTitle = row.cells[1].querySelector('strong')?.textContent.toLowerCase() || '';
+      const teacherName = row.cells[2].textContent.toLowerCase() || '';
+      const categoryName = row.cells[3].textContent.toLowerCase() || '';
+
+      // 2. Kiểm tra khớp từ khóa
+      const searchMatch = !searchTerm || 
+          courseTitle.includes(searchTerm) || 
+          teacherName.includes(searchTerm) || 
+          categoryName.includes(searchTerm);
+
+      // 3. Ẩn/Hiện hàng
+      row.classList.toggle('d-none', !(categoryMatch && teacherMatch && statusMatch && searchMatch));
+    });
+    updateCourseCount();
+  }
 
   function filterByCategory(categoryId) {
     filterCourses();
