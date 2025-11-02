@@ -156,6 +156,9 @@ export const getAllAdminCourses = async () => {
       "c.rating_count",
       "c.enrollment_count",
       database.ref("cat.name").as("category_name"),
+      database.ref("t.full_name").as("teacher_full_name"),
+      database.ref("cat.id").as("category_id"),
+      database.ref("t.id").as("teacher_id"),
       database.ref("t.full_name").as("teacher_full_name")
     )
     .orderBy("c.created_at", "desc");
@@ -169,8 +172,8 @@ export const getAllAdminCourses = async () => {
     rating_avg: Number(r.rating_avg || 0),
     rating_count: Number(r.rating_count || 0),
     enrollment_count: Number(r.enrollment_count || 0),
-    category: { name: r.category_name || "Chưa có" },
-    teacher: { full_name: r.teacher_full_name || "Không rõ" },
+    category: { id: r.category_id, name: r.category_name || "Chưa có" },
+    teacher: { id: r.teacher_id, full_name: r.teacher_full_name || "Không rõ" },
   }));
 };
 
