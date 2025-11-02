@@ -24,8 +24,18 @@ const __dirname = import.meta.dirname;
 
 //App Configuration
 app.engine('handlebars', engine({
-    partialsDir: __dirname + '/views/partials',
-    helpers: hbsHelpers
+  partialsDir: __dirname + '/views/partials',
+  helpers: {
+    ...hbsHelpers,
+    fill_section: function (name, options) {
+      if (!this._sections) this._sections = {};
+      this._sections[name] = options.fn(this);
+      return null;
+    },
+    section: function (name) {
+      return this._sections && this._sections[name] ? this._sections[name] : '';
+    }
+  }
 }));
 app.set('view engine', 'handlebars');
 app.set('views', viewsRoot);

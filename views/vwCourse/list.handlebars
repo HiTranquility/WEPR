@@ -1,5 +1,54 @@
 {{#fill_section 'css'}}
 <link rel="stylesheet" href="/statics/css/course/course-list.css">
+<style>
+/* Pagination styles to match Udemy-like look (compact, circular prev/next, underline current) */
+.pagination-nav { --pill-size: 42px; }
+.pagination-nav .pagination { gap: 18px; align-items: center; display: flex; justify-content: center; }
+.pagination-nav .page-item { list-style: none; }
+.pagination-nav .page-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  color: #5b2dd3; /* purple */
+  text-decoration: none;
+  font-weight: 600;
+}
+.pagination-nav .page-item.active .page-link {
+  color: #4a148c;
+  position: relative;
+}
+.pagination-nav .page-item.active .page-link::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -6px;
+  width: 22px;
+  height: 3px;
+  background: #4a148c;
+  border-radius: 2px;
+}
+.pagination-nav .page-item.disabled .page-link { opacity: 0.35; pointer-events: none; }
+.pagination-nav .page-item .page-link.small-circle {
+  width: var(--pill-size);
+  height: var(--pill-size);
+  min-width: var(--pill-size);
+  border-radius: 50%;
+  border: 2px solid rgba(91,45,211,0.12);
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.pagination-nav .page-item .page-link.ellipsis {
+  pointer-events: none;
+  background: transparent;
+  border: none;
+  color: #666;
+}
+</style>
 {{/fill_section}}
 
 <div class="course-list-page">
@@ -211,8 +260,9 @@
           {{/each}}
         </div>
 
-        {{#if (gt totalPages 1)}}
-        <nav class="pagination-nav mt-5">
+        <!-- Pagination container: always render so client JS can decide to show/hide; defaults to page=1,total=1 -->
+        <nav class="pagination-nav mt-5" data-current-page="{{currentPage}}" data-total-pages="{{totalPages}}" style="display: block;">
+          <!-- Server-side pagination will render items below; JS will replace/update as needed -->
           <ul class="pagination justify-content-center">
             {{#if searchQuery}}
             {{!-- Pagination cho search --}}
@@ -240,10 +290,21 @@
             <li class="page-item {{#if (eq currentPage totalPages)}}disabled{{/if}}">
               <a class="page-link" href="/courses?page={{math currentPage '+' 1}}{{#if currentCategory}}&category={{currentCategory}}{{/if}}{{#if currentSub}}&sub={{currentSub}}{{/if}}{{#if (ne sortBy 'popular')}}&sort={{sortBy}}{{/if}}">Sau</a>
             </li>
+            {{#if paginationPages}}
+              {{#each paginationPages}}
+                <li class="page-item {{#if active}}active{{/if}} {{#if disabled}}disabled{{/if}}">
+                  {{#if url}}
+                    <a class="page-link {{#if small}}small-circle{{/if}} {{#if ellipsis}}ellipsis{{/if}}" href="{{url}}">{{{label}}}</a>
+                  {{else}}
+                    <span class="page-link {{#if small}}small-circle{{/if}} {{#if ellipsis}}ellipsis{{/if}}">{{{label}}}</span>
+                  {{/if}}
+                </li>
+              {{/each}}
+            {{else}}
+              <!-- pagination rendered by JS -->
             {{/if}}
           </ul>
         </nav>
-        {{/if}}
       </div>
     </div>
   </div>
@@ -295,60 +356,41 @@ function calculateDiscount(price, discountPrice) {
 // ========== BUILD FILTER PARAMS ==========
 function buildFilterParams() {
   const params = new URLSearchParams();
-  
-  // Category/Sub
+
+  // 🟣 CATEGORY + SUB
   const selectedCategories = [];
   const selectedSubs = [];
-  
   document.querySelectorAll('.category-checkbox:checked').forEach(cb => {
-    const categoryId = cb.dataset.categoryId;
+    const id = cb.dataset.categoryId;
     const hasChildren = cb.dataset.hasChildren === 'true';
-    
-    if (!hasChildren) {
-      selectedCategories.push(categoryId);
-    } else {
-      const subList = document.getElementById(`subcats-${categoryId}`);
-      const selectedSubsInCategory = subList ? 
-        Array.from(subList.querySelectorAll('.subcategory-checkbox:checked')).map(cb => cb.value) : [];
-      
-      if (selectedSubsInCategory.length === 0) {
-        selectedCategories.push(categoryId);
-  } else {
-        selectedSubs.push(...selectedSubsInCategory);
-      }
-    }
+    if (hasChildren) {
+      const subList = document.getElementById(`subcats-${id}`);
+      const checkedSubs = subList ? 
+        Array.from(subList.querySelectorAll('.subcategory-checkbox:checked')).map(s => s.value) : [];
+      if (checkedSubs.length === 0) selectedCategories.push(id);
+      else selectedSubs.push(...checkedSubs);
+    } else selectedCategories.push(id);
   });
-  
-  document.querySelectorAll('.subcategory-checkbox:checked').forEach(cb => {
-    if (!selectedSubs.includes(cb.value)) {
-      selectedSubs.push(cb.value);
-    }
-  });
-  
-  if (selectedSubs.length > 0) {
-    params.set('sub', selectedSubs[0]);
-  } else if (selectedCategories.length > 0) {
-    params.set('category', selectedCategories[0]);
-  }
-  
-  // Sort
+
+  if (selectedSubs.length > 0) params.set('sub', selectedSubs.join(','));
+  else if (selectedCategories.length > 0) params.set('category', selectedCategories.join(','));
+
+  // 🟣 SORT
   const sortRadio = document.querySelector('input[name="sortFilter"]:checked');
-  if (sortRadio) {
-    params.set('sort', sortRadio.value);
-  }
-  
-  // Price
-  const priceRadio = document.querySelector('input[name="priceFilter"]:checked');
-  if (priceRadio && priceRadio.value === 'free') {
+  if (sortRadio) params.set('sort', sortRadio.value);
+
+  // 🟣 PRICE
+  const priceFilter = document.querySelector('input[name="priceFilter"]:checked')?.value;
+  if (priceFilter === 'free') {
     params.set('min_price', '0');
     params.set('max_price', '0');
-  } else if (priceRadio && priceRadio.value === 'paid') {
+  } else if (priceFilter === 'paid') {
     params.set('min_price', '1');
   }
   
   // Rating (có thể thêm sau)
   
-  params.set('page', '1'); // Reset về trang 1
+  params.set('page', String(currentFilters.page || 1));
   
   return params;
 }
@@ -437,13 +479,122 @@ async function fetchCourses() {
 // ========== UPDATE PAGINATION ==========
 function updatePagination(pagination) {
   const paginationNav = document.querySelector('.pagination-nav');
-  if (!paginationNav || pagination.totalPages <= 1) {
-    if (paginationNav) paginationNav.style.display = 'none';
+  if (!paginationNav) return;
+
+  // Accept either an object passed in or read from data-* attributes
+  let currentPage = 1;
+  let totalPages = 1;
+  if (pagination && typeof pagination === 'object' && (pagination.currentPage || pagination.totalPages || pagination.total)) {
+    currentPage = parseInt(pagination.currentPage || pagination.page || pagination.pageNumber || 1, 10);
+    totalPages = parseInt(pagination.totalPages || pagination.total || 1, 10);
+  } else {
+    currentPage = parseInt(paginationNav.dataset.currentPage || '1', 10);
+    totalPages = parseInt(paginationNav.dataset.totalPages || '1', 10);
+  }
+
+  if (totalPages <= 1) {
+    paginationNav.style.display = 'none';
     return;
   }
-  
+
   paginationNav.style.display = 'block';
-  // TODO: Implement pagination update (có thể thêm sau nếu cần)
+  const ul = paginationNav.querySelector('ul.pagination');
+  ul.innerHTML = '';
+
+  function buildPageUrl(page) {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('page', String(page));
+      return url.pathname + '?' + url.searchParams.toString();
+    } catch (e) {
+      // fallback
+      const params = new URLSearchParams(window.location.search);
+      params.set('page', String(page));
+      return window.location.pathname + '?' + params.toString();
+    }
+  }
+
+  function makeLi(content, href, isActive, isDisabled) {
+    const li = document.createElement('li');
+    li.className = 'page-item' + (isActive ? ' active' : '') + (isDisabled ? ' disabled' : '');
+    if (href && !isDisabled) {
+      const a = document.createElement('a');
+      a.className = 'page-link';
+      a.href = href;
+      a.innerHTML = content;
+      li.appendChild(a);
+    } else {
+      const span = document.createElement('span');
+      span.className = 'page-link';
+      span.innerHTML = content;
+      li.appendChild(span);
+    }
+    // special styling for chevrons and ellipsis
+    const link = li.querySelector('.page-link');
+    if (link) {
+      if (content === '‹' || content === '›') {
+        link.classList.add('small-circle');
+      }
+      if (content === '...') {
+        link.classList.add('ellipsis');
+      }
+    }
+    return li;
+  }
+
+  // Prev (chevron)
+  const prevPage = Math.max(1, currentPage - 1);
+  ul.appendChild(makeLi('‹', buildPageUrl(prevPage), false, currentPage === 1));
+
+  // If small number of pages, show all
+  if (totalPages <= 7) {
+    for (let p = 1; p <= totalPages; p++) {
+      ul.appendChild(makeLi(String(p), buildPageUrl(p), p === currentPage, false));
+    }
+  } else {
+    // Always show first
+    ul.appendChild(makeLi('1', buildPageUrl(1), 1 === currentPage, false));
+
+    const start = Math.max(2, currentPage - 2);
+    const end = Math.min(totalPages - 1, currentPage + 2);
+
+    if (start > 2) {
+      ul.appendChild(makeLi('...', null, false, true));
+    }
+
+    for (let p = start; p <= end; p++) {
+      ul.appendChild(makeLi(String(p), buildPageUrl(p), p === currentPage, false));
+    }
+
+    if (end < totalPages - 1) {
+      ul.appendChild(makeLi('...', null, false, true));
+    }
+
+    // Last
+    ul.appendChild(makeLi(String(totalPages), buildPageUrl(totalPages), totalPages === currentPage, false));
+  }
+
+  // Next
+  const nextPage = Math.min(totalPages, currentPage + 1);
+  ul.appendChild(makeLi('›', buildPageUrl(nextPage), false, currentPage === totalPages));
+
+  // Attach click handlers for AJAX navigation: intercept clicks and call fetchCourses()
+  ul.querySelectorAll('a.page-link').forEach(a => {
+    a.addEventListener('click', function (e) {
+      // If link points to same-origin page with a page param, intercept
+      const href = this.getAttribute('href');
+      if (!href) return;
+      const url = new URL(href, window.location.origin);
+      const page = parseInt(url.searchParams.get('page') || '1', 10);
+      if (!isNaN(page)) {
+        e.preventDefault();
+        currentFilters.page = page;
+        fetchCourses();
+        // update URL in address bar without reloading
+        try { history.pushState({}, '', url.pathname + '?' + url.searchParams.toString()); } catch(e){}
+      }
+    });
+  });
 }
 
 // ========== EVENT HANDLERS ==========
@@ -474,7 +625,8 @@ document.querySelectorAll('.category-checkbox').forEach(checkbox => {
       document.querySelector(`[data-category-id="${categoryId}"].toggle-icon`)?.classList.add('rotated');
     }
     
-    // Gọi API ngay
+    // Reset page and call API
+    currentFilters.page = 1;
     fetchCourses();
   });
 });
@@ -482,6 +634,7 @@ document.querySelectorAll('.category-checkbox').forEach(checkbox => {
 // Subcategory checkbox - gọi API khi thay đổi
 document.querySelectorAll('.subcategory-checkbox').forEach(checkbox => {
   checkbox.addEventListener('change', function() {
+    currentFilters.page = 1;
     fetchCourses();
   });
 });
@@ -489,6 +642,7 @@ document.querySelectorAll('.subcategory-checkbox').forEach(checkbox => {
 // Sort radio - gọi API khi thay đổi
 document.querySelectorAll('input[name="sortFilter"]').forEach(radio => {
   radio.addEventListener('change', function() {
+    currentFilters.page = 1;
     fetchCourses();
   });
 });
@@ -496,6 +650,7 @@ document.querySelectorAll('input[name="sortFilter"]').forEach(radio => {
 // Price filter - gọi API khi thay đổi
 document.querySelectorAll('input[name="priceFilter"]').forEach(radio => {
   radio.addEventListener('change', function() {
+    currentFilters.page = 1;
     fetchCourses();
   });
 });
@@ -503,6 +658,7 @@ document.querySelectorAll('input[name="priceFilter"]').forEach(radio => {
 // Rating filter (có thể thêm sau nếu cần)
 document.querySelectorAll('#rating-4.5, #rating-4, #rating-3.5').forEach(checkbox => {
   checkbox.addEventListener('change', function() {
+    currentFilters.page = 1;
     fetchCourses();
   });
 });
@@ -526,6 +682,7 @@ document.getElementById('clearFilters')?.addEventListener('click', function() {
   document.querySelectorAll('.toggle-icon').forEach(icon => icon.classList.remove('rotated'));
   
   // Gọi API với filters đã clear
+  currentFilters.page = 1;
   fetchCourses();
 });
 
@@ -568,7 +725,15 @@ document.querySelectorAll('.btn-wishlist').forEach(btn => {
 });
 }
 
-// Attach handlers khi page load
-attachWishlistHandlers();
+  // Attach handlers khi page load
+  attachWishlistHandlers();
+
+  // Render initial pagination (reads data-* attributes on .pagination-nav)
+  console.log("[DEBUG] Pagination JS loaded");
+
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("[DEBUG] DOM loaded — calling updatePagination()");
+    updatePagination();
+  });
 </script>
 {{/fill_section}}
