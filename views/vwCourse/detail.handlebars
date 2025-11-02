@@ -94,16 +94,16 @@
               </div>
               <div class="collapse section-content" id="section-{{@index}}">
                 {{#each lectures}}
-                <div class="lecture-item">
+                <a href="/courses/{{../../course.id}}/preview/lecture/{{id}}" target="_blank" class="lecture-item text-decoration-none">
                   <div class="lecture-info">
                     <i class="bi bi-play-circle lecture-icon"></i>
                     <span>{{title}}</span>
                     {{#if is_preview}}
-                    <a class="preview-badge" href="/courses/{{../../course.id}}/preview/lecture/{{id}}" target="_blank">Xem trước</a>
+                    <span class="preview-badge">Xem trước</span>
                     {{/if}}
                   </div>
-                    <span class="text-muted">{{duration_text}}</span>
-                </div>
+                  <span class="text-muted">{{duration_text}}</span>
+                </a>
                 {{/each}}
               </div>
             </div>

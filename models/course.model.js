@@ -603,12 +603,13 @@ export const getLecturePreview = async (courseId, lectureId) => {
     .leftJoin('users as t', 'c.teacher_id', 't.id')
     .where('l.id', lectureId)
     .andWhere('c.id', courseId)
-    .andWhere('l.is_preview', true)
+    // Bỏ điều kiện is_preview để cho phép xem tất cả lectures
     .first(
       'l.id as lecture_id',
       'l.title as lecture_title',
       'l.video_url',
       'l.duration',
+      'l.is_preview',
       's.id as section_id',
       's.title as section_title',
       'c.id as course_id',

@@ -167,6 +167,47 @@ router.get('/courses/search', async function(req, res, next) {
 //   }
 // });            
 
+// Preview lecture route - phải đặt TRƯỚC /courses/:id để tránh conflict
+router.get('/courses/:courseId/preview/lecture/:lectureId', async (req, res, next) => {
+  try {
+    const { courseId, lectureId } = req.params;
+    const data = await getLecturePreview(courseId, lectureId);
+
+    if (!data) {
+      return res.status(404).render('vwCommon/404', {
+        layout: 'error',
+        title: 'Không tìm thấy bài giảng',
+        bodyClass: 'error-404'
+      });
+    }
+
+    res.render('vwCourse/preview', {
+      layout: false,
+      title: `Preview: ${data.lecture_title}`,
+      lecture: {
+        id: data.lecture_id,
+        title: data.lecture_title,
+        video_url: data.video_url,
+        duration: data.duration,
+      },
+      section: {
+        id: data.section_id,
+        title: data.section_title,
+      },
+      course: {
+        id: data.course_id,
+        title: data.course_title,
+        teacher: {
+          full_name: data.teacher_name,
+          avatar_url: data.teacher_avatar,
+        },
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/courses/:id', async function(req, res, next) {
     try {
         const course = await getCourseDetail(req.params.id);
@@ -248,46 +289,6 @@ router.get('/courses/:id', async function(req, res, next) {
     } catch (err) {
         next(err);
     }
-});
-
-router.get('/courses/:courseId/preview/lecture/:lectureId', async (req, res, next) => {
-  try {
-    const { courseId, lectureId } = req.params;
-    const data = await getLecturePreview(courseId, lectureId);
-
-    if (!data) {
-      return res.status(404).render('vwCommon/404', {
-        layout: 'error',
-        title: 'Không tìm thấy bài giảng',
-        bodyClass: 'error-404'
-      });
-    }
-
-    res.render('vwCourse/preview', {
-      layout: false,
-      title: `Preview: ${data.lecture_title}`,
-      lecture: {
-        id: data.lecture_id,
-        title: data.lecture_title,
-        video_url: data.video_url,
-        duration: data.duration,
-      },
-      section: {
-        id: data.section_id,
-        title: data.section_title,
-      },
-      course: {
-        id: data.course_id,
-        title: data.course_title,
-        teacher: {
-          full_name: data.teacher_name,
-          avatar_url: data.teacher_avatar,
-        },
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
 });
 
 router.post('/courses/:id/enroll', async function(req, res, next) {
